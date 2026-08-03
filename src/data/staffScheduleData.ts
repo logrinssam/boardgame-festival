@@ -1,16 +1,15 @@
 import type {
   BoothStaffing,
   HeadquartersStaffing,
-  StaffRole,
+  DutyRole,
   StaffRotation,
   StaffingSummary,
 } from '../types';
 import { SCHEDULE_SLOTS } from './scheduleData';
 
-/** 부스 1~6: 3인 순환 (A,B,C) — 매 회차 2명 운영 / 1명 휴식 */
 const THREE_PERSON_PATTERN: Array<{
-  active: StaffRole[];
-  resting: StaffRole[];
+  active: DutyRole[];
+  resting: DutyRole[];
 }> = [
   { active: ['A', 'C'], resting: ['B'] },
   { active: ['B', 'C'], resting: ['A'] },
@@ -27,10 +26,9 @@ const THREE_PERSON_PATTERN: Array<{
   { active: ['A', 'C'], resting: ['B'] },
 ];
 
-/** 부스 8~13: 4인 순환 (A,B,C,D) — 매 회차 3명 운영 / 1명 휴식 */
 const FOUR_PERSON_PATTERN: Array<{
-  active: StaffRole[];
-  resting: StaffRole[];
+  active: DutyRole[];
+  resting: DutyRole[];
 }> = [
   { active: ['A', 'B', 'C'], resting: ['D'] },
   { active: ['B', 'C', 'D'], resting: ['A'] },
@@ -48,7 +46,7 @@ const FOUR_PERSON_PATTERN: Array<{
 ];
 
 function buildRotations(
-  pattern: Array<{ active: StaffRole[]; resting: StaffRole[] }>,
+  pattern: Array<{ active: DutyRole[]; resting: DutyRole[] }>,
 ): StaffRotation[] {
   return SCHEDULE_SLOTS.map((slot, index) => ({
     slotId: slot.id,
@@ -58,15 +56,15 @@ function buildRotations(
 }
 
 function emptyAssignments(
-  roles: StaffRole[],
-): Partial<Record<StaffRole, string | null>> {
+  roles: DutyRole[],
+): Partial<Record<DutyRole, string | null>> {
   return Object.fromEntries(roles.map((role) => [role, null])) as Partial<
-    Record<StaffRole, string | null>
+    Record<DutyRole, string | null>
   >;
 }
 
 function createThreePersonStaffing(boothId: string): BoothStaffing {
-  const roles: StaffRole[] = ['A', 'B', 'C'];
+  const roles: DutyRole[] = ['A', 'B', 'C'];
   return {
     boothId,
     teamSize: 3,
@@ -78,7 +76,7 @@ function createThreePersonStaffing(boothId: string): BoothStaffing {
 }
 
 function createFourPersonStaffing(boothId: string): BoothStaffing {
-  const roles: StaffRole[] = ['A', 'B', 'C', 'D'];
+  const roles: DutyRole[] = ['A', 'B', 'C', 'D'];
   return {
     boothId,
     teamSize: 4,
@@ -89,10 +87,7 @@ function createFourPersonStaffing(boothId: string): BoothStaffing {
   };
 }
 
-function createFixedStaffing(
-  boothId: string,
-  role: StaffRole,
-): BoothStaffing {
+function createFixedStaffing(boothId: string, role: DutyRole): BoothStaffing {
   return {
     boothId,
     teamSize: 1,
@@ -114,16 +109,16 @@ export const HEADQUARTERS_STAFFING: HeadquartersStaffing = {
 
 export const STAFFING_SUMMARIES: StaffingSummary[] = [
   {
-    boothRangeLabel: '부스 1~6',
+    boothRangeLabel: 'Booths 1-6',
     teachers: 18,
     miraeItda: 3,
-    note: '3인 1팀 · 회차당 2명 운영 / 1명 휴식',
+    note: '3-person team, 2 active / 1 rest',
   },
   {
-    boothRangeLabel: '부스 8~13',
+    boothRangeLabel: 'Booths 8-13',
     teachers: 12,
     miraeItda: 13,
-    note: '4인 1팀 · 회차당 3명 운영 / 1명 휴식',
+    note: '4-person team, 3 active / 1 rest',
   },
 ];
 
@@ -152,10 +147,11 @@ export function getRotationForSlot(
   boothId: string,
   scheduleSlotId: string,
 ): StaffRotation | undefined {
-  const staffing = getBoothStaffing(boothId);
-  return staffing?.rotations.find((rotation) => rotation.slotId === scheduleSlotId);
+  return getBoothStaffing(boothId)?.rotations.find(
+    (rotation) => rotation.slotId === scheduleSlotId,
+  );
 }
 
-export function formatRoles(roles: StaffRole[]): string {
+export function formatRoles(roles: DutyRole[]): string {
   return roles.join(', ');
 }

@@ -1,4 +1,4 @@
-import type { Booth, BoothSlot, StaffingType } from '../types';
+import type { Booth, BoothSlot, BoothType, ExperienceGroup, StaffingType } from '../types';
 import { SCHEDULE_SLOTS } from './scheduleData';
 
 const BOARD_GAME_ACTIVITIES = [
@@ -26,7 +26,8 @@ interface BoothSeed {
   number: number;
   name: string;
   subtitle?: string | null;
-  category: Booth['category'];
+  experienceGroup: ExperienceGroup;
+  boothType: BoothType;
   target: string;
   groupLabel?: string;
   description: string;
@@ -41,7 +42,8 @@ function createBooth(seed: BoothSeed): Booth {
     number: seed.number,
     name: seed.name,
     subtitle: seed.subtitle ?? null,
-    category: seed.category,
+    experienceGroup: seed.experienceGroup,
+    boothType: seed.boothType,
     description: seed.description,
     location: '추후 안내',
     target: seed.target,
@@ -50,6 +52,7 @@ function createBooth(seed: BoothSeed): Booth {
     accentColor: seed.accentColor,
     accessCodeConfigured: false,
     accessCode: null,
+    operatorPinConfigured: true,
     capacity: null,
     waitlistCapacity: null,
     status: 'CAPACITY_PENDING',
@@ -67,7 +70,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-01',
     number: 1,
     name: '유치부 A',
-    category: 'BOARD_GAME',
+    experienceGroup: 'BOARD_GAME',
+    boothType: 'AGE_BOARD_GAME',
     target: '유치부',
     groupLabel: 'A',
     description: BOARD_GAME_DESCRIPTION,
@@ -79,7 +83,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-02',
     number: 2,
     name: '유치부 B',
-    category: 'BOARD_GAME',
+    experienceGroup: 'BOARD_GAME',
+    boothType: 'AGE_BOARD_GAME',
     target: '유치부',
     groupLabel: 'B',
     description: BOARD_GAME_DESCRIPTION,
@@ -91,7 +96,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-03',
     number: 3,
     name: '1~2학년 A',
-    category: 'BOARD_GAME',
+    experienceGroup: 'BOARD_GAME',
+    boothType: 'AGE_BOARD_GAME',
     target: '초등학교 1~2학년',
     groupLabel: 'A',
     description: BOARD_GAME_DESCRIPTION,
@@ -103,7 +109,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-04',
     number: 4,
     name: '1~2학년 B',
-    category: 'BOARD_GAME',
+    experienceGroup: 'BOARD_GAME',
+    boothType: 'AGE_BOARD_GAME',
     target: '초등학교 1~2학년',
     groupLabel: 'B',
     description: BOARD_GAME_DESCRIPTION,
@@ -115,7 +122,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-05',
     number: 5,
     name: '3~4학년',
-    category: 'BOARD_GAME',
+    experienceGroup: 'BOARD_GAME',
+    boothType: 'AGE_BOARD_GAME',
     target: '초등학교 3~4학년',
     description: BOARD_GAME_DESCRIPTION,
     accentColor: '#2F7FE0',
@@ -126,7 +134,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-06',
     number: 6,
     name: '4학년 이상',
-    category: 'BOARD_GAME',
+    experienceGroup: 'BOARD_GAME',
+    boothType: 'AGE_BOARD_GAME',
     target: '초등학교 4학년 이상',
     description: BOARD_GAME_DESCRIPTION,
     accentColor: '#2A6FD0',
@@ -137,7 +146,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-07',
     number: 7,
     name: '과학아 놀자! 그래비트랙스',
-    category: 'GRAVITRAX',
+    experienceGroup: 'BOARD_GAME',
+    boothType: 'GRAVITRAX',
     target: '추후 안내',
     description: '그래비트랙스를 자유롭게 체험하는 과학 놀이 부스',
     accentColor: '#20B2A8',
@@ -147,7 +157,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-08',
     number: 8,
     name: '만들기 1',
-    category: 'CREATIVE',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    boothType: 'MAKING',
     target: '추후 안내',
     description: '세부 체험 내용 추후 입력',
     accentColor: '#7B6CF6',
@@ -157,7 +168,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-09',
     number: 9,
     name: '만들기 2',
-    category: 'CREATIVE',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    boothType: 'MAKING',
     target: '추후 안내',
     description: '세부 체험 내용 추후 입력',
     accentColor: '#8A74F0',
@@ -167,7 +179,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-10',
     number: 10,
     name: '체험 1',
-    category: 'CREATIVE',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    boothType: 'ACTIVITY',
     target: '추후 안내',
     description: '세부 체험 내용 추후 입력',
     accentColor: '#6E63E8',
@@ -177,7 +190,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-11',
     number: 11,
     name: '체험 2',
-    category: 'CREATIVE',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    boothType: 'ACTIVITY',
     target: '추후 안내',
     description: '세부 체험 내용 추후 입력',
     accentColor: '#7A5FE0',
@@ -188,7 +202,8 @@ export const BOOTHS: Booth[] = [
     number: 12,
     name: '카미봇',
     subtitle: '자원전쟁',
-    category: 'ROBOT',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    boothType: 'ROBOT',
     target: '추후 안내',
     description: '카미봇을 활용한 자원전쟁 체험',
     accentColor: '#E67E22',
@@ -199,7 +214,8 @@ export const BOOTHS: Booth[] = [
     number: 13,
     name: '햄스터봇',
     subtitle: '축구',
-    category: 'ROBOT',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    boothType: 'ROBOT',
     target: '추후 안내',
     description: '햄스터봇을 활용한 축구 체험',
     accentColor: '#D35400',
@@ -209,7 +225,8 @@ export const BOOTHS: Booth[] = [
     id: 'booth-14',
     number: 14,
     name: '넥슨',
-    category: 'NEXON',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    boothType: 'NEXON',
     target: '추후 안내',
     description: '세부 체험 내용 추후 입력',
     accentColor: '#1ABC9C',
@@ -217,26 +234,20 @@ export const BOOTHS: Booth[] = [
   }),
 ];
 
-export const CATEGORY_LABELS: Record<Booth['category'], string> = {
-  BOARD_GAME: '보드게임·수학 체험',
-  GRAVITRAX: '그래비트랙스',
-  CREATIVE: '창의융합',
-  ROBOT: '로봇',
-  NEXON: '넥슨',
-};
-
-export const CATEGORY_ORDER: Booth['category'][] = [
-  'BOARD_GAME',
-  'GRAVITRAX',
-  'CREATIVE',
-  'ROBOT',
-  'NEXON',
-];
-
 export function getBoothById(id: string): Booth | undefined {
   return BOOTHS.find((booth) => booth.id === id);
 }
 
-export function getBoothsByCategory(category: Booth['category']): Booth[] {
-  return BOOTHS.filter((booth) => booth.category === category);
+export function getBoothsByExperienceGroup(
+  group: ExperienceGroup,
+): Booth[] {
+  return BOOTHS.filter((booth) => booth.experienceGroup === group);
 }
+
+export const BOARD_GAME_BOOTH_IDS = BOOTHS.filter(
+  (booth) => booth.experienceGroup === 'BOARD_GAME',
+).map((booth) => booth.id);
+
+export const CREATIVE_BOOTH_IDS = BOOTHS.filter(
+  (booth) => booth.experienceGroup === 'CREATIVE_CONVERGENCE',
+).map((booth) => booth.id);

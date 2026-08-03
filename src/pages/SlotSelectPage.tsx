@@ -1,8 +1,8 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AppShell } from '../components/AppShell';
 import { StatusBadge } from '../components/StatusBadge';
-import { useReservations } from '../context/ReservationContext';
+import { useAppStore } from '../context/AppStore';
 import { formatTimeRange } from '../data/scheduleData';
+import type { BoothSlot } from '../types';
 import {
   canBookSlot,
   getEffectiveCapacity,
@@ -13,32 +13,23 @@ import {
 export function SlotSelectPage() {
   const { boothId = '' } = useParams();
   const navigate = useNavigate();
-  const { getBooth } = useReservations();
+  const { getBooth } = useAppStore();
   const booth = getBooth(boothId);
 
   if (!booth) {
     return (
-      <AppShell title="부스를 찾을 수 없습니다" showBack backTo="/">
+      <div className="glass-card">
         <Link to="/" className="btn btn-primary">
           홈으로
         </Link>
-      </AppShell>
+      </div>
     );
   }
 
   const currentBooth = booth;
   const effective = getEffectiveCapacity(currentBooth);
-  const morningSlots = currentBooth.slots.filter(
-    (slot) => slot.period === 'MORNING',
-  );
-  const afternoonSlots = currentBooth.slots.filter(
-    (slot) => slot.period === 'AFTERNOON',
-  );
 
-  function renderSlotList(
-    slots: typeof currentBooth.slots,
-    label: string,
-  ) {
+  function renderList(slots: BoothSlot[], label: string) {
     return (
       <section className="glass-card">
         <h3 className="section-title">{label}</h3>
@@ -47,7 +38,6 @@ export function SlotSelectPage() {
             const status = getSlotAvailabilityStatus(currentBooth, slot);
             const bookable = canBookSlot(currentBooth, slot);
             const remaining = getRemainingSeats(currentBooth, slot);
-
             return (
               <li key={slot.id}>
                 <button
@@ -55,9 +45,9 @@ export function SlotSelectPage() {
                   className="slot-select-item"
                   disabled={!bookable.allowed}
                   onClick={() =>
-                    navigate(
-                      `/booth/${currentBooth.id}/slots/${slot.id}/consent`,
-                    )
+                    navigate('/booking/consent', {
+                      state: { boothId: currentBooth.id, slotId: slot.id },
+                    })
                   }
                 >
                   <div>
@@ -69,7 +59,7 @@ export function SlotSelectPage() {
                         {status === 'AVAILABLE'
                           ? `남은 자리 ${remaining}명`
                           : status === 'WAITLIST'
-                            ? `예비 ${slot.waitlistCount + 1}번 가능`
+                            ? '예비 가능'
                             : null}
                       </p>
                     ) : (
@@ -87,29 +77,25 @@ export function SlotSelectPage() {
   }
 
   return (
-    <AppShell
-      title="회차 선택"
-      subtitle={`부스 ${currentBooth.number}. ${currentBooth.name} · 25분 단위`}
-      showBack
-      backTo={`/booth/${currentBooth.id}/access`}
-    >
+    <>
+      <div className="page-heading">
+        <h2>회차 선택</h2>
+        <p>
+          부스 {currentBooth.number}. {currentBooth.name} · 25분 단위
+        </p>
+      </div>
       {effective.isDemo ? (
         <p className="demo-banner">개발용 데모 데이터로 정원·예비가 표시됩니다.</p>
       ) : null}
-
-      {!effective.isConfigured ? (
-        <div className="glass-card notice warning">
-          <strong>예약 정원 준비 중</strong>
-          <p>관리자가 정원을 설정해야 예약할 수 있습니다.</p>
-        </div>
-      ) : null}
-
-      <div className="lunch-banner">
-        점심시간 11:55~13:00 — 예약 회차 없음
-      </div>
-
-      {renderSlotList(morningSlots, '오전 회차')}
-      {renderSlotList(afternoonSlots, '오후 회차')}
-    </AppShell>
+      <div className="lunch-banner">점심시간 11:55~13:00 — 예약 회차 없음</div>
+      {renderList(
+        currentBooth.slots.filter((slot) => slot.period === 'MORNING'),
+        '오전 회차',
+      )}
+      {renderList(
+        currentBooth.slots.filter((slot) => slot.period === 'AFTERNOON'),
+        '오후 회차',
+      )}
+    </>
   );
 }

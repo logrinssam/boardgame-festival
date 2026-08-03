@@ -1,76 +1,84 @@
-import { Link, useLocation, useParams } from 'react-router-dom';
-import { AppShell } from '../components/AppShell';
-import { useReservations } from '../context/ReservationContext';
+import { Link, useLocation } from 'react-router-dom';
+import { useAppStore } from '../context/AppStore';
 import { formatTimeRange } from '../data/scheduleData';
-import type { ReservationDraft } from '../types';
+import { RESERVATION_STATUS_LABELS } from '../types';
 
-interface ConfirmLocationState {
-  reservation?: ReservationDraft;
+interface ResultState {
+  reservationId?: string;
 }
 
 export function ConfirmPage() {
-  const { boothId = '', slotId = '' } = useParams();
   const location = useLocation();
-  const { getBooth, getSlot } = useReservations();
-  const booth = getBooth(boothId);
-  const slot = getSlot(boothId, slotId);
-  const state = location.state as ConfirmLocationState | null;
-  const reservation = state?.reservation;
+  const state = (location.state as ResultState | null) ?? {};
+  const { reservations, getBooth, getSlot } = useAppStore();
+  const reservation = reservations.find(
+    (item) => item.id === state.reservationId,
+  );
+  const booth = reservation ? getBooth(reservation.boothId) : undefined;
+  const slot =
+    reservation && booth
+      ? getSlot(reservation.boothId, reservation.slotId)
+      : undefined;
 
-  if (!booth || !slot || !reservation) {
+  if (!reservation || !booth || !slot) {
     return (
-      <AppShell title="예약 정보를 확인할 수 없습니다" showBack backTo="/">
-        <div className="glass-card">
-          <p>예약 세션이 만료되었거나 정보가 없습니다.</p>
-          <Link to="/" className="btn btn-primary">
-            홈으로
-          </Link>
-        </div>
-      </AppShell>
+      <div className="glass-card">
+        <p>예약 정보를 확인할 수 없습니다.</p>
+        <Link to="/my-reservations" className="btn btn-primary">
+          내 예약
+        </Link>
+      </div>
     );
   }
 
+  const isWaitlist =
+    reservation.status === 'WAITLIST' ||
+    reservation.status === 'WAITLIST_CALLED';
+
   return (
-    <AppShell
-      title={reservation.isWaitlist ? '예비 예약 완료' : '예약 확정'}
-      subtitle={`부스 ${booth.number}. ${booth.name}`}
-    >
-      <section className="glass-card success-card">
-        <p className="success-emoji" aria-hidden="true">
-          {reservation.isWaitlist ? '대기' : '완료'}
-        </p>
-        <h3>
-          {reservation.isWaitlist
-            ? `예비 ${reservation.waitlistOrder}번으로 등록되었습니다.`
-            : '예약이 확정되었습니다.'}
-        </h3>
-        <dl className="detail-list">
-          <div>
-            <dt>회차</dt>
-            <dd>{formatTimeRange(slot.startTime, slot.endTime)}</dd>
-          </div>
-          <div>
-            <dt>참가자</dt>
-            <dd>{reservation.participantName}</dd>
-          </div>
-          <div>
-            <dt>학년/연령</dt>
-            <dd>{reservation.gradeOrAge}</dd>
-          </div>
-          <div>
-            <dt>연락처</dt>
-            <dd>{reservation.guardianContact}</dd>
-          </div>
-        </dl>
-        <div className="action-stack">
-          <Link to="/" className="btn btn-primary">
-            홈으로
-          </Link>
-          <Link to={`/booth/${booth.id}`} className="btn btn-ghost">
-            부스 상세로
-          </Link>
+    <section className="glass-card success-card">
+      <p className="success-emoji">{isWaitlist ? '예비' : '완료'}</p>
+      <h3>
+        {isWaitlist
+          ? `예비 ${reservation.waitlistOrder ?? ''}번으로 등록되었습니다.`
+          : '예약이 확정되었습니다.'}
+      </h3>
+      <dl className="detail-list">
+        <div>
+          <dt>예약번호</dt>
+          <dd className="reservation-code">{reservation.reservationCode}</dd>
         </div>
-      </section>
-    </AppShell>
+        <div>
+          <dt>부스</dt>
+          <dd>
+            {booth.number}. {booth.name}
+          </dd>
+        </div>
+        <div>
+          <dt>회차</dt>
+          <dd>{formatTimeRange(slot.startTime, slot.endTime)}</dd>
+        </div>
+        <div>
+          <dt>참가자</dt>
+          <dd>{reservation.participantName}</dd>
+        </div>
+        <div>
+          <dt>상태</dt>
+          <dd>{RESERVATION_STATUS_LABELS[reservation.status]}</dd>
+        </div>
+      </dl>
+      <p className="hint-text">
+        현장에서 이름과 휴대폰 뒤 4자리({reservation.phoneLast4}) 또는
+        예약번호로 확인합니다.
+      </p>
+      <div className="action-stack">
+        <Link to="/my-reservations" className="btn btn-primary">
+          내 예약 보기
+        </Link>
+        <Link to="/" className="btn btn-ghost">
+          홈으로
+        </Link>
+      </div>
+    </section>
   );
 }

@@ -740,4 +740,252 @@ input {
   .info-grid {
     grid-template-columns: 1fr;
   }
+
+  .admin-nav {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.filter-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.filter-tab {
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.45);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.filter-tab.active {
+  background: rgba(47, 107, 255, 0.16);
+  color: var(--blue-deep);
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.group-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-soft);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.group-badge {
+  display: inline-flex;
+  align-items: center;
+  margin: 8px 0 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.group-board,
+.group-badge.group-board {
+  background: rgba(79, 180, 220, 0.22);
+  color: #1f6f8b;
+}
+
+.group-creative,
+.group-badge.group-creative {
+  background: rgba(180, 120, 220, 0.22);
+  color: #6b3f9a;
+}
+
+.booth-card.group-board {
+  border-left-color: #4fb4dc;
+}
+
+.booth-card.group-creative {
+  border-left-color: #c47ad8;
+}
+
+.group-board_game .group-header {
+  border-left: 4px solid #4fb4dc;
+}
+
+.group-creative_convergence .group-header {
+  border-left: 4px solid #c47ad8;
+}
+
+.hidden-ops-links {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  opacity: 0.25;
+  font-size: 11px;
+}
+
+.center-hint {
+  text-align: center;
+}
+
+.booth-detail-title {
+  margin: 10px 0;
+  font-size: 22px;
+  word-break: keep-all;
+}
+
+.reservation-code {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.staff-hero h2 {
+  margin: 8px 0;
+  font-size: 22px;
+}
+
+.staff-slot-time {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.staff-summary {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+.slot-chip-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.slot-chip {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.slot-chip.active {
+  background: var(--blue);
+  color: #fff;
+}
+
+.sticky-search {
+  position: sticky;
+  top: 8px;
+  z-index: 5;
+}
+
+.guest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.guest-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.btn-green {
+  background: #1f9d6c;
+  color: #fff;
+}
+
+.btn-green-deep {
+  background: #0f7a52;
+  color: #fff;
+}
+
+.btn-blue {
+  background: var(--blue);
+  color: #fff;
+}
+
+.btn-red {
+  background: #d64545;
+  color: #fff;
+}
+
+.btn-orange {
+  background: #e67e22;
+  color: #fff;
+}
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.admin-nav {
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.admin-nav .nav-item {
+  font-size: 12px;
+  min-height: 44px;
+  padding: 6px 4px;
+}
+
+.status-confirmed {
+  background: rgba(47, 107, 255, 0.14);
+  color: var(--blue-deep);
+}
+
+.status-checked_in {
+  background: rgba(31, 157, 108, 0.16);
+  color: var(--success);
+}
+
+.status-in_progress {
+  background: rgba(47, 107, 255, 0.2);
+  color: var(--blue-deep);
+}
+
+.status-completed {
+  background: rgba(15, 122, 82, 0.18);
+  color: #0f7a52;
+}
+
+.status-no_show,
+.status-cancelled {
+  background: rgba(214, 69, 69, 0.14);
+  color: var(--danger);
+}
+
+.status-waitlist,
+.status-waitlist_called {
+  background: rgba(230, 126, 34, 0.16);
+  color: #c45f0c;
 }
