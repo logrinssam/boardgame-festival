@@ -15,7 +15,7 @@ import { SlotSelectPage } from './pages/SlotSelectPage';
 export default function App() {
   return (
     <ReservationProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/guide" element={<GuidePage />} />
