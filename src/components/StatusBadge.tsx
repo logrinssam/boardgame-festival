@@ -1,0 +1,19 @@
+import type { SlotAvailabilityStatus } from '../types';
+import { getSlotStatusLabel } from '../utils/capacity';
+
+interface StatusBadgeProps {
+  status: SlotAvailabilityStatus | 'READY' | 'CAPACITY_PENDING';
+  label?: string;
+}
+
+export function StatusBadge({ status, label }: StatusBadgeProps) {
+  const text =
+    label ??
+    (status === 'READY'
+      ? '운영 가능'
+      : status === 'CAPACITY_PENDING'
+        ? '예약 준비 중'
+        : getSlotStatusLabel(status));
+
+  return <span className={`status-badge status-${status.toLowerCase()}`}>{text}</span>;
+}
