@@ -66,7 +66,9 @@ export function StaffBoothOpsPage() {
 
   const slotReservations = useMemo(() => {
     if (!booth || !operatingBoothSlot) return [];
-    return getReservationsForSlot(booth.id, operatingBoothSlot.id);
+    return getReservationsForSlot(booth.id, operatingBoothSlot.id).filter(
+      (item) => item.status !== 'CANCELLED',
+    );
   }, [booth, operatingBoothSlot, getReservationsForSlot]);
 
   const filtered = useMemo(() => {
