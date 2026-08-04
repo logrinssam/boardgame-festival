@@ -663,6 +663,12 @@ input {
   border: 1px solid rgba(255, 255, 255, 0.7);
 }
 
+.btn-cancel {
+  background: var(--surface-1);
+  color: var(--badge-full-text);
+  border: 1px solid color-mix(in srgb, var(--badge-full-text) 28%, transparent);
+}
+
 .btn-small {
   min-height: 40px;
   padding: 8px 12px;
@@ -1134,6 +1140,12 @@ input {
   background: rgba(255, 255, 255, 0.55);
   color: var(--text);
   border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.btn-cancel {
+  background: var(--surface-1);
+  color: var(--badge-full-text);
+  border: 1px solid color-mix(in srgb, var(--badge-full-text) 28%, transparent);
 }
 
 .admin-nav {

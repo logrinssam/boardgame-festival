@@ -54,12 +54,13 @@ export function AdminReservationsPage() {
               #{reservation.reservationCode} · {maskPhone(reservation.phone)}
             </p>
             {(reservation.status === 'CONFIRMED' ||
+              reservation.status === 'CHECKED_IN' ||
               reservation.status === 'WAITLIST' ||
               reservation.status === 'WAITLIST_CALLED') &&
             session ? (
               <button
                 type="button"
-                className="btn btn-ghost"
+                className="btn btn-cancel"
                 onClick={() => {
                   if (!window.confirm('예약을 취소할까요?')) return;
                   void changeReservationStatus({

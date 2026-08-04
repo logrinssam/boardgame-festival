@@ -136,16 +136,45 @@ export function StaffBoothOpsPage() {
     if (needsConfirm && !window.confirm(`${label}을(를) 진행할까요?`)) {
       return;
     }
+    const freesConfirmedSeat =
+      nextStatus === 'NO_SHOW' ||
+      (nextStatus === 'CANCELLED' &&
+        (reservation.status === 'CONFIRMED' ||
+          reservation.status === 'CHECKED_IN' ||
+          reservation.status === 'WAITLIST_CALLED'));
+    const waitlistToCall = nextWaitlist;
+
     void changeReservationStatus({
       reservationId: reservation.id,
       nextStatus,
       operatorId: currentSession.uid,
       operatorName: currentSession.name,
       actionLabel: label,
-    }).then((result) => {
-      setMessage(
-        result.ok ? `${reservation.participantName} · ${label}` : result.message,
-      );
+    }).then(async (result) => {
+      if (!result.ok) {
+        setMessage(result.message);
+        return;
+      }
+
+      let notice = `${reservation.participantName} · ${label}`;
+      if (
+        freesConfirmedSeat &&
+        waitlistToCall &&
+        window.confirm(
+          `자리가 비었습니다. 예비 ${waitlistToCall.waitlistOrder ?? 1}번을 호출할까요?`,
+        )
+      ) {
+        const called = await callNextWaitlist({
+          boothId: currentBooth.id,
+          slotId: currentBoothSlot.id,
+          operatorId: currentSession.uid,
+          operatorName: currentSession.name,
+        });
+        notice = called.ok
+          ? `${notice} → 예비 ${called.reservation.waitlistOrder ?? 1}번 호출`
+          : `${notice} · ${called.message}`;
+      }
+      setMessage(notice);
     });
   }
 

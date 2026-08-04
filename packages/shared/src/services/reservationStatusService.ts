@@ -29,21 +29,24 @@ export function getActionsForStatus(
       return [
         { to: 'CHECKED_IN', label: '도착 확인', tone: 'green' },
         { to: 'NO_SHOW', label: '미도착 처리', tone: 'red', confirm: true },
-        { to: 'CANCELLED', label: '예약 취소', tone: 'ghost', confirm: true },
+        { to: 'CANCELLED', label: '예약 취소', tone: 'cancel', confirm: true },
       ];
     case 'CHECKED_IN':
       return [
         { to: 'IN_PROGRESS', label: '체험 시작', tone: 'blue' },
-        { to: 'CANCELLED', label: '예약 취소', tone: 'ghost', confirm: true },
+        { to: 'CANCELLED', label: '예약 취소', tone: 'cancel', confirm: true },
       ];
     case 'IN_PROGRESS':
       return [{ to: 'COMPLETED', label: '체험 완료', tone: 'green-deep' }];
     case 'WAITLIST':
-      return [{ to: 'WAITLIST_CALLED', label: '예비 호출', tone: 'orange' }];
+      return [
+        { to: 'WAITLIST_CALLED', label: '예비 호출', tone: 'orange' },
+        { to: 'CANCELLED', label: '예비 취소', tone: 'cancel', confirm: true },
+      ];
     case 'WAITLIST_CALLED':
       return [
         { to: 'CHECKED_IN', label: '도착 확인', tone: 'green' },
-        { to: 'CANCELLED', label: '호출 취소', tone: 'ghost', confirm: true },
+        { to: 'CANCELLED', label: '호출 취소', tone: 'cancel', confirm: true },
       ];
     default:
       return [];
