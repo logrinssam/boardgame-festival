@@ -8,7 +8,6 @@ import {
   formatRoles,
 } from '../../data/staffScheduleData';
 import { STAFF_ASSIGNMENTS } from '../../data/staffAssignments';
-import { EXPERIENCE_GROUP_LABELS } from '../../types';
 
 export function AdminStaffPage() {
   return (
@@ -23,18 +22,12 @@ export function AdminStaffPage() {
 
       <section className="glass-card">
         <h3 className="section-title">로그인 권한 배정 (mock)</h3>
+        <p className="hint-text">테스트 계정 ID: staff</p>
         {STAFF_ASSIGNMENTS.map((item) => (
           <div key={item.uid} className="staff-summary">
             <strong>{item.name}</strong>
-            <p className="admin-meta">
-              {item.role}
-              {item.experienceGroup
-                ? ` · ${EXPERIENCE_GROUP_LABELS[item.experienceGroup]}`
-                : ''}
-            </p>
-            <p className="hint-text">
-              담당 부스: {item.assignedBoothIds.join(', ') || '전체'}
-            </p>
+            <p className="admin-meta">{item.role}</p>
+            <p className="hint-text">담당 부스: 전체</p>
           </div>
         ))}
       </section>

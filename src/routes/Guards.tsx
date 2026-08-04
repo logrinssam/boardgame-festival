@@ -7,9 +7,6 @@ export function RequireStaff() {
   if (!session || session.role === 'PARTICIPANT') {
     return <Navigate to="/staff/login" replace />;
   }
-  if (session.role === 'HEAD_ADMIN') {
-    return <Navigate to="/admin" replace />;
-  }
   return <Outlet />;
 }
 
@@ -27,10 +24,6 @@ export function RequireBoothAccess() {
 
   if (!session) {
     return <Navigate to="/staff/login" replace />;
-  }
-
-  if (session.role === 'HEAD_ADMIN') {
-    return <Navigate to={`/admin/booths`} replace />;
   }
 
   if (!canAccessBooth(session, boothId)) {

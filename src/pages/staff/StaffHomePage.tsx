@@ -28,7 +28,10 @@ export function StaffHomePage() {
     <>
       <div className="page-heading">
         <h2>담당 부스</h2>
-        <p>{session.name}</p>
+        <p>
+          {session.name}
+          {session.role === 'HEAD_ADMIN' ? ' · 전체 부스' : ''}
+        </p>
       </div>
       <div className="booth-grid">
         {accessible.map((booth) => {
