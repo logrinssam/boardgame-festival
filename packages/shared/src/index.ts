@@ -6,3 +6,4 @@ export * from './utils/capacity';
 export * from './services/storageService';
 export * from './services/reservationService';
 export * from './services/reservationStatusService';
+export * from './firebase/collections';

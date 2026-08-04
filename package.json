@@ -15,7 +15,8 @@
     "build:participant": "npm run build -w @bgf/participant",
     "build:operations": "npm run build -w @bgf/operations",
     "lint": "oxlint apps packages",
-    "preview": "npm run preview -w @bgf/participant"
+    "preview": "npm run preview -w @bgf/participant",
+    "functions:build": "npm --prefix functions run build"
   },
   "devDependencies": {
     "oxlint": "^1.75.0",

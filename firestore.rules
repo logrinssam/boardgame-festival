@@ -1,0 +1,73 @@
+rules_version = '2';
+
+/**
+ * 제4회 창의융합 보드게임 대축제 — Firestore Rules (초안)
+ *
+ * 원칙:
+ * - 참여자는 예약자 전체 명단을 읽지 못함
+ * - 운영자 권한은 staffAssignments 문서로 확인
+ * - 상태 변경·정원 검증은 Cloud Functions에서도 재검증 필요
+ *
+ * 아직 Firebase Auth 미연결 상태이므로 배포 전 deny-by-default로 둡니다.
+ * Auth 연결 후 아래 주석 블록을 활성화하세요.
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function staffDoc() {
+      return get(/databases/$(database)/documents/staffAssignments/$(request.auth.uid));
+    }
+
+    function isActiveStaff() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/staffAssignments/$(request.auth.uid))
+        && staffDoc().data.isActive == true;
+    }
+
+    function staffRole() {
+      return staffDoc().data.role;
+    }
+
+    function isHeadAdmin() {
+      return isActiveStaff() && staffRole() == 'HEAD_ADMIN';
+    }
+
+    function canAccessBooth(boothId) {
+      return isHeadAdmin()
+        || (isActiveStaff() && boothId in staffDoc().data.assignedBoothIds);
+    }
+
+    // 공개: 부스 현황(정원·회차 카운트) — 현장코드·PIN은 문서에 두지 말 것
+    match /booths/{boothId} {
+      allow read: if true;
+      allow write: if isHeadAdmin()
+        || (isActiveStaff() && canAccessBooth(boothId));
+    }
+
+    // 예약: 참여자는 Callable Function으로만 생성/조회/취소 권장
+    // 직접 클라이언트 쓰기는 운영자(담당 부스)만 허용
+    match /reservations/{reservationId} {
+      allow read: if isActiveStaff()
+        && canAccessBooth(resource.data.boothId);
+      allow create, update, delete: if false; // Cloud Functions only
+    }
+
+    match /staffAssignments/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if isHeadAdmin();
+    }
+
+    match /operationLogs/{logId} {
+      allow read: if isActiveStaff()
+        && canAccessBooth(resource.data.boothId);
+      allow write: if false; // Cloud Functions only
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
