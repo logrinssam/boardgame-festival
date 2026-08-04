@@ -1,13 +1,7 @@
 {
   "projects": {
-    "default": "REPLACE_WITH_FIREBASE_PROJECT_ID"
+    "default": "boardgame-a06d1"
   },
-  "targets": {
-    "REPLACE_WITH_FIREBASE_PROJECT_ID": {
-      "hosting": {
-        "participant": ["participant"],
-        "operations": ["operations"]
-      }
-    }
-  }
+  "targets": {},
+  "etags": {}
 }
