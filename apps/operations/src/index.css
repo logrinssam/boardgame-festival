@@ -587,6 +587,36 @@ input {
   font-weight: 600;
 }
 
+.choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.choice-row.grade-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.choice-chip {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.choice-chip.selected {
+  background: var(--creative-bg-soft);
+  border-color: var(--creative-border);
+  color: var(--creative-accent);
+}
+
 .field-input {
   width: 100%;
   min-height: 48px;

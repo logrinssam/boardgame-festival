@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
 import { formatTimeRange, canBookSlot } from '@bgf/shared';
@@ -8,6 +8,10 @@ interface BookingState {
   slotId?: string;
   accessCode?: string;
 }
+
+type SchoolTrack = 'KINDERGARTEN' | 'ELEMENTARY' | '';
+
+const ELEMENTARY_GRADES = [1, 2, 3, 4, 5, 6] as const;
 
 export function ParticipantFormPage() {
   const navigate = useNavigate();
@@ -22,9 +26,23 @@ export function ParticipantFormPage() {
 
   const [participantName, setParticipantName] = useState('');
   const [phone, setPhone] = useState('');
-  const [gradeOrAge, setGradeOrAge] = useState('');
+  const [track, setTrack] = useState<SchoolTrack>('');
+  const [elementaryGrade, setElementaryGrade] = useState<number | null>(null);
+  const [kindergartenAge, setKindergartenAge] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+
+  const gradeOrAge = useMemo(() => {
+    if (track === 'ELEMENTARY' && elementaryGrade != null) {
+      return `초등 ${elementaryGrade}학년`;
+    }
+    if (track === 'KINDERGARTEN') {
+      const age = kindergartenAge.trim();
+      if (!age) return '';
+      return `유치 ${age}세`;
+    }
+    return '';
+  }, [track, elementaryGrade, kindergartenAge]);
 
   if (!booth || !slot) {
     return (
@@ -40,10 +58,36 @@ export function ParticipantFormPage() {
   const currentSlot = slot;
   const bookable = canBookSlot(currentBooth, currentSlot);
 
+  function selectTrack(next: SchoolTrack) {
+    setTrack(next);
+    setElementaryGrade(null);
+    setKindergartenAge('');
+    setError('');
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!participantName.trim() || !phone.trim() || !gradeOrAge.trim()) {
-      setError('모든 항목을 입력해 주세요.');
+    if (!participantName.trim() || !phone.trim()) {
+      setError('이름과 연락처를 입력해 주세요.');
+      return;
+    }
+    if (!track) {
+      setError('유치 / 초등 중 하나를 선택해 주세요.');
+      return;
+    }
+    if (track === 'ELEMENTARY' && elementaryGrade == null) {
+      setError('학년을 선택해 주세요.');
+      return;
+    }
+    if (track === 'KINDERGARTEN') {
+      const age = Number(kindergartenAge);
+      if (!kindergartenAge.trim() || !Number.isFinite(age) || age < 3 || age > 7) {
+        setError('유치 나이는 3~7 사이 숫자로 입력해 주세요.');
+        return;
+      }
+    }
+    if (!gradeOrAge) {
+      setError('학년 / 연령을 입력해 주세요.');
       return;
     }
 
@@ -105,15 +149,73 @@ export function ParticipantFormPage() {
         inputMode="tel"
         placeholder="01012345678"
       />
-      <label className="field-label" htmlFor="grade">
+
+      <p className="field-label" id="track-label">
         학년 / 연령
-      </label>
-      <input
-        id="grade"
-        className="field-input"
-        value={gradeOrAge}
-        onChange={(event) => setGradeOrAge(event.target.value)}
-      />
+      </p>
+      <div
+        className="choice-row"
+        role="group"
+        aria-labelledby="track-label"
+      >
+        <button
+          type="button"
+          className={`choice-chip${track === 'KINDERGARTEN' ? ' selected' : ''}`}
+          onClick={() => selectTrack('KINDERGARTEN')}
+        >
+          유치
+        </button>
+        <button
+          type="button"
+          className={`choice-chip${track === 'ELEMENTARY' ? ' selected' : ''}`}
+          onClick={() => selectTrack('ELEMENTARY')}
+        >
+          초등
+        </button>
+      </div>
+
+      {track === 'ELEMENTARY' ? (
+        <>
+          <p className="field-label" id="grade-label">
+            학년 선택
+          </p>
+          <div
+            className="choice-row grade-row"
+            role="group"
+            aria-labelledby="grade-label"
+          >
+            {ELEMENTARY_GRADES.map((grade) => (
+              <button
+                key={grade}
+                type="button"
+                className={`choice-chip${elementaryGrade === grade ? ' selected' : ''}`}
+                onClick={() => setElementaryGrade(grade)}
+              >
+                {grade}학년
+              </button>
+            ))}
+          </div>
+        </>
+      ) : null}
+
+      {track === 'KINDERGARTEN' ? (
+        <>
+          <label className="field-label" htmlFor="age">
+            나이 (만 나이)
+          </label>
+          <input
+            id="age"
+            className="field-input"
+            value={kindergartenAge}
+            onChange={(event) =>
+              setKindergartenAge(event.target.value.replace(/\D/g, '').slice(0, 1))
+            }
+            inputMode="numeric"
+            placeholder="예: 5"
+          />
+        </>
+      ) : null}
+
       {error ? <p className="error-text">{error}</p> : null}
       <button
         type="submit"
