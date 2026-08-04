@@ -32,6 +32,16 @@ export type BoothOperationalStatus =
   | 'BOOKING_OPEN'
   | 'BOOKING_CLOSED';
 
+export type BoothOperationMode = 'TIME_RESERVATION' | 'WALK_IN_CHECKIN';
+
+export type WalkInBoothPublicStatus =
+  | 'OPEN'
+  | 'PAUSED'
+  | 'PREPARING'
+  | 'CLOSED';
+
+export type WalkInRegistrationStatus = 'REGISTERED' | 'CANCELLED';
+
 export type SlotAvailabilityStatus =
   | 'AVAILABLE'
   | 'WAITLIST'
@@ -101,6 +111,7 @@ export interface Booth {
   slots: BoothSlot[];
   staffingType: StaffingType;
   activities?: string[];
+  operationMode: BoothOperationMode;
 }
 
 export interface StaffRotation {
@@ -159,6 +170,38 @@ export interface Reservation {
   previousStatus: ReservationStatus | null;
 }
 
+export interface WalkInRegistration {
+  id: string;
+  boothId: string;
+  participantName: string;
+  phone: string;
+  maskedPhone: string;
+  phoneLastFour: string;
+  gradeOrAge: string | null;
+  confirmationNumber: string;
+  status: WalkInRegistrationStatus;
+  createdAt: string;
+  cancelledAt: string | null;
+}
+
+export interface WalkInBoothSettings {
+  boothId: string;
+  publicStatus: WalkInBoothPublicStatus;
+  duplicateBlockCount: number;
+}
+
+export interface WalkInRegistrationStatistics {
+  boothId: string;
+  totalToday: number;
+  morningCount: number;
+  afternoonCount: number;
+  currentHourCount: number;
+  duplicateBlockCount: number;
+  publicStatus: WalkInBoothPublicStatus;
+  latestCreatedAt: string | null;
+  hourlyCounts: Array<{ hour: number; count: number }>;
+}
+
 export interface OperationLog {
   id: string;
   reservationId: string;
@@ -207,6 +250,21 @@ export const EXPERIENCE_GROUP_LABELS: Record<ExperienceGroup, string> = {
 export const EXPERIENCE_GROUP_DESCRIPTIONS: Record<ExperienceGroup, string> = {
   BOARD_GAME: '연령별 수학 보드게임과 그래비트랙스 체험',
   CREATIVE_CONVERGENCE: '만들기·체험·로봇·넥슨 창의융합 프로그램',
+};
+
+export const OPERATION_MODE_LABELS: Record<BoothOperationMode, string> = {
+  TIME_RESERVATION: '시간 예약형',
+  WALK_IN_CHECKIN: '현장 참여 등록형',
+};
+
+export const WALK_IN_PUBLIC_STATUS_LABELS: Record<
+  WalkInBoothPublicStatus,
+  string
+> = {
+  OPEN: '현장 참여 가능',
+  PAUSED: '현장 등록 잠시 중지',
+  PREPARING: '준비 중',
+  CLOSED: '오늘 운영 종료',
 };
 
 /** 다른 부스 예약을 막는 활성 상태 */

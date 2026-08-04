@@ -5,6 +5,7 @@ import {
 } from 'firebase/firestore';
 import type { Booth, BoothSlot, OperationLog, Reservation } from '../types';
 import { getEffectiveCapacity } from '../utils/capacity';
+import { resolveOperationMode } from '../utils/operationMode';
 import { getFirebaseDb } from './client';
 import { FIRESTORE_COLLECTIONS } from './collections';
 
@@ -39,6 +40,11 @@ function asBooth(id: string, data: Record<string, unknown>): Booth {
     status: data.status as Booth['status'],
     staffingType: data.staffingType as Booth['staffingType'],
     activities: (data.activities as string[] | undefined) ?? undefined,
+    operationMode: resolveOperationMode({
+      id,
+      number: Number(data.number),
+      operationMode: data.operationMode as Booth['operationMode'],
+    }),
     slots: ((data.slots as BoothSlot[]) ?? []).map((slot) => ({
       ...slot,
       confirmedCount: Number(slot.confirmedCount ?? 0),

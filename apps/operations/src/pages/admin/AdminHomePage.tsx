@@ -4,6 +4,10 @@ import {
   EVENT_SCHEDULE,
   formatTimeRange,
   getCurrentAndNextSlot,
+  getWalkInRegistrationStatistics,
+  isWalkInBooth,
+  OPERATION_MODE_LABELS,
+  WALK_IN_PUBLIC_STATUS_LABELS,
 } from '@bgf/shared';
 import { EXPERIENCE_GROUP_LABELS } from '@bgf/shared';
 import { getEffectiveCapacity, minutesFromTime } from '@bgf/shared';
@@ -14,19 +18,32 @@ export function AdminHomePage() {
   const minutes = now.getHours() * 60 + now.getMinutes();
   const { current, next } = getCurrentAndNextSlot(minutes);
 
-  const noShow = reservations.filter((item) => item.status === 'NO_SHOW').length;
-  const cancelled = reservations.filter(
+  const timeBoothIds = new Set(
+    booths.filter((booth) => !isWalkInBooth(booth)).map((booth) => booth.id),
+  );
+  const timeReservations = reservations.filter((item) =>
+    timeBoothIds.has(item.boothId),
+  );
+  const noShow = timeReservations.filter((item) => item.status === 'NO_SHOW')
+    .length;
+  const cancelled = timeReservations.filter(
     (item) => item.status === 'CANCELLED',
   ).length;
-  const completed = reservations.filter(
+  const completed = timeReservations.filter(
     (item) => item.status === 'COMPLETED',
   ).length;
+  const walkInTotal = booths
+    .filter((booth) => isWalkInBooth(booth))
+    .reduce(
+      (sum, booth) => sum + getWalkInRegistrationStatistics(booth.id).totalToday,
+      0,
+    );
 
   return (
     <>
       <div className="page-heading">
         <h2>본부 현황</h2>
-        <p>14개 부스 통합 운영</p>
+        <p>시간 예약형과 현장 참여 등록형을 구분해 표시합니다.</p>
       </div>
       <section className="glass-card">
         <dl className="detail-list">
@@ -54,19 +71,63 @@ export function AdminHomePage() {
             </dd>
           </div>
           <div>
-            <dt>통계</dt>
+            <dt>시간 예약형</dt>
             <dd>
               완료 {completed} · 미도착 {noShow} · 취소 {cancelled} · 로그{' '}
               {logs.length}
             </dd>
           </div>
+          <div>
+            <dt>현장 참여 등록형</dt>
+            <dd>오늘 등록 {walkInTotal}명 (부스 8·9)</dd>
+          </div>
         </dl>
       </section>
 
       {booths.map((booth) => {
+        if (isWalkInBooth(booth)) {
+          const stats = getWalkInRegistrationStatistics(booth.id);
+          return (
+            <Link
+              key={booth.id}
+              to={`/admin/booths?focus=${booth.id}`}
+              className="glass-card admin-booth-card"
+            >
+              <div className="detail-row">
+                <strong>
+                  부스 {booth.number}. {booth.name}
+                </strong>
+                <span className="mode-badge mode-walkin">
+                  {OPERATION_MODE_LABELS.WALK_IN_CHECKIN}
+                </span>
+              </div>
+              <p className="admin-meta">
+                현장 참여 등록 인원: {stats.totalToday}명 · 오전{' '}
+                {stats.morningCount} · 오후 {stats.afternoonCount}
+              </p>
+              <p className="admin-meta">
+                중복 차단 {stats.duplicateBlockCount} ·{' '}
+                {WALK_IN_PUBLIC_STATUS_LABELS[stats.publicStatus]}
+              </p>
+              {stats.hourlyCounts.length > 0 ? (
+                <p className="admin-meta">
+                  시간대별:{' '}
+                  {stats.hourlyCounts
+                    .map((item) => `${item.hour}시 ${item.count}명`)
+                    .join(' · ')}
+                </p>
+              ) : null}
+            </Link>
+          );
+        }
+
         const effective = getEffectiveCapacity(booth);
         const boothReservations = reservations.filter(
-          (item) => item.boothId === booth.id,
+          (item) =>
+            item.boothId === booth.id &&
+            ['CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS', 'COMPLETED'].includes(
+              item.status,
+            ),
         );
         return (
           <Link
@@ -82,13 +143,15 @@ export function AdminHomePage() {
                 {EXPERIENCE_GROUP_LABELS[booth.experienceGroup]}
               </span>
             </div>
+            <span className="mode-badge mode-time">
+              {OPERATION_MODE_LABELS.TIME_RESERVATION}
+            </span>
             <p className="admin-meta">
-              정원{' '}
+              예약 확정 인원: {boothReservations.length}명 · 정원{' '}
               {effective.capacity === null
                 ? '미설정'
                 : `${effective.capacity}${effective.isDemo ? '(데모)' : ''}`}{' '}
-              · 예약 {boothReservations.length} · 현장코드{' '}
-              {booth.accessCodeConfigured ? '설정' : '미설정'}
+              · 현장코드 {booth.accessCodeConfigured ? '설정' : '미설정'}
             </p>
           </Link>
         );

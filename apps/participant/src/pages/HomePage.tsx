@@ -7,7 +7,7 @@ import {
   type ExperienceGroup,
 } from '@bgf/shared';
 import { EVENT_SCHEDULE, formatTimeRange } from '@bgf/shared';
-import { getEffectiveCapacity } from '@bgf/shared';
+import { getEffectiveCapacity, isWalkInBooth } from '@bgf/shared';
 
 type Filter = 'ALL' | ExperienceGroup;
 
@@ -24,9 +24,11 @@ export function HomePage() {
     return groups.map((group) => {
       const items = booths.filter((booth) => booth.experienceGroup === group);
       const bookable = items.filter(
-        (booth) => getEffectiveCapacity(booth).isConfigured,
+        (booth) =>
+          !isWalkInBooth(booth) && getEffectiveCapacity(booth).isConfigured,
       ).length;
-      return { group, items, bookable };
+      const walkInOpen = items.filter((booth) => isWalkInBooth(booth)).length;
+      return { group, items, bookable, walkInOpen };
     });
   }, [booths, filter]);
 
@@ -73,7 +75,7 @@ export function HomePage() {
         ))}
       </div>
 
-      {sections.map(({ group, items, bookable }) => (
+      {sections.map(({ group, items, bookable, walkInOpen }) => (
         <section
           key={group}
           className={`category-section group-${group.toLowerCase()}`}
@@ -90,6 +92,9 @@ export function HomePage() {
             <div className="group-stats">
               <span className="cat-stat">운영 {items.length}부스</span>
               <span className="cat-stat">예약 가능 {bookable}</span>
+              {walkInOpen > 0 ? (
+                <span className="cat-stat">현장 등록 {walkInOpen}</span>
+              ) : null}
             </div>
           </div>
           <div className="booth-grid">

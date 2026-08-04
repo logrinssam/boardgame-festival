@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAppStore } from '../context/AppStore';
 import { formatTimeRange } from '@bgf/shared';
@@ -8,6 +8,7 @@ import {
   getEffectiveCapacity,
   getRemainingSeats,
   getSlotAvailabilityStatus,
+  isWalkInBooth,
 } from '@bgf/shared';
 
 export function SlotSelectPage() {
@@ -25,6 +26,10 @@ export function SlotSelectPage() {
         </Link>
       </div>
     );
+  }
+
+  if (isWalkInBooth(booth)) {
+    return <Navigate to={`/booths/${booth.id}`} replace />;
   }
 
   const currentBooth = booth;

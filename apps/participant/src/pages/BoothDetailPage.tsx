@@ -7,6 +7,10 @@ import {
   getBoothAvailabilityStatus,
   getEffectiveCapacity,
   getSlotAvailabilityStatus,
+  getWalkInPublicStatus,
+  isWalkInBooth,
+  OPERATION_MODE_LABELS,
+  WALK_IN_PUBLIC_STATUS_LABELS,
 } from '@bgf/shared';
 
 export function BoothDetailPage() {
@@ -25,8 +29,10 @@ export function BoothDetailPage() {
     );
   }
 
+  const walkIn = isWalkInBooth(booth);
   const effective = getEffectiveCapacity(booth);
   const availability = getBoothAvailabilityStatus(booth);
+  const walkInStatus = walkIn ? getWalkInPublicStatus(booth.id) : null;
 
   return (
     <>
@@ -41,8 +47,19 @@ export function BoothDetailPage() {
           >
             {EXPERIENCE_GROUP_LABELS[booth.experienceGroup]}
           </span>
-          <StatusBadge status={availability} />
+          {walkIn && walkInStatus ? (
+            <span className={`status-badge walkin-status status-${walkInStatus.toLowerCase()}`}>
+              {WALK_IN_PUBLIC_STATUS_LABELS[walkInStatus]}
+            </span>
+          ) : (
+            <StatusBadge status={availability} />
+          )}
         </div>
+        {walkIn ? (
+          <span className="mode-badge mode-walkin">
+            {OPERATION_MODE_LABELS.WALK_IN_CHECKIN}
+          </span>
+        ) : null}
         <h2 className="booth-detail-title">
           부스 {booth.number}. {booth.name}
           {booth.subtitle ? ` · ${booth.subtitle}` : ''}
@@ -74,6 +91,19 @@ export function BoothDetailPage() {
         <h3 className="section-title">활동 설명</h3>
         <p className="body-text">{booth.description}</p>
 
+        {walkIn ? (
+          <>
+            <h3 className="section-title">현장 참여 방법</h3>
+            <p className="body-text">
+              이 부스는 시간 예약 없이 현장에서 등록한 뒤 바로 참여하는
+              부스입니다.
+            </p>
+            <p className="body-text">
+              실제 등록을 위해 부스에 표시된 현장코드가 필요합니다.
+            </p>
+          </>
+        ) : null}
+
         {booth.activities && booth.activities.length > 0 ? (
           <>
             <h3 className="section-title">주요 체험</h3>
@@ -88,31 +118,45 @@ export function BoothDetailPage() {
           </>
         ) : null}
 
-        {!effective.isConfigured ? (
+        {!walkIn && !effective.isConfigured ? (
           <div className="notice warning">
             <strong>예약 정원 준비 중</strong>
             <p>관리자가 정원을 설정해야 예약할 수 있습니다.</p>
           </div>
         ) : null}
-        {effective.isDemo ? (
+        {!walkIn && effective.isDemo ? (
           <p className="demo-inline">개발용 데모 데이터</p>
         ) : null}
       </section>
 
-      <section className="glass-card">
-        <h3 className="section-title">회차별 시간</h3>
-        <ul className="slot-mini-list">
-          {booth.slots.map((slot) => (
-            <li key={slot.id}>
-              <span>{formatTimeRange(slot.startTime, slot.endTime)}</span>
-              <StatusBadge status={getSlotAvailabilityStatus(booth, slot)} />
-            </li>
-          ))}
-        </ul>
-      </section>
+      {!walkIn ? (
+        <section className="glass-card">
+          <h3 className="section-title">회차별 시간</h3>
+          <ul className="slot-mini-list">
+            {booth.slots.map((slot) => (
+              <li key={slot.id}>
+                <span>{formatTimeRange(slot.startTime, slot.endTime)}</span>
+                <StatusBadge status={getSlotAvailabilityStatus(booth, slot)} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="action-stack">
-        {effective.isConfigured ? (
+        {walkIn ? (
+          walkInStatus === 'OPEN' ? (
+            <Link to={`/booths/${booth.id}/access`} className="btn btn-primary">
+              부스 현장에서 등록하기
+            </Link>
+          ) : (
+            <button type="button" className="btn btn-primary" disabled>
+              {walkInStatus
+                ? WALK_IN_PUBLIC_STATUS_LABELS[walkInStatus]
+                : '현장 등록 불가'}
+            </button>
+          )
+        ) : effective.isConfigured ? (
           <Link to={`/booths/${booth.id}/access`} className="btn btn-primary">
             현장코드 입력하고 예약하기
           </Link>

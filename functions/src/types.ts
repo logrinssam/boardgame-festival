@@ -16,6 +16,7 @@ export type BoothOperationalStatus =
   | 'CAPACITY_PENDING'
   | 'BOOKING_OPEN'
   | 'BOOKING_CLOSED';
+export type BoothOperationMode = 'TIME_RESERVATION' | 'WALK_IN_CHECKIN';
 export type ReservationStatus =
   | 'CONFIRMED'
   | 'CHECKED_IN'
@@ -60,6 +61,7 @@ export interface Booth {
   slots: BoothSlot[];
   staffingType: StaffingType;
   activities?: string[];
+  operationMode: BoothOperationMode;
 }
 
 export interface Reservation {

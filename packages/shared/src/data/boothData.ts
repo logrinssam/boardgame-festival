@@ -1,5 +1,6 @@
 import type { Booth, BoothSlot, BoothType, ExperienceGroup, StaffingType } from '../types';
 import { SCHEDULE_SLOTS } from './scheduleData';
+import { resolveOperationMode } from '../utils/operationMode';
 
 const BOARD_GAME_ACTIVITIES = [
   '우봉고 미니 포켓몬',
@@ -59,6 +60,11 @@ function createBooth(seed: BoothSeed): Booth {
     slots: createBoothSlots(seed.id),
     staffingType: seed.staffingType,
     activities: seed.activities,
+    operationMode: resolveOperationMode({
+      id: seed.id,
+      number: seed.number,
+      operationMode: 'TIME_RESERVATION',
+    }),
   };
 }
 

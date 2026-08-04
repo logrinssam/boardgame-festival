@@ -10,6 +10,8 @@ import { HomePage } from './pages/HomePage';
 import { MyReservationsPage } from './pages/MyReservationsPage';
 import { ParticipantFormPage } from './pages/ParticipantFormPage';
 import { SlotSelectPage } from './pages/SlotSelectPage';
+import { WalkInConfirmPage } from './pages/WalkInConfirmPage';
+import { WalkInRegisterPage } from './pages/WalkInRegisterPage';
 
 export default function App() {
   return (
@@ -27,6 +29,14 @@ export default function App() {
             <Route
               path="/booths/:boothId/slots"
               element={<SlotSelectPage />}
+            />
+            <Route
+              path="/booths/:boothId/walk-in-register"
+              element={<WalkInRegisterPage />}
+            />
+            <Route
+              path="/walk-in-registration/:registrationId"
+              element={<WalkInConfirmPage />}
             />
             <Route path="/booking/consent" element={<ConsentPage />} />
             <Route

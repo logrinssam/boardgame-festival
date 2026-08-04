@@ -136,6 +136,14 @@ export function asBooth(id: string, data: Record<string, unknown>): Booth {
     status: data.status as Booth['status'],
     staffingType: data.staffingType as Booth['staffingType'],
     activities: data.activities as string[] | undefined,
+    operationMode:
+      data.operationMode === 'WALK_IN_CHECKIN' ||
+      id === 'booth-08' ||
+      id === 'booth-09' ||
+      Number(data.number) === 8 ||
+      Number(data.number) === 9
+        ? 'WALK_IN_CHECKIN'
+        : 'TIME_RESERVATION',
     slots: ((data.slots as BoothSlot[]) ?? []).map((slot) => ({
       ...slot,
       confirmedCount: Number(slot.confirmedCount ?? 0),

@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom';
 import type { Booth } from '@bgf/shared';
-import { EXPERIENCE_GROUP_LABELS } from '@bgf/shared';
-import { getBoothAvailabilityStatus, getEffectiveCapacity } from '@bgf/shared';
+import {
+  EXPERIENCE_GROUP_LABELS,
+  getEffectiveCapacity,
+  getWalkInPublicStatus,
+  isWalkInBooth,
+  OPERATION_MODE_LABELS,
+  WALK_IN_PUBLIC_STATUS_LABELS,
+} from '@bgf/shared';
+import { getBoothAvailabilityStatus } from '@bgf/shared';
 import { StatusBadge } from './StatusBadge';
 
 interface BoothCardProps {
@@ -9,8 +16,10 @@ interface BoothCardProps {
 }
 
 export function BoothCard({ booth }: BoothCardProps) {
+  const walkIn = isWalkInBooth(booth);
   const effective = getEffectiveCapacity(booth);
   const availability = getBoothAvailabilityStatus(booth);
+  const walkInStatus = walkIn ? getWalkInPublicStatus(booth.id) : null;
   const groupClass =
     booth.experienceGroup === 'BOARD_GAME' ? 'group-board' : 'group-creative';
 
@@ -18,11 +27,22 @@ export function BoothCard({ booth }: BoothCardProps) {
     <Link to={`/booths/${booth.id}`} className={`booth-card ${groupClass}`}>
       <div className="booth-card-top">
         <span className="booth-number">부스 {booth.number}</span>
-        <StatusBadge status={availability} />
+        {walkIn && walkInStatus ? (
+          <span className={`status-badge walkin-status status-${walkInStatus.toLowerCase()}`}>
+            {WALK_IN_PUBLIC_STATUS_LABELS[walkInStatus]}
+          </span>
+        ) : (
+          <StatusBadge status={availability} />
+        )}
       </div>
       <span className={`group-badge ${groupClass}`}>
         {EXPERIENCE_GROUP_LABELS[booth.experienceGroup]}
       </span>
+      {walkIn ? (
+        <span className="mode-badge mode-walkin">
+          {OPERATION_MODE_LABELS.WALK_IN_CHECKIN}
+        </span>
+      ) : null}
       <h3 className="booth-card-name">
         {booth.name}
         {booth.subtitle ? (
@@ -30,7 +50,16 @@ export function BoothCard({ booth }: BoothCardProps) {
         ) : null}
       </h3>
       <p className="booth-card-target">대상: {booth.target}</p>
-      {effective.isDemo ? (
+      {walkIn ? (
+        <>
+          <p className="hint-text">
+            예약 없이 현장에서 등록 후 참여하는 부스입니다.
+          </p>
+          <p className="hint-text">부스에 방문해 현장코드를 입력해 주세요.</p>
+          <span className="btn btn-small">이용 안내</span>
+        </>
+      ) : null}
+      {!walkIn && effective.isDemo ? (
         <p className="demo-tag">개발용 데모 데이터</p>
       ) : null}
     </Link>

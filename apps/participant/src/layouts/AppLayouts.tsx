@@ -76,7 +76,7 @@ export function ParticipantLayout() {
             to="/my-reservations"
             className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
           >
-            내 예약
+            내 이용 현황
           </NavLink>
         </nav>
       }

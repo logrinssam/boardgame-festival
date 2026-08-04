@@ -923,6 +923,47 @@ input {
   white-space: nowrap;
 }
 
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  margin: 6px 0 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mode-badge.mode-time {
+  background: #e6f1fb;
+  color: #185fa5;
+}
+
+.mode-badge.mode-walkin {
+  background: #faeeda;
+  color: #633806;
+}
+
+.walkin-status.status-open {
+  background: var(--badge-available-bg);
+  color: var(--badge-available-text);
+}
+
+.walkin-status.status-paused,
+.walkin-status.status-preparing {
+  background: var(--badge-waitlist-bg);
+  color: var(--badge-waitlist-text);
+}
+
+.walkin-status.status-closed {
+  background: var(--badge-full-bg);
+  color: var(--badge-full-text);
+}
+
+.walkin-code {
+  margin: 12px 0;
+  font-size: 28px;
+}
+
 .group-badge {
   display: inline-flex;
   align-items: center;

@@ -5,6 +5,7 @@ import { useAppStore } from '../../context/AppStore';
 import {
   formatTimeRange,
   getCurrentAndNextSlot,
+  isWalkInBooth,
   SCHEDULE_SLOTS,
 } from '@bgf/shared';
 import { maskPhone } from '@bgf/shared';
@@ -15,6 +16,7 @@ import {
   type Reservation,
   type ReservationStatus,
 } from '@bgf/shared';
+import { StaffWalkInOpsPanel } from '../../components/StaffWalkInOpsPanel';
 function nowMinutes(): number {
   const now = new Date();
   return now.getHours() * 60 + now.getMinutes();
@@ -108,7 +110,15 @@ export function StaffBoothOpsPage() {
     .filter((item) => item.boothId === boothId)
     .slice(0, 8);
 
-  if (!session || !booth || !operatingSchedule || !operatingBoothSlot) {
+  if (!session || !booth) {
+    return <div className="glass-card">운영 정보를 불러올 수 없습니다.</div>;
+  }
+
+  if (isWalkInBooth(booth)) {
+    return <StaffWalkInOpsPanel booth={booth} />;
+  }
+
+  if (!operatingSchedule || !operatingBoothSlot) {
     return <div className="glass-card">운영 정보를 불러올 수 없습니다.</div>;
   }
 

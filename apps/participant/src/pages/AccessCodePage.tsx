@@ -1,7 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
-import { getEffectiveCapacity } from '@bgf/shared';
+import {
+  getEffectiveCapacity,
+  grantWalkInAccess,
+  isWalkInBooth,
+} from '@bgf/shared';
 
 export function AccessCodePage() {
   const { boothId = '' } = useParams();
@@ -22,8 +26,10 @@ export function AccessCodePage() {
   }
 
   const currentBooth = booth;
+  const walkIn = isWalkInBooth(currentBooth);
   const effective = getEffectiveCapacity(currentBooth);
-  if (!effective.isConfigured) {
+
+  if (!walkIn && !effective.isConfigured) {
     return (
       <div className="glass-card notice warning">
         <p>관리자가 정원을 설정해야 예약할 수 있습니다.</p>
@@ -47,6 +53,12 @@ export function AccessCodePage() {
         setError('현장코드가 올바르지 않습니다.');
         return;
       }
+    }
+
+    if (walkIn) {
+      grantWalkInAccess(currentBooth.id, trimmed);
+      navigate(`/booths/${currentBooth.id}/walk-in-register`);
+      return;
     }
 
     navigate(`/booths/${currentBooth.id}/slots`, {
