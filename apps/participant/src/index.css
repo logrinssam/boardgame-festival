@@ -293,7 +293,7 @@ input {
 }
 
 .info-chip.lunch {
-  background: rgba(255, 196, 120, 0.35);
+  background: var(--surface-1);
 }
 
 .info-label {
