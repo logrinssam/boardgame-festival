@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { setGlobalOptions } from 'firebase-functions/v2';
+import { setGlobalOptions } from 'firebase-functions/v2/options';
 import type { Reservation, ReservationStatus, StaffAssignment } from './types';
 import {
   ALLOWED_STATUS_TRANSITIONS,
@@ -15,7 +15,12 @@ import {
   getPhoneLast4,
 } from './lib';
 
-setGlobalOptions({ region: 'asia-northeast3' });
+// Import from v2/https + v2/options only — the v2 barrel pulls in RTDB and
+// can fail cold start with "Cannot find module '@firebase/app'".
+setGlobalOptions({
+  region: 'asia-northeast3',
+  invoker: 'public',
+});
 initializeApp();
 
 const db = getFirestore();
@@ -72,7 +77,9 @@ async function recountAndUpdateBooth(boothId: string, slotId: string) {
   });
 }
 
-export const createReservation = onCall(async (request) => {
+const callableOpts = { invoker: 'public' as const };
+
+export const createReservation = onCall(callableOpts, async (request) => {
   const data = request.data as {
     boothId?: string;
     slotId?: string;
@@ -120,28 +127,27 @@ export const createReservation = onCall(async (request) => {
   const reservation = await db.runTransaction(async (tx) => {
     const boothSnap = await tx.get(boothRef);
     if (!boothSnap.exists) {
-      throw new HttpsError('not-found', '부스를 찾을 수 없습니다.');
+      throw new Error('NOT_FOUND:부스를 찾을 수 없습니다.');
     }
-    const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+    const booth = asBooth(
+      boothSnap.id,
+      boothSnap.data() as Record<string, unknown>,
+    );
     const slot = booth.slots.find((item) => item.id === data.slotId);
     if (!slot) {
-      throw new HttpsError('not-found', '회차 정보를 찾을 수 없습니다.');
+      throw new Error('NOT_FOUND:회차 정보를 찾을 수 없습니다.');
     }
 
     if (booth.accessCodeConfigured && booth.accessCode) {
       if (!data.accessCode || data.accessCode.trim() !== booth.accessCode) {
-        throw new HttpsError(
-          'permission-denied',
-          '현장코드가 올바르지 않습니다.',
-        );
+        throw new Error('PERMISSION:현장코드가 올바르지 않습니다.');
       }
     }
 
     const bookable = canBookSlot(booth, slot);
     if (!bookable.allowed) {
-      throw new HttpsError(
-        'failed-precondition',
-        bookable.reason ?? '예약할 수 없습니다.',
+      throw new Error(
+        `FAILED_PRECONDITION:${bookable.reason ?? '예약할 수 없습니다.'}`,
       );
     }
     if (
@@ -151,10 +157,7 @@ export const createReservation = onCall(async (request) => {
           item.status === 'WAITLIST' || item.status === 'WAITLIST_CALLED',
       )
     ) {
-      throw new HttpsError(
-        'failed-precondition',
-        '예비 예약은 1개까지만 가능합니다.',
-      );
+      throw new Error('FAILED_PRECONDITION:예비 예약은 1개까지만 가능합니다.');
     }
 
     const now = new Date().toISOString();
@@ -200,12 +203,34 @@ export const createReservation = onCall(async (request) => {
         booth.status === 'CAPACITY_PENDING' ? 'BOOKING_OPEN' : booth.status,
     });
     return record;
+  }).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.startsWith('NOT_FOUND:')) {
+      throw new HttpsError('not-found', message.slice('NOT_FOUND:'.length));
+    }
+    if (message.startsWith('PERMISSION:')) {
+      throw new HttpsError(
+        'permission-denied',
+        message.slice('PERMISSION:'.length),
+      );
+    }
+    if (message.startsWith('FAILED_PRECONDITION:')) {
+      throw new HttpsError(
+        'failed-precondition',
+        message.slice('FAILED_PRECONDITION:'.length),
+      );
+    }
+    console.error('createReservation failed', error);
+    throw new HttpsError(
+      'internal',
+      '예약 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+    );
   });
 
   return { reservation };
 });
 
-export const getMyReservations = onCall(async (request) => {
+export const getMyReservations = onCall(callableOpts, async (request) => {
   const phone = digitsOnly(String(request.data?.phone ?? ''));
   if (phone.length < 10) {
     throw new HttpsError('invalid-argument', '연락처를 정확히 입력해 주세요.');
@@ -214,7 +239,7 @@ export const getMyReservations = onCall(async (request) => {
   return { reservations };
 });
 
-export const cancelReservation = onCall(async (request) => {
+export const cancelReservation = onCall(callableOpts, async (request) => {
   const reservationId = String(request.data?.reservationId ?? '');
   const phone = digitsOnly(String(request.data?.phone ?? ''));
   if (!reservationId) {
@@ -276,7 +301,7 @@ export const cancelReservation = onCall(async (request) => {
   return { ok: true };
 });
 
-export const changeReservationStatus = onCall(async (request) => {
+export const changeReservationStatus = onCall(callableOpts, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
   }
@@ -331,7 +356,7 @@ export const changeReservationStatus = onCall(async (request) => {
   return { reservation: updated };
 });
 
-export const callNextWaitlist = onCall(async (request) => {
+export const callNextWaitlist = onCall(callableOpts, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
   }
@@ -385,7 +410,7 @@ export const callNextWaitlist = onCall(async (request) => {
   return { reservation: updated };
 });
 
-export const updateBoothSettings = onCall(async (request) => {
+export const updateBoothSettings = onCall(callableOpts, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
   }

@@ -4,6 +4,7 @@ import { useAppStore } from '../context/AppStore';
 import { EVENT_SCHEDULE, formatTimeRange } from '@bgf/shared';
 import { EXPERIENCE_GROUP_LABELS } from '@bgf/shared';
 import {
+  getBoothAvailabilityStatus,
   getEffectiveCapacity,
   getSlotAvailabilityStatus,
 } from '@bgf/shared';
@@ -25,7 +26,7 @@ export function BoothDetailPage() {
   }
 
   const effective = getEffectiveCapacity(booth);
-  const capacityPending = !effective.isConfigured;
+  const availability = getBoothAvailabilityStatus(booth);
 
   return (
     <>
@@ -40,10 +41,7 @@ export function BoothDetailPage() {
           >
             {EXPERIENCE_GROUP_LABELS[booth.experienceGroup]}
           </span>
-          <StatusBadge
-            status={capacityPending ? 'CAPACITY_PENDING' : 'AVAILABLE'}
-            label={capacityPending ? '예약 정원 준비 중' : '예약 가능'}
-          />
+          <StatusBadge status={availability} />
         </div>
         <h2 className="booth-detail-title">
           부스 {booth.number}. {booth.name}

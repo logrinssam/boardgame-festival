@@ -91,9 +91,28 @@ export async function updateBoothSettingsCallable(input: {
 }
 
 function callableErrorMessage(error: unknown): string {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const message = String((error as { message: string }).message);
-    return message.replace(/^Firebase:\s*/i, '').replace(/\s*\(.*\)$/, '');
+  if (!error || typeof error !== 'object') {
+    return '요청 처리 중 오류가 발생했습니다.';
   }
-  return '요청 처리 중 오류가 발생했습니다.';
+  const err = error as {
+    code?: string;
+    message?: string;
+    details?: unknown;
+  };
+  if (typeof err.message === 'string' && err.message.trim()) {
+    const cleaned = err.message
+      .replace(/^Firebase:\s*/i, '')
+      .replace(/\s*\(.*\)$/, '')
+      .trim();
+    if (cleaned && cleaned.toLowerCase() !== 'internal') {
+      return cleaned;
+    }
+  }
+  if (err.code === 'functions/unavailable') {
+    return '서버에 잠시 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.';
+  }
+  if (err.code === 'functions/not-found') {
+    return '예약 기능이 아직 배포되지 않았습니다.';
+  }
+  return '예약 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
 }

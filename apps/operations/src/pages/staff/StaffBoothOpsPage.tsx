@@ -203,11 +203,38 @@ export function StaffBoothOpsPage() {
           운영 회차{' '}
           {formatTimeRange(currentSchedule.startTime, currentSchedule.endTime)}
         </p>
-        <p className="staff-summary">
-          확정 {counts.confirmed}명 · 도착 {counts.checkedIn}명 · 체험 중{' '}
-          {counts.inProgress}명 · 완료 {counts.completed}명 · 미도착{' '}
-          {counts.noShow}명 · 예비 {counts.waitlist}명
-        </p>
+        <div className="status-row" aria-label="회차 상태 요약">
+          <span
+            className={`status-chip confirmed${counts.confirmed > 0 ? ' active' : ''}`}
+          >
+            확정 {counts.confirmed}
+          </span>
+          <span
+            className={`status-chip arrived${counts.checkedIn > 0 ? ' active' : ''}`}
+          >
+            도착 {counts.checkedIn}
+          </span>
+          <span
+            className={`status-chip inprogress${counts.inProgress > 0 ? ' active' : ''}`}
+          >
+            체험 중 {counts.inProgress}
+          </span>
+          <span
+            className={`status-chip done${counts.completed > 0 ? ' active' : ''}`}
+          >
+            완료 {counts.completed}
+          </span>
+          <span
+            className={`status-chip noshow${counts.noShow > 0 ? ' active' : ''}`}
+          >
+            미도착 {counts.noShow}
+          </span>
+          <span
+            className={`status-chip waitlist${counts.waitlist > 0 ? ' active' : ''}`}
+          >
+            예비 {counts.waitlist}
+          </span>
+        </div>
         <p className="admin-meta">
           현재 {current ? formatTimeRange(current.startTime, current.endTime) : '없음'} ·
           다음 {next ? formatTimeRange(next.startTime, next.endTime) : '없음'}
@@ -227,18 +254,19 @@ export function StaffBoothOpsPage() {
         ) : null}
       </section>
 
-      <div className="slot-chip-row">
+      <div className="slot-chip-row" role="tablist" aria-label="회차 선택">
         {currentBooth.slots.map((slot) => {
           const schedule = SCHEDULE_SLOTS.find(
             (item) => item.id === slot.scheduleSlotId,
           );
           if (!schedule) return null;
           const active = currentBoothSlot.id === slot.id;
+          const isCurrent = current?.id === schedule.id;
           return (
             <button
               key={slot.id}
               type="button"
-              className={`slot-chip${active ? ' active' : ''}`}
+              className={`slot-chip time-slot${active ? ' active selected' : ''}${isCurrent ? ' is-current' : ''}`}
               onClick={() => setFocusSlotId(schedule.id)}
             >
               {schedule.startTime}
@@ -328,7 +356,7 @@ export function StaffBoothOpsPage() {
           </article>
         ))}
         {filtered.length === 0 ? (
-          <div className="glass-card">이 회차 예약자가 없습니다.</div>
+          <div className="empty-state">이 회차 예약자가 없습니다.</div>
         ) : null}
       </div>
 

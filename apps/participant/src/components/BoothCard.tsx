@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { Booth } from '@bgf/shared';
 import { EXPERIENCE_GROUP_LABELS } from '@bgf/shared';
-import { getEffectiveCapacity } from '@bgf/shared';
+import { getBoothAvailabilityStatus, getEffectiveCapacity } from '@bgf/shared';
 import { StatusBadge } from './StatusBadge';
 
 interface BoothCardProps {
@@ -10,22 +10,15 @@ interface BoothCardProps {
 
 export function BoothCard({ booth }: BoothCardProps) {
   const effective = getEffectiveCapacity(booth);
-  const pending = !effective.isConfigured;
+  const availability = getBoothAvailabilityStatus(booth);
   const groupClass =
     booth.experienceGroup === 'BOARD_GAME' ? 'group-board' : 'group-creative';
 
   return (
-    <Link
-      to={`/booths/${booth.id}`}
-      className={`booth-card ${groupClass}`}
-      style={{ ['--booth-accent' as string]: booth.accentColor }}
-    >
+    <Link to={`/booths/${booth.id}`} className={`booth-card ${groupClass}`}>
       <div className="booth-card-top">
         <span className="booth-number">부스 {booth.number}</span>
-        <StatusBadge
-          status={pending ? 'CAPACITY_PENDING' : 'AVAILABLE'}
-          label={pending ? '예약 준비 중' : '예약 가능'}
-        />
+        <StatusBadge status={availability} />
       </div>
       <span className={`group-badge ${groupClass}`}>
         {EXPERIENCE_GROUP_LABELS[booth.experienceGroup]}
@@ -38,7 +31,7 @@ export function BoothCard({ booth }: BoothCardProps) {
       </h3>
       <p className="booth-card-target">대상: {booth.target}</p>
       {effective.isDemo ? (
-        <p className="demo-inline">개발용 데모 데이터</p>
+        <p className="demo-tag">개발용 데모 데이터</p>
       ) : null}
     </Link>
   );

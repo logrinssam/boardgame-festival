@@ -66,6 +66,30 @@ export function getSlotAvailabilityStatus(
   return 'FULL';
 }
 
+export function getBoothAvailabilityStatus(
+  booth: Booth,
+): SlotAvailabilityStatus {
+  const effective = getEffectiveCapacity(booth);
+  if (!effective.isConfigured) {
+    return 'CAPACITY_PENDING';
+  }
+
+  const statuses = booth.slots.map((slot) =>
+    getSlotAvailabilityStatus(booth, slot),
+  );
+
+  if (statuses.some((status) => status === 'AVAILABLE')) {
+    return 'AVAILABLE';
+  }
+  if (statuses.some((status) => status === 'WAITLIST')) {
+    return 'WAITLIST';
+  }
+  if (statuses.length > 0 && statuses.every((status) => status === 'CLOSED')) {
+    return 'CLOSED';
+  }
+  return 'FULL';
+}
+
 export function minutesFromTime(time: string): number {
   const [hours, minutes] = time.split(':').map(Number);
   return hours * 60 + minutes;

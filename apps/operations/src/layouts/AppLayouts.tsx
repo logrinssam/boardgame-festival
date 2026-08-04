@@ -33,7 +33,7 @@ function Shell({
           <div className="header-spacer" />
         )}
         <div className="header-brand">
-          <p className="brand-eyebrow">{badge ?? '미래잇다 · 창의융합'}</p>
+          {badge ? <p className="brand-eyebrow">{badge}</p> : null}
           <h1 className="brand-title">제4회 창의융합 보드게임 대축제</h1>
         </div>
         {DEMO_MODE ? (

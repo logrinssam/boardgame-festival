@@ -78,14 +78,18 @@ export function HomePage() {
           key={group}
           className={`category-section group-${group.toLowerCase()}`}
         >
-          <div className="group-header glass-card">
+          <div className="group-header category-summary">
             <div>
-              <h3 className="category-title">{EXPERIENCE_GROUP_LABELS[group]}</h3>
-              <p className="hint-text">{EXPERIENCE_GROUP_DESCRIPTIONS[group]}</p>
+              <h3 className="category-title cat-title">
+                {EXPERIENCE_GROUP_LABELS[group]}
+              </h3>
+              <p className="hint-text cat-desc">
+                {EXPERIENCE_GROUP_DESCRIPTIONS[group]}
+              </p>
             </div>
             <div className="group-stats">
-              <span>운영 {items.length}부스</span>
-              <span>예약 가능 {bookable}</span>
+              <span className="cat-stat">운영 {items.length}부스</span>
+              <span className="cat-stat">예약 가능 {bookable}</span>
             </div>
           </div>
           <div className="booth-grid">
