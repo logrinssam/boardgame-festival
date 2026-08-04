@@ -53,6 +53,12 @@ service cloud.firestore {
       allow write: if isHeadAdmin();
     }
 
+    // 이름 → 이메일 조회용 (PIN/비밀번호 없음)
+    match /staffLoginIndex/{loginId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /operationLogs/{logId} {
       allow read: if isActiveStaff()
         && canAccessBooth(resource.data.boothId);

@@ -7,6 +7,10 @@ export default defineConfig({
   base: '/boardgame-festival/ops/',
   resolve: {
     alias: {
+      '@bgf/shared/firebase': path.resolve(
+        import.meta.dirname,
+        '../../packages/shared/src/firebase/client.ts',
+      ),
       '@bgf/shared': path.resolve(
         import.meta.dirname,
         '../../packages/shared/src/index.ts',

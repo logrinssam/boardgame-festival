@@ -21,10 +21,12 @@ export function AdminStaffPage() {
       </div>
 
       <section className="glass-card">
-        <h3 className="section-title">로그인 권한 배정 (mock)</h3>
-        <p className="hint-text">테스트 계정 ID: staff</p>
+        <h3 className="section-title">로그인 권한 배정</h3>
+        <p className="hint-text">
+          테스트 계정: 이름 입력 + PIN 0000 (전원 본부 관리자 권한)
+        </p>
         {STAFF_ASSIGNMENTS.map((item) => (
-          <div key={item.uid} className="staff-summary">
+          <div key={item.loginId} className="staff-summary">
             <strong>{item.name}</strong>
             <p className="admin-meta">{item.role}</p>
             <p className="hint-text">담당 부스: 전체</p>

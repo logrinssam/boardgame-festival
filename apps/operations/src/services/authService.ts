@@ -6,37 +6,16 @@ import type {
   UserRole,
 } from '@bgf/shared';
 import { getBoothById } from '@bgf/shared';
-import {
-  findAssignmentByLoginId,
-  findAssignmentByUid,
-  MOCK_OPERATOR_PINS,
-} from '../data/staffAssignments';
+import { getFirebaseAuth, getFirebaseDb } from '@bgf/shared/firebase';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { pinToAuthPassword } from '../data/staffAssignments';
 
 /**
  * 권한 검증 서비스.
- * Firebase 단계에서는 Firestore Rules / Cloud Functions에서도
- * 동일한 규칙을 서버 측에서 재검증해야 한다.
+ * 로그인: Firestore staffLoginIndex(이름→이메일) + Auth Email/Password
+ * 세션 권한: Firestore staffAssignments/{uid}
  */
-
-export function verifyOperatorPin(
-  loginId: string,
-  pin: string,
-): { ok: true; session: AuthSession } | { ok: false; message: string } {
-  const assignment = findAssignmentByLoginId(loginId.trim());
-  if (!assignment) {
-    return { ok: false, message: '등록되지 않은 운영자입니다.' };
-  }
-
-  const expected = MOCK_OPERATOR_PINS[assignment.loginId];
-  if (!expected || expected !== pin.trim()) {
-    return { ok: false, message: '로그인 정보가 올바르지 않습니다.' };
-  }
-
-  return {
-    ok: true,
-    session: toSession(assignment.uid, assignment.role, assignment.name, assignment.experienceGroup, assignment.assignedBoothIds),
-  };
-}
 
 export function toSession(
   uid: string,
@@ -54,14 +33,96 @@ export function toSession(
   };
 }
 
+export async function verifyOperatorPin(
+  loginId: string,
+  pin: string,
+): Promise<{ ok: true; session: AuthSession } | { ok: false; message: string }> {
+  const trimmedId = loginId.trim();
+  const trimmedPin = pin.trim();
+  if (!trimmedId || !trimmedPin) {
+    return { ok: false, message: '이름과 PIN을 입력해 주세요.' };
+  }
+
+  try {
+    const indexRef = doc(getFirebaseDb(), 'staffLoginIndex', trimmedId);
+    const indexSnap = await getDoc(indexRef);
+    if (!indexSnap.exists()) {
+      return { ok: false, message: '등록되지 않은 운영자입니다.' };
+    }
+
+    const index = indexSnap.data() as { email?: string; uid?: string };
+    if (!index.email) {
+      return { ok: false, message: '운영자 계정 정보가 올바르지 않습니다.' };
+    }
+
+    const credential = await signInWithEmailAndPassword(
+      getFirebaseAuth(),
+      index.email,
+      pinToAuthPassword(trimmedPin),
+    );
+
+    const assignmentRef = doc(
+      getFirebaseDb(),
+      'staffAssignments',
+      credential.user.uid,
+    );
+    const assignmentSnap = await getDoc(assignmentRef);
+    if (!assignmentSnap.exists()) {
+      await signOut(getFirebaseAuth());
+      return { ok: false, message: '운영 권한이 없습니다.' };
+    }
+
+    const assignment = assignmentSnap.data() as {
+      name: string;
+      role: OperatorRole;
+      experienceGroup: ExperienceGroup | null;
+      assignedBoothIds: string[];
+      isActive: boolean;
+    };
+
+    if (!assignment.isActive) {
+      await signOut(getFirebaseAuth());
+      return { ok: false, message: '비활성 운영자 계정입니다.' };
+    }
+
+    return {
+      ok: true,
+      session: toSession(
+        credential.user.uid,
+        assignment.role,
+        assignment.name,
+        assignment.experienceGroup ?? null,
+        assignment.assignedBoothIds ?? [],
+      ),
+    };
+  } catch (error) {
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? String((error as { code: string }).code)
+        : '';
+    if (
+      code === 'auth/invalid-credential' ||
+      code === 'auth/wrong-password' ||
+      code === 'auth/user-not-found' ||
+      code === 'auth/invalid-email'
+    ) {
+      return { ok: false, message: '로그인 정보가 올바르지 않습니다.' };
+    }
+    console.error(error);
+    return { ok: false, message: '로그인 중 오류가 발생했습니다.' };
+  }
+}
+
+export async function logoutOperator(): Promise<void> {
+  await signOut(getFirebaseAuth());
+}
+
 export function getAccessibleBoothIds(session: AuthSession): string[] {
-  if (session.role === 'HEAD_ADMIN') {
-    return session.assignedBoothIds;
-  }
-  if (session.role === 'GROUP_MANAGER' && session.experienceGroup) {
-    return session.assignedBoothIds;
-  }
-  if (session.role === 'BOOTH_STAFF') {
+  if (
+    session.role === 'HEAD_ADMIN' ||
+    session.role === 'GROUP_MANAGER' ||
+    session.role === 'BOOTH_STAFF'
+  ) {
     return session.assignedBoothIds;
   }
   return [];
@@ -72,8 +133,6 @@ export function canAccessBooth(
   boothId: string,
 ): boolean {
   if (!session) return false;
-  const assignment = findAssignmentByUid(session.uid);
-  if (!assignment || !assignment.isActive) return false;
 
   const booth = getBoothById(boothId);
   if (!booth) return false;

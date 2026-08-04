@@ -16,7 +16,8 @@
     "build:operations": "npm run build -w @bgf/operations",
     "lint": "oxlint apps packages",
     "preview": "npm run preview -w @bgf/participant",
-    "functions:build": "npm --prefix functions run build"
+    "functions:build": "npm --prefix functions run build",
+    "seed:firebase": "node scripts/seed-firebase.mjs"
   },
   "devDependencies": {
     "oxlint": "^1.75.0",

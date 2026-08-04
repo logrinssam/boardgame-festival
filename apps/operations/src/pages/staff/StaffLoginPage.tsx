@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { INITIAL_OPERATOR_PIN, STAFF_DIRECTORY } from '../../data/staffAssignments';
 import { useAppStore } from '../../context/AppStore';
 
 export function StaffLoginPage() {
@@ -8,6 +9,7 @@ export function StaffLoginPage() {
   const [loginId, setLoginId] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
 
   if (session) {
     return (
@@ -21,16 +23,25 @@ export function StaffLoginPage() {
             관리 화면
           </Link>
         ) : null}
-        <button type="button" className="btn btn-ghost" onClick={logout}>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => {
+            void logout();
+          }}
+        >
           로그아웃
         </button>
       </div>
     );
   }
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const result = loginOperator(loginId, pin);
+    setPending(true);
+    setError('');
+    const result = await loginOperator(loginId, pin);
+    setPending(false);
     if (!result.ok) {
       setError(result.message);
       return;
@@ -39,13 +50,13 @@ export function StaffLoginPage() {
   }
 
   return (
-    <form className="glass-card form-card" onSubmit={handleSubmit}>
+    <form className="glass-card form-card" onSubmit={(e) => void handleSubmit(e)}>
       <h2 className="section-title">부스 운영자 로그인</h2>
       <p className="hint-text">
-        참가자 현장코드와 다른 내부 계정입니다.
+        이름을 입력하세요. 테스트 PIN은 {INITIAL_OPERATOR_PIN} 입니다.
       </p>
       <label className="field-label" htmlFor="loginId">
-        운영자 ID
+        이름
       </label>
       <input
         id="loginId"
@@ -53,9 +64,16 @@ export function StaffLoginPage() {
         value={loginId}
         onChange={(event) => setLoginId(event.target.value)}
         autoComplete="username"
+        placeholder="예: 조하나"
+        list="staff-names"
       />
+      <datalist id="staff-names">
+        {STAFF_DIRECTORY.map((person) => (
+          <option key={person.loginId} value={person.loginId} />
+        ))}
+      </datalist>
       <label className="field-label" htmlFor="pin">
-        내부 PIN
+        PIN
       </label>
       <input
         id="pin"
@@ -67,8 +85,8 @@ export function StaffLoginPage() {
         inputMode="numeric"
       />
       {error ? <p className="error-text">{error}</p> : null}
-      <button type="submit" className="btn btn-primary">
-        로그인
+      <button type="submit" className="btn btn-primary" disabled={pending}>
+        {pending ? '로그인 중…' : '로그인'}
       </button>
     </form>
   );

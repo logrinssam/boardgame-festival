@@ -1,0 +1,1600 @@
+[
+  {
+    "id": "booth-01",
+    "number": 1,
+    "name": "유치부 A",
+    "subtitle": null,
+    "experienceGroup": "BOARD_GAME",
+    "boothType": "AGE_BOARD_GAME",
+    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "location": "추후 안내",
+    "target": "유치부",
+    "groupLabel": "A",
+    "durationMinutes": 25,
+    "accentColor": "#4F8CFF",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "THREE_PERSON_ROTATION",
+    "activities": [
+      "우봉고 미니 포켓몬",
+      "비타워",
+      "도토리산",
+      "레이어스 플러스"
+    ],
+    "slots": [
+      {
+        "id": "booth-01-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-01-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-01-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-01-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-01-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-01-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-01-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-01-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-01-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-01-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-01-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-01-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-01-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-02",
+    "number": 2,
+    "name": "유치부 B",
+    "subtitle": null,
+    "experienceGroup": "BOARD_GAME",
+    "boothType": "AGE_BOARD_GAME",
+    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "location": "추후 안내",
+    "target": "유치부",
+    "groupLabel": "B",
+    "durationMinutes": 25,
+    "accentColor": "#5B8DEF",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "THREE_PERSON_ROTATION",
+    "activities": [
+      "우봉고 미니 포켓몬",
+      "비타워",
+      "도토리산",
+      "레이어스 플러스"
+    ],
+    "slots": [
+      {
+        "id": "booth-02-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-02-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-02-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-02-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-02-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-02-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-02-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-02-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-02-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-02-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-02-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-02-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-02-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-03",
+    "number": 3,
+    "name": "1~2학년 A",
+    "subtitle": null,
+    "experienceGroup": "BOARD_GAME",
+    "boothType": "AGE_BOARD_GAME",
+    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "location": "추후 안내",
+    "target": "초등학교 1~2학년",
+    "groupLabel": "A",
+    "durationMinutes": 25,
+    "accentColor": "#3D9BFF",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "THREE_PERSON_ROTATION",
+    "activities": [
+      "우봉고 미니 포켓몬",
+      "비타워",
+      "도토리산",
+      "레이어스 플러스"
+    ],
+    "slots": [
+      {
+        "id": "booth-03-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-03-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-03-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-03-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-03-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-03-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-03-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-03-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-03-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-03-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-03-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-03-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-03-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-04",
+    "number": 4,
+    "name": "1~2학년 B",
+    "subtitle": null,
+    "experienceGroup": "BOARD_GAME",
+    "boothType": "AGE_BOARD_GAME",
+    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "location": "추후 안내",
+    "target": "초등학교 1~2학년",
+    "groupLabel": "B",
+    "durationMinutes": 25,
+    "accentColor": "#458AE8",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "THREE_PERSON_ROTATION",
+    "activities": [
+      "우봉고 미니 포켓몬",
+      "비타워",
+      "도토리산",
+      "레이어스 플러스"
+    ],
+    "slots": [
+      {
+        "id": "booth-04-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-04-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-04-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-04-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-04-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-04-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-04-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-04-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-04-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-04-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-04-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-04-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-04-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-05",
+    "number": 5,
+    "name": "3~4학년",
+    "subtitle": null,
+    "experienceGroup": "BOARD_GAME",
+    "boothType": "AGE_BOARD_GAME",
+    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "location": "추후 안내",
+    "target": "초등학교 3~4학년",
+    "groupLabel": null,
+    "durationMinutes": 25,
+    "accentColor": "#2F7FE0",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "THREE_PERSON_ROTATION",
+    "activities": [
+      "우봉고 미니 포켓몬",
+      "비타워",
+      "도토리산",
+      "레이어스 플러스"
+    ],
+    "slots": [
+      {
+        "id": "booth-05-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-05-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-05-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-05-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-05-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-05-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-05-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-05-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-05-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-05-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-05-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-05-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-05-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-06",
+    "number": 6,
+    "name": "4학년 이상",
+    "subtitle": null,
+    "experienceGroup": "BOARD_GAME",
+    "boothType": "AGE_BOARD_GAME",
+    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "location": "추후 안내",
+    "target": "초등학교 4학년 이상",
+    "groupLabel": null,
+    "durationMinutes": 25,
+    "accentColor": "#2A6FD0",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "THREE_PERSON_ROTATION",
+    "activities": [
+      "우봉고 미니 포켓몬",
+      "비타워",
+      "도토리산",
+      "레이어스 플러스"
+    ],
+    "slots": [
+      {
+        "id": "booth-06-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-06-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-06-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-06-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-06-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-06-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-06-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-06-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-06-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-06-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-06-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-06-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-06-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-07",
+    "number": 7,
+    "name": "과학아 놀자! 그래비트랙스",
+    "subtitle": null,
+    "experienceGroup": "BOARD_GAME",
+    "boothType": "GRAVITRAX",
+    "description": "그래비트랙스를 자유롭게 체험하는 과학 놀이 부스",
+    "location": "추후 안내",
+    "target": "추후 안내",
+    "groupLabel": null,
+    "durationMinutes": 25,
+    "accentColor": "#20B2A8",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "FIXED_STAFF",
+    "activities": [],
+    "slots": [
+      {
+        "id": "booth-07-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-07-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-07-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-07-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-07-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-07-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-07-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-07-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-07-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-07-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-07-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-07-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-07-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-08",
+    "number": 8,
+    "name": "만들기 1",
+    "subtitle": null,
+    "experienceGroup": "CREATIVE_CONVERGENCE",
+    "boothType": "MAKING",
+    "description": "세부 체험 내용 추후 입력",
+    "location": "추후 안내",
+    "target": "추후 안내",
+    "groupLabel": null,
+    "durationMinutes": 25,
+    "accentColor": "#7B6CF6",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "FOUR_PERSON_ROTATION",
+    "activities": [],
+    "slots": [
+      {
+        "id": "booth-08-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-08-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-08-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-08-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-08-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-08-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-08-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-08-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-08-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-08-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-08-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-08-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-08-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-09",
+    "number": 9,
+    "name": "만들기 2",
+    "subtitle": null,
+    "experienceGroup": "CREATIVE_CONVERGENCE",
+    "boothType": "MAKING",
+    "description": "세부 체험 내용 추후 입력",
+    "location": "추후 안내",
+    "target": "추후 안내",
+    "groupLabel": null,
+    "durationMinutes": 25,
+    "accentColor": "#8A74F0",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "FOUR_PERSON_ROTATION",
+    "activities": [],
+    "slots": [
+      {
+        "id": "booth-09-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-09-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-09-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-09-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-09-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-09-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-09-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-09-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-09-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-09-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-09-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-09-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-09-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-10",
+    "number": 10,
+    "name": "체험 1",
+    "subtitle": null,
+    "experienceGroup": "CREATIVE_CONVERGENCE",
+    "boothType": "ACTIVITY",
+    "description": "세부 체험 내용 추후 입력",
+    "location": "추후 안내",
+    "target": "추후 안내",
+    "groupLabel": null,
+    "durationMinutes": 25,
+    "accentColor": "#6E63E8",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "FOUR_PERSON_ROTATION",
+    "activities": [],
+    "slots": [
+      {
+        "id": "booth-10-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-10-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-10-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-10-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-10-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-10-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-10-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-10-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-10-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-10-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-10-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-10-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-10-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-11",
+    "number": 11,
+    "name": "체험 2",
+    "subtitle": null,
+    "experienceGroup": "CREATIVE_CONVERGENCE",
+    "boothType": "ACTIVITY",
+    "description": "세부 체험 내용 추후 입력",
+    "location": "추후 안내",
+    "target": "추후 안내",
+    "groupLabel": null,
+    "durationMinutes": 25,
+    "accentColor": "#7A5FE0",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "FOUR_PERSON_ROTATION",
+    "activities": [],
+    "slots": [
+      {
+        "id": "booth-11-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-11-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-11-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-11-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-11-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-11-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-11-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-11-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-11-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-11-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-11-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-11-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-11-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-12",
+    "number": 12,
+    "name": "카미봇",
+    "subtitle": "자원전쟁",
+    "experienceGroup": "CREATIVE_CONVERGENCE",
+    "boothType": "ROBOT",
+    "description": "카미봇을 활용한 자원전쟁 체험",
+    "location": "추후 안내",
+    "target": "추후 안내",
+    "groupLabel": null,
+    "durationMinutes": 25,
+    "accentColor": "#E67E22",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "FOUR_PERSON_ROTATION",
+    "activities": [],
+    "slots": [
+      {
+        "id": "booth-12-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-12-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-12-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-12-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-12-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-12-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-12-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-12-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-12-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-12-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-12-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-12-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-12-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-13",
+    "number": 13,
+    "name": "햄스터봇",
+    "subtitle": "축구",
+    "experienceGroup": "CREATIVE_CONVERGENCE",
+    "boothType": "ROBOT",
+    "description": "햄스터봇을 활용한 축구 체험",
+    "location": "추후 안내",
+    "target": "추후 안내",
+    "groupLabel": null,
+    "durationMinutes": 25,
+    "accentColor": "#D35400",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "FOUR_PERSON_ROTATION",
+    "activities": [],
+    "slots": [
+      {
+        "id": "booth-13-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-13-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-13-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-13-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-13-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-13-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-13-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-13-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-13-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-13-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-13-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-13-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-13-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  },
+  {
+    "id": "booth-14",
+    "number": 14,
+    "name": "넥슨",
+    "subtitle": null,
+    "experienceGroup": "CREATIVE_CONVERGENCE",
+    "boothType": "NEXON",
+    "description": "세부 체험 내용 추후 입력",
+    "location": "추후 안내",
+    "target": "추후 안내",
+    "groupLabel": null,
+    "durationMinutes": 25,
+    "accentColor": "#1ABC9C",
+    "capacity": null,
+    "waitlistCapacity": null,
+    "status": "CAPACITY_PENDING",
+    "staffingType": "FIXED_STAFF",
+    "activities": [],
+    "slots": [
+      {
+        "id": "booth-14-slot-01",
+        "scheduleSlotId": "slot-01",
+        "startTime": "09:00",
+        "endTime": "09:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-14-slot-02",
+        "scheduleSlotId": "slot-02",
+        "startTime": "09:30",
+        "endTime": "09:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-14-slot-03",
+        "scheduleSlotId": "slot-03",
+        "startTime": "10:00",
+        "endTime": "10:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-14-slot-04",
+        "scheduleSlotId": "slot-04",
+        "startTime": "10:30",
+        "endTime": "10:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-14-slot-05",
+        "scheduleSlotId": "slot-05",
+        "startTime": "11:00",
+        "endTime": "11:25",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-14-slot-06",
+        "scheduleSlotId": "slot-06",
+        "startTime": "11:30",
+        "endTime": "11:55",
+        "period": "MORNING"
+      },
+      {
+        "id": "booth-14-slot-07",
+        "scheduleSlotId": "slot-07",
+        "startTime": "13:00",
+        "endTime": "13:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-14-slot-08",
+        "scheduleSlotId": "slot-08",
+        "startTime": "13:30",
+        "endTime": "13:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-14-slot-09",
+        "scheduleSlotId": "slot-09",
+        "startTime": "14:00",
+        "endTime": "14:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-14-slot-10",
+        "scheduleSlotId": "slot-10",
+        "startTime": "14:30",
+        "endTime": "14:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-14-slot-11",
+        "scheduleSlotId": "slot-11",
+        "startTime": "15:00",
+        "endTime": "15:25",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-14-slot-12",
+        "scheduleSlotId": "slot-12",
+        "startTime": "15:30",
+        "endTime": "15:55",
+        "period": "AFTERNOON"
+      },
+      {
+        "id": "booth-14-slot-13",
+        "scheduleSlotId": "slot-13",
+        "startTime": "16:00",
+        "endTime": "16:25",
+        "period": "AFTERNOON"
+      }
+    ]
+  }
+]

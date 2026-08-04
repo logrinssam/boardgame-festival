@@ -23,7 +23,7 @@ import {
   type Reservation,
   type ReservationStatus,
 } from '@bgf/shared';
-import { verifyOperatorPin } from '../services/authService';
+import { verifyOperatorPin, logoutOperator } from '../services/authService';
 
 function cloneBooths(source: Booth[]): Booth[] {
   return source.map((booth) => ({
@@ -74,10 +74,11 @@ interface AppStoreValue {
   loginOperator: (
     loginId: string,
     pin: string,
-  ) =>
+  ) => Promise<
     | { ok: true; session: AuthSession }
-    | { ok: false; message: string };
-  logout: () => void;
+    | { ok: false; message: string }
+  >;
+  logout: () => Promise<void>;
   setAccessCode: (boothId: string, code: string) => void;
   setCapacity: (
     boothId: string,
@@ -179,14 +180,15 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     [reservations],
   );
 
-  const loginOperator = useCallback((loginId: string, pin: string) => {
-    const result = verifyOperatorPin(loginId, pin);
+  const loginOperator = useCallback(async (loginId: string, pin: string) => {
+    const result = await verifyOperatorPin(loginId, pin);
     if (!result.ok) return result;
     setSession(result.session);
     return { ok: true as const, session: result.session };
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await logoutOperator();
     setSession(null);
   }, []);
 
