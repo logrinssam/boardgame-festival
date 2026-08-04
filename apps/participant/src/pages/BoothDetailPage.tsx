@@ -88,7 +88,7 @@ export function BoothDetailPage() {
           </>
         ) : null}
 
-        {capacityPending ? (
+        {!effective.isConfigured ? (
           <div className="notice warning">
             <strong>예약 정원 준비 중</strong>
             <p>관리자가 정원을 설정해야 예약할 수 있습니다.</p>
