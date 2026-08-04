@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAppStore } from '../context/AppStore';
 import { formatTimeRange } from '@bgf/shared';
@@ -13,6 +13,7 @@ import {
 export function SlotSelectPage() {
   const { boothId = '' } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { getBooth } = useAppStore();
   const booth = getBooth(boothId);
 
@@ -46,7 +47,13 @@ export function SlotSelectPage() {
                   disabled={!bookable.allowed}
                   onClick={() =>
                     navigate('/booking/consent', {
-                      state: { boothId: currentBooth.id, slotId: slot.id },
+                      state: {
+                        boothId: currentBooth.id,
+                        slotId: slot.id,
+                        accessCode: (
+                          location.state as { accessCode?: string } | null
+                        )?.accessCode,
+                      },
                     })
                   }
                 >

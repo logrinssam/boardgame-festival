@@ -18,7 +18,8 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@bgf/shared": ["../../packages/shared/src/index.ts"],
-      "@bgf/shared/firebase": ["../../packages/shared/src/firebase/client.ts"]
+      "@bgf/shared/firebase": ["../../packages/shared/src/firebase/client.ts"],
+      "@bgf/shared/firebase/reservations": ["../../packages/shared/src/firebase/reservations.ts"]
     }
   },
   "include": ["src", "../../packages/shared/src"]

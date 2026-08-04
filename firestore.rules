@@ -1,11 +1,7 @@
 rules_version = '2';
 
 /**
- * 제4회 창의융합 보드게임 대축제 — Firestore Rules
- *
- * - 참여자는 예약자 전체 명단을 읽지 못함
- * - 운영자 권한은 staffAssignments 문서로 확인
- * - 예약 생성/상태 변경은 Cloud Functions에서만
+ * Functions(Admin SDK)가 예약을 쓰고, 클라이언트는 읽기 위주.
  */
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -23,45 +19,32 @@ service cloud.firestore {
         && staffDoc().data.isActive == true;
     }
 
-    function staffRole() {
-      return staffDoc().data.role;
-    }
-
     function isHeadAdmin() {
-      return isActiveStaff() && staffRole() == 'HEAD_ADMIN';
-    }
-
-    function canAccessBooth(boothId) {
-      return isHeadAdmin()
-        || (isActiveStaff() && boothId in staffDoc().data.assignedBoothIds);
+      return isActiveStaff() && staffDoc().data.role == 'HEAD_ADMIN';
     }
 
     match /booths/{boothId} {
       allow read: if true;
-      allow write: if isHeadAdmin()
-        || (isActiveStaff() && canAccessBooth(boothId));
+      allow write: if false;
     }
 
     match /reservations/{reservationId} {
-      allow read: if isActiveStaff()
-        && canAccessBooth(resource.data.boothId);
-      allow create, update, delete: if false;
+      allow read: if isActiveStaff();
+      allow write: if false;
     }
 
     match /staffAssignments/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
-      allow write: if isHeadAdmin();
+      allow write: if false;
     }
 
-    // 이름 → 이메일 조회용 (PIN/비밀번호 없음)
     match /staffLoginIndex/{loginId} {
       allow read: if true;
       allow write: if false;
     }
 
     match /operationLogs/{logId} {
-      allow read: if isActiveStaff()
-        && canAccessBooth(resource.data.boothId);
+      allow read: if isActiveStaff();
       allow write: if false;
     }
 

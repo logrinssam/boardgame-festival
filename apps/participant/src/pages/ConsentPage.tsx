@@ -7,6 +7,7 @@ import { canBookSlot } from '@bgf/shared';
 interface BookingState {
   boothId?: string;
   slotId?: string;
+  accessCode?: string;
 }
 
 export function ConsentPage() {
@@ -69,7 +70,11 @@ export function ConsentPage() {
         disabled={!agreed}
         onClick={() =>
           navigate('/booking/participant', {
-            state: { boothId: booth.id, slotId: slot.id },
+            state: {
+              boothId: booth.id,
+              slotId: slot.id,
+              accessCode: state.accessCode,
+            },
           })
         }
       >

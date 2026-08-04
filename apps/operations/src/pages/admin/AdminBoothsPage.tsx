@@ -22,7 +22,7 @@ export function AdminBoothsPage() {
   const currentBooth = booth;
   const effective = getEffectiveCapacity(currentBooth);
 
-  function saveCapacity(event: FormEvent) {
+  async function saveCapacity(event: FormEvent) {
     event.preventDefault();
     const capacity =
       capacityInput.trim() === '' ? null : Number(capacityInput);
@@ -35,17 +35,17 @@ export function AdminBoothsPage() {
       setMessage('정원은 0 이상이어야 합니다.');
       return;
     }
-    setCapacity(currentBooth.id, capacity, waitlist);
+    await setCapacity(currentBooth.id, capacity, waitlist);
     setMessage('정원이 저장되었습니다.');
   }
 
-  function saveCode(event: FormEvent) {
+  async function saveCode(event: FormEvent) {
     event.preventDefault();
     if (!codeInput.trim()) {
       setMessage('현장코드를 입력해 주세요.');
       return;
     }
-    setAccessCode(currentBooth.id, codeInput.trim());
+    await setAccessCode(currentBooth.id, codeInput.trim());
     setMessage('현장코드가 저장되었습니다.');
   }
 
@@ -79,7 +79,10 @@ export function AdminBoothsPage() {
             ? '미설정'
             : `${effective.capacity}${effective.isDemo ? ' (데모)' : ''}`}
         </p>
-        <form className="form-card" onSubmit={saveCapacity}>
+        <form
+          className="form-card"
+          onSubmit={(event) => void saveCapacity(event)}
+        >
           <label className="field-label" htmlFor="cap">
             확정 정원
           </label>
@@ -110,7 +113,7 @@ export function AdminBoothsPage() {
       </section>
 
       <section className="glass-card form-card">
-        <form onSubmit={saveCode}>
+        <form onSubmit={(event) => void saveCode(event)}>
           <label className="field-label" htmlFor="code">
             참가자 현장코드
           </label>
@@ -142,13 +145,13 @@ export function AdminBoothsPage() {
               <button
                 type="button"
                 className="btn btn-small"
-                onClick={() =>
-                  setSlotBookingOpen(
+                onClick={() => {
+                  void setSlotBookingOpen(
                     currentBooth.id,
                     slot.id,
                     !slot.bookingOpen,
-                  )
-                }
+                  );
+                }}
               >
                 {slot.bookingOpen ? '예약 중지' : '예약 시작'}
               </button>

@@ -134,14 +134,17 @@ export function StaffBoothOpsPage() {
     if (needsConfirm && !window.confirm(`${label}을(를) 진행할까요?`)) {
       return;
     }
-    const result = changeReservationStatus({
+    void changeReservationStatus({
       reservationId: reservation.id,
       nextStatus,
       operatorId: currentSession.uid,
       operatorName: currentSession.name,
       actionLabel: label,
+    }).then((result) => {
+      setMessage(
+        result.ok ? `${reservation.participantName} · ${label}` : result.message,
+      );
     });
-    setMessage(result.ok ? `${reservation.participantName} · ${label}` : result.message);
   }
 
   function bulk(from: ReservationStatus, to: ReservationStatus, label: string) {
@@ -161,16 +164,18 @@ export function StaffBoothOpsPage() {
     ) {
       return;
     }
-    targets.forEach((item) => {
-      changeReservationStatus({
-        reservationId: item.id,
-        nextStatus: to,
-        operatorId: currentSession.uid,
-        operatorName: currentSession.name,
-        actionLabel: label,
-      });
-    });
-    setMessage(`${label} ${targets.length}명 처리`);
+    void (async () => {
+      for (const item of targets) {
+        await changeReservationStatus({
+          reservationId: item.id,
+          nextStatus: to,
+          operatorId: currentSession.uid,
+          operatorName: currentSession.name,
+          actionLabel: label,
+        });
+      }
+      setMessage(`${label} ${targets.length}명 처리`);
+    })();
   }
 
   return (
@@ -252,17 +257,18 @@ export function StaffBoothOpsPage() {
             type="button"
             className="btn btn-orange"
             onClick={() => {
-              const result = callNextWaitlist({
+              void callNextWaitlist({
                 boothId: currentBooth.id,
                 slotId: currentBoothSlot.id,
                 operatorId: currentSession.uid,
                 operatorName: currentSession.name,
+              }).then((result) => {
+                setMessage(
+                  result.ok
+                    ? `예비 ${result.reservation.waitlistOrder ?? 1}번 호출`
+                    : result.message,
+                );
               });
-              setMessage(
-                result.ok
-                  ? `예비 ${result.reservation.waitlistOrder ?? 1}번 호출`
-                  : result.message,
-              );
             }}
           >
             예비 {nextWaitlist.waitlistOrder ?? 1}번 호출

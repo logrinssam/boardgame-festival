@@ -6,7 +6,7 @@ import { getEffectiveCapacity } from '@bgf/shared';
 export function AccessCodePage() {
   const { boothId = '' } = useParams();
   const navigate = useNavigate();
-  const { getBooth, setAccessCode } = useAppStore();
+  const { getBooth } = useAppStore();
   const booth = getBooth(boothId);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -47,11 +47,11 @@ export function AccessCodePage() {
         setError('현장코드가 올바르지 않습니다.');
         return;
       }
-    } else {
-      setAccessCode(currentBooth.id, trimmed);
     }
 
-    navigate(`/booths/${currentBooth.id}/slots`);
+    navigate(`/booths/${currentBooth.id}/slots`, {
+      state: { accessCode: trimmed },
+    });
   }
 
   return (

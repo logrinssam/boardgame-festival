@@ -1,18 +1,77 @@
 import { initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { setGlobalOptions } from 'firebase-functions/v2';
+import type { Reservation, ReservationStatus, StaffAssignment } from './types';
+import {
+  ALLOWED_STATUS_TRANSITIONS,
+  BLOCKING_STATUSES,
+  asBooth,
+  asReservation,
+  canBookSlot,
+  countSeatUsage,
+  digitsOnly,
+  generateReservationCode,
+  getPhoneLast4,
+} from './lib';
 
 setGlobalOptions({ region: 'asia-northeast3' });
 initializeApp();
 
 const db = getFirestore();
 
-/**
- * 참여자 예약 생성 (초안).
- * Auth 없이도 호출 가능하되, App Check + rate limit을 이후에 추가할 것.
- * 실제 정원·예비 순번·중복 예약 검증은 트랜잭션으로 처리한다.
- */
+async function getStaff(uid: string): Promise<StaffAssignment> {
+  const snap = await db.collection('staffAssignments').doc(uid).get();
+  if (!snap.exists) {
+    throw new HttpsError('permission-denied', '운영 권한이 없습니다.');
+  }
+  const data = snap.data() as StaffAssignment;
+  if (!data.isActive) {
+    throw new HttpsError('permission-denied', '비활성 운영자 계정입니다.');
+  }
+  return { ...data, uid: snap.id };
+}
+
+function canAccessBooth(staff: StaffAssignment, boothId: string): boolean {
+  if (staff.role === 'HEAD_ADMIN') return true;
+  return staff.assignedBoothIds.includes(boothId);
+}
+
+async function loadReservationsByPhone(phone: string): Promise<Reservation[]> {
+  const snap = await db
+    .collection('reservations')
+    .where('phone', '==', phone)
+    .get();
+  return snap.docs.map((doc) => asReservation(doc.id, doc.data() as Record<string, unknown>));
+}
+
+async function recountAndUpdateBooth(boothId: string, slotId: string) {
+  const boothRef = db.collection('booths').doc(boothId);
+  const boothSnap = await boothRef.get();
+  if (!boothSnap.exists) return;
+  const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+  const slotSnap = await db
+    .collection('reservations')
+    .where('boothId', '==', boothId)
+    .where('slotId', '==', slotId)
+    .get();
+  const usage = countSeatUsage(
+    slotSnap.docs.map((doc) => asReservation(doc.id, doc.data() as Record<string, unknown>)),
+  );
+  await boothRef.update({
+    slots: booth.slots.map((slot) =>
+      slot.id === slotId
+        ? {
+            ...slot,
+            confirmedCount: usage.confirmed,
+            waitlistCount: usage.waitlist,
+          }
+        : slot,
+    ),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
 export const createReservation = onCall(async (request) => {
   const data = request.data as {
     boothId?: string;
@@ -33,26 +92,348 @@ export const createReservation = onCall(async (request) => {
     throw new HttpsError('invalid-argument', '필수 예약 정보가 없습니다.');
   }
 
-  // TODO: accessCode 검증, 정원/예비 트랜잭션, phone 해시 저장
-  void db;
-  throw new HttpsError(
-    'unimplemented',
-    'Firebase 프로젝트 연결 후 구현합니다.',
-  );
+  const phoneDigits = digitsOnly(data.phone);
+  if (phoneDigits.length < 10) {
+    throw new HttpsError('invalid-argument', '연락처를 정확히 입력해 주세요.');
+  }
+
+  const boothRef = db.collection('booths').doc(data.boothId);
+  const existingForPhone = await loadReservationsByPhone(phoneDigits);
+
+  if (
+    existingForPhone.some(
+      (item) => item.boothId === data.boothId && item.status !== 'CANCELLED',
+    )
+  ) {
+    throw new HttpsError(
+      'failed-precondition',
+      '같은 부스는 하루 1회만 예약할 수 있습니다.',
+    );
+  }
+  if (existingForPhone.some((item) => BLOCKING_STATUSES.includes(item.status))) {
+    throw new HttpsError(
+      'failed-precondition',
+      '진행 중인 예약이 있어 다른 부스를 예약할 수 없습니다.',
+    );
+  }
+
+  const reservation = await db.runTransaction(async (tx) => {
+    const boothSnap = await tx.get(boothRef);
+    if (!boothSnap.exists) {
+      throw new HttpsError('not-found', '부스를 찾을 수 없습니다.');
+    }
+    const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+    const slot = booth.slots.find((item) => item.id === data.slotId);
+    if (!slot) {
+      throw new HttpsError('not-found', '회차 정보를 찾을 수 없습니다.');
+    }
+
+    if (booth.accessCodeConfigured && booth.accessCode) {
+      if (!data.accessCode || data.accessCode.trim() !== booth.accessCode) {
+        throw new HttpsError(
+          'permission-denied',
+          '현장코드가 올바르지 않습니다.',
+        );
+      }
+    }
+
+    const bookable = canBookSlot(booth, slot);
+    if (!bookable.allowed) {
+      throw new HttpsError(
+        'failed-precondition',
+        bookable.reason ?? '예약할 수 없습니다.',
+      );
+    }
+    if (
+      bookable.isWaitlist &&
+      existingForPhone.some(
+        (item) =>
+          item.status === 'WAITLIST' || item.status === 'WAITLIST_CALLED',
+      )
+    ) {
+      throw new HttpsError(
+        'failed-precondition',
+        '예비 예약은 1개까지만 가능합니다.',
+      );
+    }
+
+    const now = new Date().toISOString();
+    const status: ReservationStatus = bookable.isWaitlist
+      ? 'WAITLIST'
+      : 'CONFIRMED';
+    const reservationId = `rsv-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 7)}`;
+    const record: Reservation = {
+      id: reservationId,
+      reservationCode: generateReservationCode(new Set()),
+      boothId: booth.id,
+      slotId: slot.id,
+      scheduleSlotId: slot.scheduleSlotId,
+      participantName: data.participantName!.trim(),
+      phone: phoneDigits,
+      phoneLast4: getPhoneLast4(phoneDigits),
+      gradeOrAge: data.gradeOrAge!.trim(),
+      status,
+      waitlistOrder: bookable.isWaitlist ? slot.waitlistCount + 1 : null,
+      createdAt: now,
+      updatedAt: now,
+      updatedBy: null,
+      previousStatus: null,
+    };
+
+    const nextSlots = booth.slots.map((item) =>
+      item.id === slot.id
+        ? {
+            ...item,
+            confirmedCount:
+              item.confirmedCount + (status === 'CONFIRMED' ? 1 : 0),
+            waitlistCount: item.waitlistCount + (status === 'WAITLIST' ? 1 : 0),
+          }
+        : item,
+    );
+
+    tx.set(db.collection('reservations').doc(reservationId), record);
+    tx.update(boothRef, {
+      slots: nextSlots,
+      status:
+        booth.status === 'CAPACITY_PENDING' ? 'BOOKING_OPEN' : booth.status,
+    });
+    return record;
+  });
+
+  return { reservation };
 });
 
-/**
- * 운영자 예약 상태 변경 (초안).
- * request.auth.uid → staffAssignments 권한 확인 필수.
- */
+export const getMyReservations = onCall(async (request) => {
+  const phone = digitsOnly(String(request.data?.phone ?? ''));
+  if (phone.length < 10) {
+    throw new HttpsError('invalid-argument', '연락처를 정확히 입력해 주세요.');
+  }
+  const reservations = await loadReservationsByPhone(phone);
+  return { reservations };
+});
+
+export const cancelReservation = onCall(async (request) => {
+  const reservationId = String(request.data?.reservationId ?? '');
+  const phone = digitsOnly(String(request.data?.phone ?? ''));
+  if (!reservationId) {
+    throw new HttpsError('invalid-argument', '예약 ID가 필요합니다.');
+  }
+
+  const ref = db.collection('reservations').doc(reservationId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new HttpsError('not-found', '예약을 찾을 수 없습니다.');
+  }
+  const current = asReservation(snap.id, snap.data() as Record<string, unknown>);
+
+  if (request.auth?.uid) {
+    const staff = await getStaff(request.auth.uid);
+    if (!canAccessBooth(staff, current.boothId)) {
+      throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
+    }
+  } else {
+    if (!phone || phone !== current.phone) {
+      throw new HttpsError(
+        'permission-denied',
+        '예약자 연락처가 일치하지 않습니다.',
+      );
+    }
+  }
+
+  const allowed = ALLOWED_STATUS_TRANSITIONS[current.status];
+  if (!allowed.includes('CANCELLED')) {
+    throw new HttpsError('failed-precondition', '취소할 수 없는 상태입니다.');
+  }
+
+  const now = new Date().toISOString();
+  const operatorId = request.auth?.uid ?? 'participant';
+  const operatorName = request.auth?.uid
+    ? (await getStaff(request.auth.uid)).name
+    : '참가자';
+
+  await ref.update({
+    previousStatus: current.status,
+    status: 'CANCELLED',
+    updatedAt: now,
+    updatedBy: operatorId,
+  });
+  await recountAndUpdateBooth(current.boothId, current.slotId);
+  await db.collection('operationLogs').add({
+    reservationId: current.id,
+    boothId: current.boothId,
+    slotId: current.slotId,
+    action: '예약 취소',
+    previousStatus: current.status,
+    newStatus: 'CANCELLED',
+    operatorId,
+    operatorName,
+    participantName: current.participantName,
+    createdAt: now,
+  });
+
+  return { ok: true };
+});
+
 export const changeReservationStatus = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
   }
+  const staff = await getStaff(request.auth.uid);
+  const reservationId = String(request.data?.reservationId ?? '');
+  const nextStatus = request.data?.nextStatus as ReservationStatus | undefined;
+  const actionLabel = String(request.data?.actionLabel ?? '상태 변경');
 
-  // TODO: staffAssignments 권한 + 허용 전이 검증 + operationLogs 기록
-  throw new HttpsError(
-    'unimplemented',
-    'Firebase 프로젝트 연결 후 구현합니다.',
-  );
+  if (!reservationId || !nextStatus) {
+    throw new HttpsError('invalid-argument', '필수 정보가 없습니다.');
+  }
+
+  const ref = db.collection('reservations').doc(reservationId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new HttpsError('not-found', '예약을 찾을 수 없습니다.');
+  }
+  const current = asReservation(snap.id, snap.data() as Record<string, unknown>);
+  if (!canAccessBooth(staff, current.boothId)) {
+    throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
+  }
+  if (!ALLOWED_STATUS_TRANSITIONS[current.status].includes(nextStatus)) {
+    throw new HttpsError(
+      'failed-precondition',
+      `${current.status} → ${nextStatus} 변경이 불가합니다.`,
+    );
+  }
+
+  const now = new Date().toISOString();
+  const updated: Reservation = {
+    ...current,
+    previousStatus: current.status,
+    status: nextStatus,
+    updatedAt: now,
+    updatedBy: staff.uid,
+  };
+  await ref.set(updated);
+  await recountAndUpdateBooth(current.boothId, current.slotId);
+  await db.collection('operationLogs').add({
+    reservationId: current.id,
+    boothId: current.boothId,
+    slotId: current.slotId,
+    action: actionLabel,
+    previousStatus: current.status,
+    newStatus: nextStatus,
+    operatorId: staff.uid,
+    operatorName: staff.name,
+    participantName: current.participantName,
+    createdAt: now,
+  });
+
+  return { reservation: updated };
+});
+
+export const callNextWaitlist = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const staff = await getStaff(request.auth.uid);
+  const boothId = String(request.data?.boothId ?? '');
+  const slotId = String(request.data?.slotId ?? '');
+  if (!boothId || !slotId) {
+    throw new HttpsError('invalid-argument', '부스/회차 정보가 필요합니다.');
+  }
+  if (!canAccessBooth(staff, boothId)) {
+    throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
+  }
+
+  const snap = await db
+    .collection('reservations')
+    .where('boothId', '==', boothId)
+    .where('slotId', '==', slotId)
+    .where('status', '==', 'WAITLIST')
+    .get();
+  const candidates = snap.docs
+    .map((docSnap) => asReservation(docSnap.id, docSnap.data() as Record<string, unknown>))
+    .sort((a, b) => (a.waitlistOrder ?? 0) - (b.waitlistOrder ?? 0));
+  const target = candidates[0];
+  if (!target) {
+    throw new HttpsError('not-found', '호출할 예비 참가자가 없습니다.');
+  }
+
+  const now = new Date().toISOString();
+  const updated: Reservation = {
+    ...target,
+    previousStatus: target.status,
+    status: 'WAITLIST_CALLED',
+    updatedAt: now,
+    updatedBy: staff.uid,
+  };
+  await db.collection('reservations').doc(target.id).set(updated);
+  await recountAndUpdateBooth(target.boothId, target.slotId);
+  await db.collection('operationLogs').add({
+    reservationId: target.id,
+    boothId: target.boothId,
+    slotId: target.slotId,
+    action: `예비 ${target.waitlistOrder ?? 1}번 호출`,
+    previousStatus: target.status,
+    newStatus: 'WAITLIST_CALLED',
+    operatorId: staff.uid,
+    operatorName: staff.name,
+    participantName: target.participantName,
+    createdAt: now,
+  });
+
+  return { reservation: updated };
+});
+
+export const updateBoothSettings = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const staff = await getStaff(request.auth.uid);
+  const boothId = String(request.data?.boothId ?? '');
+  if (!boothId || !canAccessBooth(staff, boothId)) {
+    throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
+  }
+
+  const patch: Record<string, unknown> = {};
+  if ('accessCode' in (request.data ?? {})) {
+    const code = String(request.data.accessCode ?? '').trim();
+    patch.accessCode = code || null;
+    patch.accessCodeConfigured = code.length > 0;
+  }
+  if ('capacity' in (request.data ?? {})) {
+    patch.capacity = request.data.capacity ?? null;
+  }
+  if ('waitlistCapacity' in (request.data ?? {})) {
+    patch.waitlistCapacity = request.data.waitlistCapacity ?? null;
+  }
+  if ('capacity' in patch || 'waitlistCapacity' in patch) {
+    const boothSnap = await db.collection('booths').doc(boothId).get();
+    const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+    const capacity =
+      'capacity' in patch ? (patch.capacity as number | null) : booth.capacity;
+    const waitlistCapacity =
+      'waitlistCapacity' in patch
+        ? (patch.waitlistCapacity as number | null)
+        : booth.waitlistCapacity;
+    patch.status =
+      capacity === null || waitlistCapacity === null
+        ? 'CAPACITY_PENDING'
+        : 'BOOKING_OPEN';
+  }
+  if ('slotId' in (request.data ?? {}) && 'bookingOpen' in (request.data ?? {})) {
+    const boothSnap = await db.collection('booths').doc(boothId).get();
+    const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+    const slotId = String(request.data.slotId);
+    const bookingOpen = Boolean(request.data.bookingOpen);
+    patch.slots = booth.slots.map((slot) =>
+      slot.id === slotId ? { ...slot, bookingOpen } : slot,
+    );
+  }
+
+  if (Object.keys(patch).length === 0) {
+    throw new HttpsError('invalid-argument', '변경할 설정이 없습니다.');
+  }
+  await db.collection('booths').doc(boothId).update(patch);
+  return { ok: true };
 });

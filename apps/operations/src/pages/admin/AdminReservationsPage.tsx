@@ -62,16 +62,17 @@ export function AdminReservationsPage() {
                 className="btn btn-ghost"
                 onClick={() => {
                   if (!window.confirm('예약을 취소할까요?')) return;
-                  const result = changeReservationStatus({
+                  void changeReservationStatus({
                     reservationId: reservation.id,
                     nextStatus: 'CANCELLED',
                     operatorId: session.uid,
                     operatorName: session.name,
                     actionLabel: '예약 취소',
+                  }).then((result) => {
+                    setMessage(
+                      result.ok ? '취소되었습니다.' : result.message,
+                    );
                   });
-                  setMessage(
-                    result.ok ? '취소되었습니다.' : result.message,
-                  );
                 }}
               >
                 예약 취소

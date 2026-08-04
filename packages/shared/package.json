@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./firebase": "./src/firebase/client.ts"
+    "./firebase": "./src/firebase/client.ts",
+    "./firebase/reservations": "./src/firebase/reservations.ts"
   },
   "dependencies": {
     "firebase": "^11.10.0"

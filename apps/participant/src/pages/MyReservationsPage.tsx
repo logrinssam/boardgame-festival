@@ -1,26 +1,37 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
-import { formatTimeRange } from '@bgf/shared';
-import { maskPhone } from '@bgf/shared';
-import { RESERVATION_STATUS_LABELS } from '@bgf/shared';
+import {
+  formatTimeRange,
+  maskPhone,
+  RESERVATION_STATUS_LABELS,
+  type Reservation,
+} from '@bgf/shared';
 
 export function MyReservationsPage() {
   const { getMyReservations, getBooth, getSlot, cancelReservation } =
     useAppStore();
   const [phone, setPhone] = useState('');
-  const [query, setQuery] = useState('');
+  const [list, setList] = useState<Reservation[]>([]);
+  const [searched, setSearched] = useState(false);
   const [message, setMessage] = useState('');
+  const [pending, setPending] = useState(false);
 
-  const list = useMemo(
-    () => (query ? getMyReservations(query) : []),
-    [getMyReservations, query],
-  );
-
-  function handleSearch(event: FormEvent) {
+  async function handleSearch(event: FormEvent) {
     event.preventDefault();
-    setQuery(phone.trim());
+    setPending(true);
     setMessage('');
+    try {
+      const rows = await getMyReservations(phone.trim());
+      setList(rows);
+      setSearched(true);
+    } catch {
+      setMessage('조회 중 오류가 발생했습니다.');
+      setList([]);
+      setSearched(true);
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -29,7 +40,10 @@ export function MyReservationsPage() {
         <h2>내 예약</h2>
         <p>예약한 연락처로 조회합니다.</p>
       </div>
-      <form className="glass-card form-card" onSubmit={handleSearch}>
+      <form
+        className="glass-card form-card"
+        onSubmit={(event) => void handleSearch(event)}
+      >
         <label className="field-label" htmlFor="phone">
           연락처
         </label>
@@ -41,12 +55,12 @@ export function MyReservationsPage() {
           inputMode="tel"
           placeholder="01012345678"
         />
-        <button type="submit" className="btn btn-primary">
-          조회
+        <button type="submit" className="btn btn-primary" disabled={pending}>
+          {pending ? '조회 중…' : '조회'}
         </button>
       </form>
 
-      {query && list.length === 0 ? (
+      {searched && list.length === 0 ? (
         <div className="glass-card">조회된 예약이 없습니다.</div>
       ) : null}
 
@@ -73,21 +87,28 @@ export function MyReservationsPage() {
               {formatTimeRange(slot.startTime, slot.endTime)}
             </p>
             <p className="admin-meta">
-              예약번호 {reservation.reservationCode} · {maskPhone(reservation.phone)}
+              예약번호 {reservation.reservationCode} ·{' '}
+              {maskPhone(reservation.phone)}
             </p>
             {canCancel ? (
               <button
                 type="button"
                 className="btn btn-ghost"
                 onClick={() => {
-                  if (!window.confirm('예약을 취소할까요?')) return;
-                  const result = cancelReservation(
-                    reservation.id,
-                    'participant',
-                  );
-                  setMessage(
-                    result.ok ? '예약이 취소되었습니다.' : result.message,
-                  );
+                  void (async () => {
+                    if (!window.confirm('예약을 취소할까요?')) return;
+                    const result = await cancelReservation(
+                      reservation.id,
+                      phone.trim(),
+                    );
+                    setMessage(
+                      result.ok ? '예약이 취소되었습니다.' : result.message,
+                    );
+                    if (result.ok) {
+                      const rows = await getMyReservations(phone.trim());
+                      setList(rows);
+                    }
+                  })();
                 }}
               >
                 예약 취소

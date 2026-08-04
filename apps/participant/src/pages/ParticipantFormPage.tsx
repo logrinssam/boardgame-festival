@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
-import { formatTimeRange } from '@bgf/shared';
-import { canBookSlot } from '@bgf/shared';
+import { formatTimeRange, canBookSlot } from '@bgf/shared';
 
 interface BookingState {
   boothId?: string;
   slotId?: string;
+  accessCode?: string;
 }
 
 export function ParticipantFormPage() {
@@ -24,6 +24,7 @@ export function ParticipantFormPage() {
   const [phone, setPhone] = useState('');
   const [gradeOrAge, setGradeOrAge] = useState('');
   const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
 
   if (!booth || !slot) {
     return (
@@ -39,20 +40,24 @@ export function ParticipantFormPage() {
   const currentSlot = slot;
   const bookable = canBookSlot(currentBooth, currentSlot);
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!participantName.trim() || !phone.trim() || !gradeOrAge.trim()) {
       setError('모든 항목을 입력해 주세요.');
       return;
     }
 
-    const result = createReservation({
+    setPending(true);
+    setError('');
+    const result = await createReservation({
       boothId: currentBooth.id,
       slotId: currentSlot.id,
       participantName,
       phone,
       gradeOrAge,
+      accessCode: state.accessCode,
     });
+    setPending(false);
 
     if (!result.ok) {
       setError(result.message);
@@ -60,12 +65,18 @@ export function ParticipantFormPage() {
     }
 
     navigate('/booking/result', {
-      state: { reservationId: result.reservation.id },
+      state: {
+        reservationId: result.reservation.id,
+        reservation: result.reservation,
+      },
     });
   }
 
   return (
-    <form className="glass-card form-card" onSubmit={handleSubmit}>
+    <form
+      className="glass-card form-card"
+      onSubmit={(event) => void handleSubmit(event)}
+    >
       <h2 className="section-title">참가자 정보</h2>
       <p className="hint-text">
         {currentBooth.name} ·{' '}
@@ -107,9 +118,13 @@ export function ParticipantFormPage() {
       <button
         type="submit"
         className="btn btn-primary"
-        disabled={!bookable.allowed}
+        disabled={!bookable.allowed || pending}
       >
-        {bookable.isWaitlist ? '예비 예약하기' : '예약 확정하기'}
+        {pending
+          ? '처리 중…'
+          : bookable.isWaitlist
+            ? '예비 예약하기'
+            : '예약 확정하기'}
       </button>
     </form>
   );
