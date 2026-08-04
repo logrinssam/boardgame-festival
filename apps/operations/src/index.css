@@ -354,10 +354,6 @@ input {
   color: var(--board-accent);
 }
 
-.booth-card.group-creative .booth-number {
-  color: var(--creative-accent);
-}
-
 .booth-card-name,
 .booth-title {
   margin: 4px 0;
@@ -856,7 +852,7 @@ input {
   gap: 12px;
   align-items: flex-start;
   background: var(--board-bg-soft);
-  border: none;
+  border: 1px solid color-mix(in srgb, var(--board-border) 45%, transparent);
   border-radius: 14px;
   box-shadow: none;
   backdrop-filter: none;
@@ -901,24 +897,32 @@ input {
   font-weight: 700;
 }
 
-.group-board,
 .group-badge.group-board {
   background: var(--board-bg-soft);
   color: var(--board-accent);
 }
 
-.group-creative,
 .group-badge.group-creative {
   background: var(--creative-bg-soft);
   color: var(--creative-accent);
 }
 
 .booth-card.group-board {
+  background: var(--card-bg);
   border-left-color: var(--board-border);
 }
 
 .booth-card.group-creative {
+  background: var(--card-bg);
   border-left-color: var(--creative-border);
+}
+
+.booth-card.group-board .booth-number {
+  color: var(--board-accent);
+}
+
+.booth-card.group-creative .booth-number {
+  color: var(--creative-accent);
 }
 
 .group-board_game .group-header,
@@ -929,6 +933,7 @@ input {
 .group-creative_convergence .group-header,
 .group-creative_convergence .category-summary {
   background: var(--creative-bg-soft);
+  border-color: color-mix(in srgb, var(--creative-border) 45%, transparent);
 }
 
 .group-creative_convergence .category-title,
