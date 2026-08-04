@@ -1,32 +1,37 @@
-# React + TypeScript + Vite
+# 제4회 창의융합 보드게임 대축제
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+참여자용 웹앱과 운영·관리자용 웹앱을 분리한 npm workspaces 모노레포입니다.
 
-Currently, two official plugins are available:
+## 구조
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```text
+apps/
+  participant/   # 부스 현황 · 예약 · 내 예약
+  operations/    # 부스 운영자 · 영역/본부 관리자
+packages/
+  shared/        # 타입 · 부스/회차 데이터 · 예약 유틸
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## 개발
+
+```bash
+npm install
+npm run dev:participant   # http://localhost:5173
+npm run dev:operations    # http://localhost:5174
+```
+
+## 빌드
+
+```bash
+npm run build
+```
+
+결과물:
+
+- `dist/` — 참여자 앱 (`/boardgame-festival/`)
+- `dist/ops/` — 운영 앱 (`/boardgame-festival/ops/`)
+
+## 테스트 운영 계정 (mock)
+
+- ID: `staff`
+- PIN: `0000`
