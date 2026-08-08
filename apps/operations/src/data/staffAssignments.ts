@@ -17,42 +17,91 @@ export const HEAD_ADMIN_DIRECTORY = [
   { name: '황보예린', loginId: '황보예린' },
 ] as const;
 
-/** 부스 운영자 (PIN = 0808). 이지수는 본부 계정이라 부스7은 loginId `부스7` */
+/** 부스 운영자 (PIN = 0808). 본부와 이름 겹치면 loginId는 `부스N` */
 export const BOOTH_STAFF_DIRECTORY = [
   {
     name: '박미진',
     loginId: '박미진',
+    experienceGroup: 'BOARD_GAME' as const,
     assignedBoothIds: ['booth-01'] as const,
   },
   {
     name: '홍성준',
     loginId: '홍성준',
+    experienceGroup: 'BOARD_GAME' as const,
     assignedBoothIds: ['booth-02'] as const,
   },
   {
     name: '오경서',
     loginId: '오경서',
+    experienceGroup: 'BOARD_GAME' as const,
     assignedBoothIds: ['booth-03'] as const,
   },
   {
     name: '김선우',
     loginId: '김선우',
+    experienceGroup: 'BOARD_GAME' as const,
     assignedBoothIds: ['booth-04'] as const,
   },
   {
     name: '이현주',
     loginId: '이현주',
+    experienceGroup: 'BOARD_GAME' as const,
     assignedBoothIds: ['booth-05'] as const,
   },
   {
     name: '박주홍',
     loginId: '박주홍',
+    experienceGroup: 'BOARD_GAME' as const,
     assignedBoothIds: ['booth-06'] as const,
   },
   {
     name: '부스7',
     loginId: '부스7',
+    experienceGroup: 'BOARD_GAME' as const,
     assignedBoothIds: ['booth-07'] as const,
+  },
+  {
+    name: '김서헌',
+    loginId: '김서헌',
+    experienceGroup: 'CREATIVE_CONVERGENCE' as const,
+    assignedBoothIds: ['booth-08'] as const,
+  },
+  {
+    name: '이서헌',
+    loginId: '이서헌',
+    experienceGroup: 'CREATIVE_CONVERGENCE' as const,
+    assignedBoothIds: ['booth-09'] as const,
+  },
+  {
+    name: '김영찬',
+    loginId: '김영찬',
+    experienceGroup: 'CREATIVE_CONVERGENCE' as const,
+    assignedBoothIds: ['booth-10'] as const,
+  },
+  {
+    name: '부스11',
+    loginId: '부스11',
+    experienceGroup: 'CREATIVE_CONVERGENCE' as const,
+    assignedBoothIds: ['booth-11'] as const,
+  },
+  {
+    name: '정규경',
+    loginId: '정규경',
+    experienceGroup: 'CREATIVE_CONVERGENCE' as const,
+    assignedBoothIds: ['booth-12'] as const,
+  },
+  {
+    name: '이동한',
+    loginId: '이동한',
+    experienceGroup: 'CREATIVE_CONVERGENCE' as const,
+    assignedBoothIds: ['booth-13'] as const,
+  },
+  {
+    name: '미래잇다',
+    loginId: '미래잇다',
+    experienceGroup: 'CREATIVE_CONVERGENCE' as const,
+    assignedBoothIds: ['booth-14'] as const,
   },
 ] as const;
 
@@ -101,7 +150,7 @@ export const STAFF_ASSIGNMENTS: Array<
     uid: `local-placeholder-booth-${index + 1}`,
     name: person.name,
     role: 'BOOTH_STAFF' as OperatorRole,
-    experienceGroup: 'BOARD_GAME' as const,
+    experienceGroup: person.experienceGroup,
     assignedBoothIds: [...person.assignedBoothIds],
     isActive: true,
     loginId: person.loginId,

@@ -23,7 +23,7 @@ export function AdminStaffPage() {
       <section className="glass-card">
         <h3 className="section-title">로그인 권한 배정</h3>
         <p className="hint-text">
-          본부: 이름 + PIN 0000 · 부스 팀장: 이름(또는 부스7) + PIN 0808
+          본부: 이름 + PIN 0000 · 부스 팀장: 이름(또는 부스7/부스11) + PIN 0808
         </p>
         {STAFF_ASSIGNMENTS.map((item) => (
           <div key={item.loginId} className="staff-summary">

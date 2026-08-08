@@ -35,6 +35,7 @@ const BOOTH_STAFF = [
     loginId: '박미진',
     emailLocal: 'mijin',
     pin: '0808',
+    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-01'],
   },
   {
@@ -42,6 +43,7 @@ const BOOTH_STAFF = [
     loginId: '홍성준',
     emailLocal: 'seongjun',
     pin: '0808',
+    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-02'],
   },
   {
@@ -49,6 +51,7 @@ const BOOTH_STAFF = [
     loginId: '오경서',
     emailLocal: 'gyeongseo',
     pin: '0808',
+    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-03'],
   },
   {
@@ -56,6 +59,7 @@ const BOOTH_STAFF = [
     loginId: '김선우',
     emailLocal: 'seonwoo',
     pin: '0808',
+    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-04'],
   },
   {
@@ -63,6 +67,7 @@ const BOOTH_STAFF = [
     loginId: '이현주',
     emailLocal: 'hyeonju',
     pin: '0808',
+    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-05'],
   },
   {
@@ -70,6 +75,7 @@ const BOOTH_STAFF = [
     loginId: '박주홍',
     emailLocal: 'juhong',
     pin: '0808',
+    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-06'],
   },
   {
@@ -77,7 +83,64 @@ const BOOTH_STAFF = [
     loginId: '부스7',
     emailLocal: 'booth7',
     pin: '0808',
+    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-07'],
+  },
+  {
+    name: '김서헌',
+    loginId: '김서헌',
+    emailLocal: 'seohon',
+    pin: '0808',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    assignedBoothIds: ['booth-08'],
+  },
+  {
+    name: '이서헌',
+    loginId: '이서헌',
+    emailLocal: 'iseohon',
+    pin: '0808',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    assignedBoothIds: ['booth-09'],
+  },
+  {
+    name: '김영찬',
+    loginId: '김영찬',
+    emailLocal: 'youngchan',
+    pin: '0808',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    assignedBoothIds: ['booth-10'],
+  },
+  {
+    name: '부스11',
+    loginId: '부스11',
+    emailLocal: 'booth11',
+    pin: '0808',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    assignedBoothIds: ['booth-11'],
+  },
+  {
+    name: '정규경',
+    loginId: '정규경',
+    emailLocal: 'gyugyeong',
+    pin: '0808',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    assignedBoothIds: ['booth-12'],
+  },
+  {
+    name: '이동한',
+    loginId: '이동한',
+    emailLocal: 'donghan',
+    pin: '0808',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    assignedBoothIds: ['booth-13'],
+  },
+  {
+    name: '미래잇다',
+    loginId: '미래잇다',
+    emailLocal: 'miraeitda',
+    pin: '0808',
+    experienceGroup: 'CREATIVE_CONVERGENCE',
+    assignedBoothIds: ['booth-14'],
   },
 ];
 
@@ -338,7 +401,7 @@ async function main() {
   for (const person of BOOTH_STAFF) {
     await seedOperator(accessToken, person, {
       role: 'BOOTH_STAFF',
-      experienceGroup: 'BOARD_GAME',
+      experienceGroup: person.experienceGroup,
       assignedBoothIds: person.assignedBoothIds,
     });
   }
