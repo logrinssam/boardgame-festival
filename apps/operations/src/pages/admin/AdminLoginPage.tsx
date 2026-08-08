@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { INITIAL_OPERATOR_PIN, STAFF_DIRECTORY } from '../../data/staffAssignments';
+import { HEAD_ADMIN_DIRECTORY, INITIAL_OPERATOR_PIN } from '../../data/staffAssignments';
 import { useAppStore } from '../../context/AppStore';
 
 export function AdminLoginPage() {
@@ -67,7 +67,7 @@ export function AdminLoginPage() {
         list="admin-staff-names"
       />
       <datalist id="admin-staff-names">
-        {STAFF_DIRECTORY.map((person) => (
+        {HEAD_ADMIN_DIRECTORY.map((person) => (
           <option key={person.loginId} value={person.loginId} />
         ))}
       </datalist>

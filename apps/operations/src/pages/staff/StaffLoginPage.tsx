@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { INITIAL_OPERATOR_PIN, STAFF_DIRECTORY } from '../../data/staffAssignments';
+import { BOOTH_STAFF_PIN, INITIAL_OPERATOR_PIN, STAFF_DIRECTORY } from '../../data/staffAssignments';
 import { useAppStore } from '../../context/AppStore';
 
 export function StaffLoginPage() {
@@ -53,7 +53,8 @@ export function StaffLoginPage() {
     <form className="glass-card form-card" onSubmit={(e) => void handleSubmit(e)}>
       <h2 className="section-title">부스 운영자 로그인</h2>
       <p className="hint-text">
-        이름을 입력하세요. 테스트 PIN은 {INITIAL_OPERATOR_PIN} 입니다.
+        이름을 입력하세요. 본부 PIN {INITIAL_OPERATOR_PIN} · 부스 팀장 PIN{' '}
+        {BOOTH_STAFF_PIN}
       </p>
       <label className="field-label" htmlFor="loginId">
         이름
@@ -64,7 +65,7 @@ export function StaffLoginPage() {
         value={loginId}
         onChange={(event) => setLoginId(event.target.value)}
         autoComplete="username"
-        placeholder="예: 조하나"
+        placeholder="예: 박미진"
         list="staff-names"
       />
       <datalist id="staff-names">

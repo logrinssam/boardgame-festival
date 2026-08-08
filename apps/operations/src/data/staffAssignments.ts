@@ -1,13 +1,14 @@
 import {
   BOARD_GAME_BOOTH_IDS,
   CREATIVE_BOOTH_IDS,
+  type OperatorRole,
   type StaffAssignment,
 } from '@bgf/shared';
 
 const ALL_BOOTH_IDS = [...BOARD_GAME_BOOTH_IDS, ...CREATIVE_BOOTH_IDS];
 
-/** 테스트 운영자 목록 (로그인 ID = 이름, PIN = 0000) */
-export const STAFF_DIRECTORY = [
+/** 본부 관리자 (로그인 ID = 이름, PIN = 0000) */
+export const HEAD_ADMIN_DIRECTORY = [
   { name: '조하나', loginId: '조하나' },
   { name: '김선아', loginId: '김선아' },
   { name: '박민영', loginId: '박민영' },
@@ -16,11 +17,57 @@ export const STAFF_DIRECTORY = [
   { name: '황보예린', loginId: '황보예린' },
 ] as const;
 
+/** 부스 운영자 (PIN = 0808). 이지수는 본부 계정이라 부스7은 loginId `부스7` */
+export const BOOTH_STAFF_DIRECTORY = [
+  {
+    name: '박미진',
+    loginId: '박미진',
+    assignedBoothIds: ['booth-01'] as const,
+  },
+  {
+    name: '홍성준',
+    loginId: '홍성준',
+    assignedBoothIds: ['booth-02'] as const,
+  },
+  {
+    name: '오경서',
+    loginId: '오경서',
+    assignedBoothIds: ['booth-03'] as const,
+  },
+  {
+    name: '김선우',
+    loginId: '김선우',
+    assignedBoothIds: ['booth-04'] as const,
+  },
+  {
+    name: '이현주',
+    loginId: '이현주',
+    assignedBoothIds: ['booth-05'] as const,
+  },
+  {
+    name: '박주홍',
+    loginId: '박주홍',
+    assignedBoothIds: ['booth-06'] as const,
+  },
+  {
+    name: '부스7',
+    loginId: '부스7',
+    assignedBoothIds: ['booth-07'] as const,
+  },
+] as const;
+
+/** 로그인 datalist용 — 본부 + 부스 운영자 */
+export const STAFF_DIRECTORY = [
+  ...HEAD_ADMIN_DIRECTORY,
+  ...BOOTH_STAFF_DIRECTORY.map(({ name, loginId }) => ({ name, loginId })),
+] as const;
+
 export const INITIAL_OPERATOR_PIN = '0000';
+export const BOOTH_STAFF_PIN = '0808';
 
 /**
  * Firebase Auth 최소 비밀번호 길이(6) 대응.
- * UI에서는 PIN 0000을 입력하고, Auth에는 000000으로 매핑한다.
+ * UI에서는 PIN 0000/0808을 입력하고, Auth에는 padEnd(6,'0') 로 매핑한다.
  */
 export function pinToAuthPassword(pin: string): string {
   const trimmed = pin.trim();
@@ -28,15 +75,36 @@ export function pinToAuthPassword(pin: string): string {
   return trimmed.padEnd(6, '0');
 }
 
+function formatBoothAssignment(boothIds: string[]): string {
+  if (boothIds.length === ALL_BOOTH_IDS.length) return '전체';
+  return boothIds
+    .map((id) => id.replace('booth-0', '').replace('booth-', ''))
+    .map((num) => `부스 ${Number(num)}`)
+    .join(', ');
+}
+
 /** 관리 화면 표시용 mock (실제 권한은 Firestore staffAssignments) */
-export const STAFF_ASSIGNMENTS: StaffAssignment[] = STAFF_DIRECTORY.map(
-  (person, index) => ({
-    uid: `local-placeholder-${index + 1}`,
+export const STAFF_ASSIGNMENTS: Array<
+  StaffAssignment & { assignmentLabel: string }
+> = [
+  ...HEAD_ADMIN_DIRECTORY.map((person, index) => ({
+    uid: `local-placeholder-admin-${index + 1}`,
     name: person.name,
-    role: 'HEAD_ADMIN',
+    role: 'HEAD_ADMIN' as OperatorRole,
     experienceGroup: null,
     assignedBoothIds: ALL_BOOTH_IDS,
     isActive: true,
     loginId: person.loginId,
-  }),
-);
+    assignmentLabel: formatBoothAssignment(ALL_BOOTH_IDS),
+  })),
+  ...BOOTH_STAFF_DIRECTORY.map((person, index) => ({
+    uid: `local-placeholder-booth-${index + 1}`,
+    name: person.name,
+    role: 'BOOTH_STAFF' as OperatorRole,
+    experienceGroup: 'BOARD_GAME' as const,
+    assignedBoothIds: [...person.assignedBoothIds],
+    isActive: true,
+    loginId: person.loginId,
+    assignmentLabel: formatBoothAssignment([...person.assignedBoothIds]),
+  })),
+];

@@ -2,11 +2,11 @@
   {
     "id": "booth-01",
     "number": 1,
-    "name": "유치부 A",
+    "name": "[유치부A] 우당탕탕! 동물 친구들의 스릴 만점 휴가",
     "subtitle": null,
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
-    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "description": "기억력·순발력·균형감각을 기르는 테마형 보드게임 체험",
     "location": "추후 안내",
     "target": "유치부",
     "groupLabel": "A",
@@ -16,12 +16,8 @@
     "waitlistCapacity": null,
     "status": "CAPACITY_PENDING",
     "staffingType": "THREE_PERSON_ROTATION",
-    "activities": [
-      "우봉고 미니 포켓몬",
-      "비타워",
-      "도토리산",
-      "레이어스 플러스"
-    ],
+    "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-01-slot-01",
@@ -119,11 +115,11 @@
   {
     "id": "booth-02",
     "number": 2,
-    "name": "유치부 B",
+    "name": "[유치부B] 반짝반짝! 보물찾기 대작전",
     "subtitle": null,
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
-    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "description": "보드게임으로 집중력 키우기",
     "location": "추후 안내",
     "target": "유치부",
     "groupLabel": "B",
@@ -133,12 +129,8 @@
     "waitlistCapacity": null,
     "status": "CAPACITY_PENDING",
     "staffingType": "THREE_PERSON_ROTATION",
-    "activities": [
-      "우봉고 미니 포켓몬",
-      "비타워",
-      "도토리산",
-      "레이어스 플러스"
-    ],
+    "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-02-slot-01",
@@ -236,11 +228,11 @@
   {
     "id": "booth-03",
     "number": 3,
-    "name": "1~2학년 A",
+    "name": "[1-2학년A, 자율체험] 비버타워 챌린지! 자신의 한계에 도전하라!",
     "subtitle": null,
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
-    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "description": "비버타워로 정해진 시간 동안 빠르고 정확하게 블록을 쌓아 올리기",
     "location": "추후 안내",
     "target": "초등학교 1~2학년",
     "groupLabel": "A",
@@ -250,12 +242,8 @@
     "waitlistCapacity": null,
     "status": "CAPACITY_PENDING",
     "staffingType": "THREE_PERSON_ROTATION",
-    "activities": [
-      "우봉고 미니 포켓몬",
-      "비타워",
-      "도토리산",
-      "레이어스 플러스"
-    ],
+    "activities": [],
+    "operationMode": "WALK_IN_CHECKIN",
     "slots": [
       {
         "id": "booth-03-slot-01",
@@ -353,11 +341,11 @@
   {
     "id": "booth-04",
     "number": 4,
-    "name": "1~2학년 B",
+    "name": "[1-2학년B] 유레카! 북극곰의 한글 탐험",
     "subtitle": null,
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
-    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "description": "보드게임으로 기르는 집중력과 절차적 사고력",
     "location": "추후 안내",
     "target": "초등학교 1~2학년",
     "groupLabel": "B",
@@ -367,12 +355,8 @@
     "waitlistCapacity": null,
     "status": "CAPACITY_PENDING",
     "staffingType": "THREE_PERSON_ROTATION",
-    "activities": [
-      "우봉고 미니 포켓몬",
-      "비타워",
-      "도토리산",
-      "레이어스 플러스"
-    ],
+    "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-04-slot-01",
@@ -470,11 +454,11 @@
   {
     "id": "booth-05",
     "number": 5,
-    "name": "3~4학년",
+    "name": "[3-4학년] 순발력 쾅쾅! 두뇌 깨우기 보드게임",
     "subtitle": null,
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
-    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "description": "보드게임으로 키우는 순발력, 창의적 사고력",
     "location": "추후 안내",
     "target": "초등학교 3~4학년",
     "groupLabel": null,
@@ -484,12 +468,8 @@
     "waitlistCapacity": null,
     "status": "CAPACITY_PENDING",
     "staffingType": "THREE_PERSON_ROTATION",
-    "activities": [
-      "우봉고 미니 포켓몬",
-      "비타워",
-      "도토리산",
-      "레이어스 플러스"
-    ],
+    "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-05-slot-01",
@@ -587,11 +567,11 @@
   {
     "id": "booth-06",
     "number": 6,
-    "name": "4학년 이상",
+    "name": "[4학년 이상, 자율체험] 공간지각능력 더 지니어스",
     "subtitle": null,
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
-    "description": "수리력과 도형 감각을 기르는 수학 보드게임 체험",
+    "description": "공간지각능력을 기를 수 있는 1인 챌린지와 1대1 대전",
     "location": "추후 안내",
     "target": "초등학교 4학년 이상",
     "groupLabel": null,
@@ -601,12 +581,8 @@
     "waitlistCapacity": null,
     "status": "CAPACITY_PENDING",
     "staffingType": "THREE_PERSON_ROTATION",
-    "activities": [
-      "우봉고 미니 포켓몬",
-      "비타워",
-      "도토리산",
-      "레이어스 플러스"
-    ],
+    "activities": [],
+    "operationMode": "WALK_IN_CHECKIN",
     "slots": [
       {
         "id": "booth-06-slot-01",
@@ -704,13 +680,13 @@
   {
     "id": "booth-07",
     "number": 7,
-    "name": "과학아 놀자! 그래비트랙스",
+    "name": "[학년 무관, 자율체험] 힘의 법칙: 움직임을 지배하라!",
     "subtitle": null,
     "experienceGroup": "BOARD_GAME",
     "boothType": "GRAVITRAX",
-    "description": "그래비트랙스를 자유롭게 체험하는 과학 놀이 부스",
+    "description": "중력과 자석의 힘을 이해하고 전략적으로 활용하는 보드게임 체험",
     "location": "추후 안내",
-    "target": "추후 안내",
+    "target": "학년 무관",
     "groupLabel": null,
     "durationMinutes": 25,
     "accentColor": "#20B2A8",
@@ -719,6 +695,7 @@
     "status": "CAPACITY_PENDING",
     "staffingType": "FIXED_STAFF",
     "activities": [],
+    "operationMode": "WALK_IN_CHECKIN",
     "slots": [
       {
         "id": "booth-07-slot-01",
@@ -831,6 +808,7 @@
     "status": "CAPACITY_PENDING",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-08-slot-01",
@@ -943,6 +921,7 @@
     "status": "CAPACITY_PENDING",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-09-slot-01",
@@ -1055,6 +1034,7 @@
     "status": "CAPACITY_PENDING",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-10-slot-01",
@@ -1167,6 +1147,7 @@
     "status": "CAPACITY_PENDING",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-11-slot-01",
@@ -1279,6 +1260,7 @@
     "status": "CAPACITY_PENDING",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-12-slot-01",
@@ -1391,6 +1373,7 @@
     "status": "CAPACITY_PENDING",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-13-slot-01",
@@ -1503,6 +1486,7 @@
     "status": "CAPACITY_PENDING",
     "staffingType": "FIXED_STAFF",
     "activities": [],
+    "operationMode": "TIME_RESERVATION",
     "slots": [
       {
         "id": "booth-14-slot-01",

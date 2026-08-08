@@ -1,13 +1,13 @@
-import type { Booth, BoothSlot, BoothType, ExperienceGroup, StaffingType } from '../types';
+import type {
+  Booth,
+  BoothOperationMode,
+  BoothSlot,
+  BoothType,
+  ExperienceGroup,
+  StaffingType,
+} from '../types';
 import { SCHEDULE_SLOTS } from './scheduleData';
 import { resolveOperationMode } from '../utils/operationMode';
-
-const BOARD_GAME_ACTIVITIES = [
-  '우봉고 미니 포켓몬',
-  '비타워',
-  '도토리산',
-  '레이어스 플러스',
-] as const;
 
 function createBoothSlots(boothId: string): BoothSlot[] {
   return SCHEDULE_SLOTS.map((slot) => ({
@@ -35,6 +35,7 @@ interface BoothSeed {
   accentColor: string;
   staffingType: StaffingType;
   activities?: string[];
+  operationMode?: BoothOperationMode;
 }
 
 function createBooth(seed: BoothSeed): Booth {
@@ -63,101 +64,98 @@ function createBooth(seed: BoothSeed): Booth {
     operationMode: resolveOperationMode({
       id: seed.id,
       number: seed.number,
-      operationMode: 'TIME_RESERVATION',
+      operationMode: seed.operationMode ?? 'TIME_RESERVATION',
     }),
   };
 }
-
-const BOARD_GAME_DESCRIPTION =
-  '수리력과 도형 감각을 기르는 수학 보드게임 체험';
 
 export const BOOTHS: Booth[] = [
   createBooth({
     id: 'booth-01',
     number: 1,
-    name: '유치부 A',
+    name: '[유치부A] 우당탕탕! 동물 친구들의 스릴 만점 휴가',
     experienceGroup: 'BOARD_GAME',
     boothType: 'AGE_BOARD_GAME',
     target: '유치부',
     groupLabel: 'A',
-    description: BOARD_GAME_DESCRIPTION,
+    description: '기억력·순발력·균형감각을 기르는 테마형 보드게임 체험',
     accentColor: '#4F8CFF',
     staffingType: 'THREE_PERSON_ROTATION',
-    activities: [...BOARD_GAME_ACTIVITIES],
   }),
   createBooth({
     id: 'booth-02',
     number: 2,
-    name: '유치부 B',
+    name: '[유치부B] 반짝반짝! 보물찾기 대작전',
     experienceGroup: 'BOARD_GAME',
     boothType: 'AGE_BOARD_GAME',
     target: '유치부',
     groupLabel: 'B',
-    description: BOARD_GAME_DESCRIPTION,
+    description: '보드게임으로 집중력 키우기',
     accentColor: '#5B8DEF',
     staffingType: 'THREE_PERSON_ROTATION',
-    activities: [...BOARD_GAME_ACTIVITIES],
   }),
   createBooth({
     id: 'booth-03',
     number: 3,
-    name: '1~2학년 A',
+    name: '[1-2학년A, 자율체험] 비버타워 챌린지! 자신의 한계에 도전하라!',
     experienceGroup: 'BOARD_GAME',
     boothType: 'AGE_BOARD_GAME',
     target: '초등학교 1~2학년',
     groupLabel: 'A',
-    description: BOARD_GAME_DESCRIPTION,
+    description:
+      '비버타워로 정해진 시간 동안 빠르고 정확하게 블록을 쌓아 올리기',
     accentColor: '#3D9BFF',
     staffingType: 'THREE_PERSON_ROTATION',
-    activities: [...BOARD_GAME_ACTIVITIES],
+    operationMode: 'WALK_IN_CHECKIN',
   }),
   createBooth({
     id: 'booth-04',
     number: 4,
-    name: '1~2학년 B',
+    name: '[1-2학년B] 유레카! 북극곰의 한글 탐험',
     experienceGroup: 'BOARD_GAME',
     boothType: 'AGE_BOARD_GAME',
     target: '초등학교 1~2학년',
     groupLabel: 'B',
-    description: BOARD_GAME_DESCRIPTION,
+    description: '보드게임으로 기르는 집중력과 절차적 사고력',
     accentColor: '#458AE8',
     staffingType: 'THREE_PERSON_ROTATION',
-    activities: [...BOARD_GAME_ACTIVITIES],
   }),
   createBooth({
     id: 'booth-05',
     number: 5,
-    name: '3~4학년',
+    name: '[3-4학년] 순발력 쾅쾅! 두뇌 깨우기 보드게임',
     experienceGroup: 'BOARD_GAME',
     boothType: 'AGE_BOARD_GAME',
     target: '초등학교 3~4학년',
-    description: BOARD_GAME_DESCRIPTION,
+    description: '보드게임으로 키우는 순발력, 창의적 사고력',
     accentColor: '#2F7FE0',
     staffingType: 'THREE_PERSON_ROTATION',
-    activities: [...BOARD_GAME_ACTIVITIES],
   }),
   createBooth({
     id: 'booth-06',
     number: 6,
-    name: '4학년 이상',
+    name: '[4학년 이상, 자율체험] 공간지각능력 더 지니어스',
     experienceGroup: 'BOARD_GAME',
     boothType: 'AGE_BOARD_GAME',
     target: '초등학교 4학년 이상',
-    description: BOARD_GAME_DESCRIPTION,
+    description:
+      '공간지각능력을 기를 수 있는 1인 챌린지와 1대1 대전',
     accentColor: '#2A6FD0',
     staffingType: 'THREE_PERSON_ROTATION',
-    activities: [...BOARD_GAME_ACTIVITIES],
+    operationMode: 'WALK_IN_CHECKIN',
   }),
   createBooth({
     id: 'booth-07',
     number: 7,
-    name: '과학아 놀자! 그래비트랙스',
+    name: '[학년 무관, 자율체험] 힘의 법칙: 움직임을 지배하라!',
     experienceGroup: 'BOARD_GAME',
     boothType: 'GRAVITRAX',
-    target: '추후 안내',
-    description: '그래비트랙스를 자유롭게 체험하는 과학 놀이 부스',
+    target: '학년 무관',
+    description:
+      '중력과 자석의 힘을 이해하고 전략적으로 활용하는 보드게임 체험',
     accentColor: '#20B2A8',
     staffingType: 'FIXED_STAFF',
+    operationMode: 'WALK_IN_CHECKIN',
   }),
   createBooth({
     id: 'booth-08',

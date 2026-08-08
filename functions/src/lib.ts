@@ -25,7 +25,7 @@ export const ALLOWED_STATUS_TRANSITIONS: Record<
   WAITLIST_CALLED: ['CHECKED_IN', 'CANCELLED'],
 };
 
-export const DEMO_MODE = true;
+export const DEMO_MODE = false;
 export const DEMO_CAPACITY = 6;
 export const DEMO_WAITLIST_CAPACITY = 2;
 

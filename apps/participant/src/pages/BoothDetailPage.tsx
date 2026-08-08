@@ -89,7 +89,9 @@ export function BoothDetailPage() {
         </dl>
 
         <h3 className="section-title">활동 설명</h3>
-        <p className="body-text">{booth.description}</p>
+        <p className="body-text" style={{ whiteSpace: 'pre-line' }}>
+          {booth.description}
+        </p>
 
         {walkIn ? (
           <>
