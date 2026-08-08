@@ -7,7 +7,9 @@ import {
   hasValidWalkInAccess,
   isWalkInBooth,
   OPERATION_MODE_LABELS,
+  PARTICIPANT_GENDER_LABELS,
   WALK_IN_PUBLIC_STATUS_LABELS,
+  type ParticipantGender,
 } from '@bgf/shared';
 
 type SchoolTrack = 'KINDERGARTEN' | 'ELEMENTARY' | '';
@@ -23,6 +25,7 @@ export function WalkInRegisterPage() {
   const [participantName, setParticipantName] = useState('');
   const [phone, setPhone] = useState('');
   const [phoneConfirm, setPhoneConfirm] = useState('');
+  const [gender, setGender] = useState<ParticipantGender | ''>('');
   const [track, setTrack] = useState<SchoolTrack>('');
   const [elementaryGrade, setElementaryGrade] = useState<number | null>(null);
   const [kindergartenAge, setKindergartenAge] = useState('');
@@ -71,6 +74,10 @@ export function WalkInRegisterPage() {
       setError('필수 항목을 모두 입력해 주세요.');
       return;
     }
+    if (!gender) {
+      setError('성별을 선택해 주세요.');
+      return;
+    }
     if (track === 'ELEMENTARY' && elementaryGrade == null) {
       setError('학년을 선택해 주세요.');
       return;
@@ -91,6 +98,7 @@ export function WalkInRegisterPage() {
       phone,
       phoneConfirm,
       gradeOrAge: gradeOrAge || undefined,
+      gender,
     });
     setPending(false);
 
@@ -173,6 +181,29 @@ export function WalkInRegisterPage() {
         inputMode="tel"
         placeholder="다시 입력"
       />
+
+      <p className="field-label" id="walkin-gender-label">
+        성별
+      </p>
+      <div
+        className="choice-row"
+        role="group"
+        aria-labelledby="walkin-gender-label"
+      >
+        {(['MALE', 'FEMALE'] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            className={`choice-chip${gender === value ? ' selected' : ''}`}
+            onClick={() => {
+              setGender(value);
+              setError('');
+            }}
+          >
+            {PARTICIPANT_GENDER_LABELS[value]}
+          </button>
+        ))}
+      </div>
 
       <p className="field-label">학년 / 연령 (선택)</p>
       <div className="choice-row">

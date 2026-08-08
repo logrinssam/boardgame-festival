@@ -1,4 +1,9 @@
-import type { Booth, Reservation, ReservationStatus } from '../types';
+import type {
+  Booth,
+  ParticipantGender,
+  Reservation,
+  ReservationStatus,
+} from '../types';
 import { BLOCKING_STATUSES } from '../types';
 import { canBookSlot, getEffectiveCapacity } from '../utils/capacity';
 import { assertTransition } from './reservationStatusService';
@@ -138,6 +143,7 @@ export function createReservationRecord(input: {
   participantName: string;
   phone: string;
   gradeOrAge: string;
+  gender: ParticipantGender;
   isWaitlist: boolean;
   existingCodes: Set<string>;
   existingWaitlistCount: number;
@@ -160,6 +166,7 @@ export function createReservationRecord(input: {
     phone: digitsOnly(input.phone),
     phoneLast4: getPhoneLast4(input.phone),
     gradeOrAge: input.gradeOrAge.trim(),
+    gender: input.gender,
     status,
     waitlistOrder: input.isWaitlist ? input.existingWaitlistCount + 1 : null,
     createdAt: now,

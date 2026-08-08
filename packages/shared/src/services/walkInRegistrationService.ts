@@ -1,4 +1,5 @@
 import type {
+  ParticipantGender,
   WalkInBoothPublicStatus,
   WalkInBoothSettings,
   WalkInRegistration,
@@ -38,7 +39,12 @@ function isSameLocalDay(iso: string, now = new Date()): boolean {
 }
 
 function loadAll(): WalkInRegistration[] {
-  return readJson<WalkInRegistration[]>(REGISTRATIONS_KEY) ?? [];
+  const items = readJson<WalkInRegistration[]>(REGISTRATIONS_KEY) ?? [];
+  return items.map((item) => ({
+    ...item,
+    gender:
+      item.gender === 'MALE' || item.gender === 'FEMALE' ? item.gender : null,
+  }));
 }
 
 function saveAll(items: WalkInRegistration[]): void {
@@ -153,6 +159,7 @@ export function createWalkInRegistration(input: {
   phone: string;
   phoneConfirm: string;
   gradeOrAge?: string;
+  gender: ParticipantGender;
 }):
   | { ok: true; registration: WalkInRegistration; duplicate: boolean }
   | { ok: false; message: string } {
@@ -166,6 +173,9 @@ export function createWalkInRegistration(input: {
   }
   if (phone !== phoneConfirm) {
     return { ok: false, message: '휴대폰 번호 확인이 일치하지 않습니다.' };
+  }
+  if (input.gender !== 'MALE' && input.gender !== 'FEMALE') {
+    return { ok: false, message: '성별을 선택해 주세요.' };
   }
 
   const settings = getWalkInBoothSettings(input.boothId);
@@ -195,6 +205,7 @@ export function createWalkInRegistration(input: {
     maskedPhone: maskPhone(phone),
     phoneLastFour: getPhoneLast4(phone),
     gradeOrAge: input.gradeOrAge?.trim() || null,
+    gender: input.gender,
     confirmationNumber,
     status: 'REGISTERED',
     createdAt: now,

@@ -167,6 +167,8 @@ export function asReservation(
     phone: String(data.phone),
     phoneLast4: String(data.phoneLast4),
     gradeOrAge: String(data.gradeOrAge),
+    gender:
+      data.gender === 'MALE' || data.gender === 'FEMALE' ? data.gender : null,
     status: data.status as ReservationStatus,
     waitlistOrder: (data.waitlistOrder as number | null) ?? null,
     createdAt: String(data.createdAt),

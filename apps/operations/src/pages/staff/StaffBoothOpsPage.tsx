@@ -371,6 +371,10 @@ export function StaffBoothOpsPage() {
             <p className="admin-meta">
               {maskPhone(reservation.phone)} · 뒤 {reservation.phoneLast4} · #
               {reservation.reservationCode}
+              {reservation.gender
+                ? ` · ${reservation.gender === 'MALE' ? '남' : '여'}`
+                : ''}
+              {reservation.gradeOrAge ? ` · ${reservation.gradeOrAge}` : ''}
             </p>
             <p className="admin-meta">
               생성 {formatClock(reservation.createdAt)}

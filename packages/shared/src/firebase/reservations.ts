@@ -65,6 +65,8 @@ function asReservation(id: string, data: Record<string, unknown>): Reservation {
     phone: String(data.phone),
     phoneLast4: String(data.phoneLast4),
     gradeOrAge: String(data.gradeOrAge),
+    gender:
+      data.gender === 'MALE' || data.gender === 'FEMALE' ? data.gender : null,
     status: data.status as Reservation['status'],
     waitlistOrder: (data.waitlistOrder as number | null) ?? null,
     createdAt: String(data.createdAt),

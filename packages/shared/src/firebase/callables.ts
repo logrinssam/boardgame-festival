@@ -12,6 +12,7 @@ export async function createReservationCallable(input: {
   participantName: string;
   phone: string;
   gradeOrAge: string;
+  gender: 'MALE' | 'FEMALE';
   accessCode?: string;
 }): Promise<{ ok: true; reservation: Reservation } | { ok: false; message: string }> {
   try {

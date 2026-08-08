@@ -52,6 +52,9 @@ export function ConfirmPage() {
       <p className="admin-meta">
         예약번호 {reservation.reservationCode} ·{' '}
         {RESERVATION_STATUS_LABELS[reservation.status]}
+        {reservation.gender
+          ? ` · ${reservation.gender === 'MALE' ? '남' : '여'}`
+          : ''}
         {reservation.waitlistOrder
           ? ` · 예비 ${reservation.waitlistOrder}번`
           : ''}

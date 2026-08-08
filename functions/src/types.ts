@@ -74,6 +74,7 @@ export interface Reservation {
   phone: string;
   phoneLast4: string;
   gradeOrAge: string;
+  gender: 'MALE' | 'FEMALE' | null;
   status: ReservationStatus;
   waitlistOrder: number | null;
   createdAt: string;

@@ -1,7 +1,12 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
-import { formatTimeRange, canBookSlot } from '@bgf/shared';
+import {
+  formatTimeRange,
+  canBookSlot,
+  PARTICIPANT_GENDER_LABELS,
+  type ParticipantGender,
+} from '@bgf/shared';
 
 interface BookingState {
   boothId?: string;
@@ -26,6 +31,7 @@ export function ParticipantFormPage() {
 
   const [participantName, setParticipantName] = useState('');
   const [phone, setPhone] = useState('');
+  const [gender, setGender] = useState<ParticipantGender | ''>('');
   const [track, setTrack] = useState<SchoolTrack>('');
   const [elementaryGrade, setElementaryGrade] = useState<number | null>(null);
   const [kindergartenAge, setKindergartenAge] = useState('');
@@ -71,6 +77,10 @@ export function ParticipantFormPage() {
       setError('이름과 연락처를 입력해 주세요.');
       return;
     }
+    if (!gender) {
+      setError('성별을 선택해 주세요.');
+      return;
+    }
     if (!track) {
       setError('유치 / 초등 중 하나를 선택해 주세요.');
       return;
@@ -81,7 +91,12 @@ export function ParticipantFormPage() {
     }
     if (track === 'KINDERGARTEN') {
       const age = Number(kindergartenAge);
-      if (!kindergartenAge.trim() || !Number.isFinite(age) || age < 3 || age > 7) {
+      if (
+        !kindergartenAge.trim() ||
+        !Number.isFinite(age) ||
+        age < 3 ||
+        age > 7
+      ) {
         setError('유치 나이는 3~7 사이 숫자로 입력해 주세요.');
         return;
       }
@@ -99,6 +114,7 @@ export function ParticipantFormPage() {
       participantName,
       phone,
       gradeOrAge,
+      gender,
       accessCode: state.accessCode,
     });
     setPending(false);
@@ -150,14 +166,29 @@ export function ParticipantFormPage() {
         placeholder="01012345678"
       />
 
+      <p className="field-label" id="gender-label">
+        성별
+      </p>
+      <div className="choice-row" role="group" aria-labelledby="gender-label">
+        {(['MALE', 'FEMALE'] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            className={`choice-chip${gender === value ? ' selected' : ''}`}
+            onClick={() => {
+              setGender(value);
+              setError('');
+            }}
+          >
+            {PARTICIPANT_GENDER_LABELS[value]}
+          </button>
+        ))}
+      </div>
+
       <p className="field-label" id="track-label">
         학년 / 연령
       </p>
-      <div
-        className="choice-row"
-        role="group"
-        aria-labelledby="track-label"
-      >
+      <div className="choice-row" role="group" aria-labelledby="track-label">
         <button
           type="button"
           className={`choice-chip${track === 'KINDERGARTEN' ? ' selected' : ''}`}
@@ -208,7 +239,9 @@ export function ParticipantFormPage() {
             className="field-input"
             value={kindergartenAge}
             onChange={(event) =>
-              setKindergartenAge(event.target.value.replace(/\D/g, '').slice(0, 1))
+              setKindergartenAge(
+                event.target.value.replace(/\D/g, '').slice(0, 1),
+              )
             }
             inputMode="numeric"
             placeholder="예: 5"

@@ -105,8 +105,12 @@ export function StaffWalkInOpsPanel({ booth }: StaffWalkInOpsPanelProps) {
             {rows.slice(0, 20).map((item) => (
               <li key={item.id}>
                 <strong>{item.participantName}</strong> · 뒤 {item.phoneLastFour}{' '}
-                · {item.maskedPhone} · #{item.confirmationNumber} ·{' '}
-                {formatClock(item.createdAt)} · {item.status}
+                · {item.maskedPhone}
+                {item.gender
+                  ? ` · ${item.gender === 'MALE' ? '남' : '여'}`
+                  : ''}{' '}
+                · #{item.confirmationNumber} · {formatClock(item.createdAt)} ·{' '}
+                {item.status}
               </li>
             ))}
           </ul>

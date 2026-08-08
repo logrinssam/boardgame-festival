@@ -6,6 +6,13 @@
  * 반드시 다시 수행해야 한다.
  */
 
+export type ParticipantGender = 'MALE' | 'FEMALE';
+
+export const PARTICIPANT_GENDER_LABELS: Record<ParticipantGender, string> = {
+  MALE: '남',
+  FEMALE: '여',
+};
+
 export type ExperienceGroup = 'BOARD_GAME' | 'CREATIVE_CONVERGENCE';
 
 export type BoothType =
@@ -162,6 +169,8 @@ export interface Reservation {
   phone: string;
   phoneLast4: string;
   gradeOrAge: string;
+  /** 구 예약은 null일 수 있음 */
+  gender: ParticipantGender | null;
   status: ReservationStatus;
   waitlistOrder: number | null;
   createdAt: string;
@@ -178,6 +187,7 @@ export interface WalkInRegistration {
   maskedPhone: string;
   phoneLastFour: string;
   gradeOrAge: string | null;
+  gender: ParticipantGender | null;
   confirmationNumber: string;
   status: WalkInRegistrationStatus;
   createdAt: string;

@@ -86,6 +86,7 @@ export const createReservation = onCall(callableOpts, async (request) => {
     participantName?: string;
     phone?: string;
     gradeOrAge?: string;
+    gender?: string;
     accessCode?: string;
   };
 
@@ -94,7 +95,8 @@ export const createReservation = onCall(callableOpts, async (request) => {
     !data.slotId ||
     !data.participantName ||
     !data.phone ||
-    !data.gradeOrAge
+    !data.gradeOrAge ||
+    (data.gender !== 'MALE' && data.gender !== 'FEMALE')
   ) {
     throw new HttpsError('invalid-argument', '필수 예약 정보가 없습니다.');
   }
@@ -177,6 +179,7 @@ export const createReservation = onCall(callableOpts, async (request) => {
       phone: phoneDigits,
       phoneLast4: getPhoneLast4(phoneDigits),
       gradeOrAge: data.gradeOrAge!.trim(),
+      gender: data.gender as 'MALE' | 'FEMALE',
       status,
       waitlistOrder: bookable.isWaitlist ? slot.waitlistCount + 1 : null,
       createdAt: now,
