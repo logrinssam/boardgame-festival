@@ -80,7 +80,7 @@ export function AccessCodePage() {
     <form className="glass-card form-card" onSubmit={handleSubmit}>
       <h2 className="section-title">참가자 현장코드</h2>
       <p className="hint-text">
-        부스 안내판에 공개된 숫자 6자리 코드입니다. 운영자 PIN과 다릅니다.
+        부스 안내판에 공개된 숫자 6자리 코드입니다.
       </p>
       <label className="field-label" htmlFor="access-code">
         현장코드
@@ -95,7 +95,7 @@ export function AccessCodePage() {
         }}
         inputMode="numeric"
         autoComplete="one-time-code"
-        placeholder="예: 381462"
+        placeholder="예: 123456"
       />
       {!currentBooth.accessCodeConfigured ? (
         <p className="hint-text">
