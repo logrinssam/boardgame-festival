@@ -9,6 +9,24 @@ import type {
 import { SCHEDULE_SLOTS } from './scheduleData';
 import { resolveOperationMode } from '../utils/operationMode';
 
+/** 부스별 참가자 현장코드 (숫자 6자리). 운영자 PIN과 별개. */
+export const BOOTH_ACCESS_CODES: Record<number, string> = {
+  1: '381462',
+  2: '572913',
+  3: '649028',
+  4: '715834',
+  5: '826491',
+  6: '903517',
+  7: '148273',
+  8: '256839',
+  9: '367514',
+  10: '479026',
+  11: '584173',
+  12: '691850',
+  13: '713946',
+  14: '825307',
+};
+
 function createBoothSlots(boothId: string): BoothSlot[] {
   return SCHEDULE_SLOTS.map((slot) => ({
     id: `${boothId}-${slot.id}`,
@@ -39,6 +57,7 @@ interface BoothSeed {
 }
 
 function createBooth(seed: BoothSeed): Booth {
+  const accessCode = BOOTH_ACCESS_CODES[seed.number] ?? null;
   return {
     id: seed.id,
     number: seed.number,
@@ -52,8 +71,8 @@ function createBooth(seed: BoothSeed): Booth {
     groupLabel: seed.groupLabel,
     durationMinutes: 25,
     accentColor: seed.accentColor,
-    accessCodeConfigured: false,
-    accessCode: null,
+    accessCodeConfigured: Boolean(accessCode),
+    accessCode,
     operatorPinConfigured: true,
     capacity: 4,
     waitlistCapacity: 2,

@@ -18,6 +18,8 @@
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "381462",
     "slots": [
       {
         "id": "booth-01-slot-01",
@@ -131,6 +133,8 @@
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "572913",
     "slots": [
       {
         "id": "booth-02-slot-01",
@@ -244,6 +248,8 @@
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [],
     "operationMode": "WALK_IN_CHECKIN",
+    "accessCodeConfigured": true,
+    "accessCode": "649028",
     "slots": [
       {
         "id": "booth-03-slot-01",
@@ -357,6 +363,8 @@
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "715834",
     "slots": [
       {
         "id": "booth-04-slot-01",
@@ -470,6 +478,8 @@
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "826491",
     "slots": [
       {
         "id": "booth-05-slot-01",
@@ -583,6 +593,8 @@
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [],
     "operationMode": "WALK_IN_CHECKIN",
+    "accessCodeConfigured": true,
+    "accessCode": "903517",
     "slots": [
       {
         "id": "booth-06-slot-01",
@@ -696,6 +708,8 @@
     "staffingType": "FIXED_STAFF",
     "activities": [],
     "operationMode": "WALK_IN_CHECKIN",
+    "accessCodeConfigured": true,
+    "accessCode": "148273",
     "slots": [
       {
         "id": "booth-07-slot-01",
@@ -809,6 +823,8 @@
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "256839",
     "slots": [
       {
         "id": "booth-08-slot-01",
@@ -922,6 +938,8 @@
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "367514",
     "slots": [
       {
         "id": "booth-09-slot-01",
@@ -1035,6 +1053,8 @@
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "479026",
     "slots": [
       {
         "id": "booth-10-slot-01",
@@ -1148,6 +1168,8 @@
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "584173",
     "slots": [
       {
         "id": "booth-11-slot-01",
@@ -1261,6 +1283,8 @@
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "691850",
     "slots": [
       {
         "id": "booth-12-slot-01",
@@ -1374,6 +1398,8 @@
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "713946",
     "slots": [
       {
         "id": "booth-13-slot-01",
@@ -1487,6 +1513,8 @@
     "staffingType": "FIXED_STAFF",
     "activities": [],
     "operationMode": "TIME_RESERVATION",
+    "accessCodeConfigured": true,
+    "accessCode": "825307",
     "slots": [
       {
         "id": "booth-14-slot-01",
