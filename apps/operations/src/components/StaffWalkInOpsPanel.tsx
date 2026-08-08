@@ -8,6 +8,7 @@ import {
   WALK_IN_PUBLIC_STATUS_LABELS,
   type Booth,
 } from '@bgf/shared';
+import { StaffBoothCapacityForm } from './StaffBoothCapacityForm';
 
 function formatClock(iso: string): string {
   const date = new Date(iso);
@@ -76,6 +77,8 @@ export function StaffWalkInOpsPanel({ booth }: StaffWalkInOpsPanelProps) {
           {WALK_IN_PUBLIC_STATUS_LABELS[stats.publicStatus]}
         </p>
       </section>
+
+      <StaffBoothCapacityForm booth={booth} />
 
       <section className="glass-card">
         <h3 className="section-title">현장 등록 운영 상태</h3>
