@@ -33,10 +33,19 @@ function asBooth(id: string, data: Record<string, unknown>): Booth {
     durationMinutes: Number(data.durationMinutes ?? 25),
     accentColor: String(data.accentColor ?? '#4c6ef5'),
     accessCodeConfigured: Boolean(data.accessCodeConfigured),
-    accessCode: (data.accessCode as string | null) ?? null,
+    accessCode:
+      data.accessCode == null || data.accessCode === ''
+        ? null
+        : String(data.accessCode),
     operatorPinConfigured: Boolean(data.operatorPinConfigured),
-    capacity: (data.capacity as number | null) ?? null,
-    waitlistCapacity: (data.waitlistCapacity as number | null) ?? null,
+    capacity:
+      data.capacity === null || data.capacity === undefined
+        ? null
+        : Number(data.capacity),
+    waitlistCapacity:
+      data.waitlistCapacity === null || data.waitlistCapacity === undefined
+        ? null
+        : Number(data.waitlistCapacity),
     status: data.status as Booth['status'],
     staffingType: data.staffingType as Booth['staffingType'],
     activities: (data.activities as string[] | undefined) ?? undefined,

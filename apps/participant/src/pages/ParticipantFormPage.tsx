@@ -4,6 +4,7 @@ import { useAppStore } from '../context/AppStore';
 import {
   formatTimeRange,
   canBookSlot,
+  getGrantedBoothAccessCode,
   PARTICIPANT_GENDER_LABELS,
   type ParticipantGender,
 } from '@bgf/shared';
@@ -106,6 +107,9 @@ export function ParticipantFormPage() {
       return;
     }
 
+    const accessCode =
+      state.accessCode || getGrantedBoothAccessCode(currentBooth.id) || undefined;
+
     setPending(true);
     setError('');
     const result = await createReservation({
@@ -115,7 +119,7 @@ export function ParticipantFormPage() {
       phone,
       gradeOrAge,
       gender,
-      accessCode: state.accessCode,
+      accessCode,
     });
     setPending(false);
 

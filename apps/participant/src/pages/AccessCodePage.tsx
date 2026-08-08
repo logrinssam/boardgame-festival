@@ -2,22 +2,29 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
 import {
+  accessCodesMatch,
   getEffectiveCapacity,
-  grantWalkInAccess,
+  grantBoothAccess,
   isWalkInBooth,
+  normalizeAccessCode,
 } from '@bgf/shared';
 
 export function AccessCodePage() {
   const { boothId = '' } = useParams();
   const navigate = useNavigate();
-  const { getBooth } = useAppStore();
+  const { getBooth, loading } = useAppStore();
   const booth = getBooth(boothId);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
 
+  if (loading && !booth) {
+    return <div className="glass-card">부스 정보를 불러오는 중…</div>;
+  }
+
   if (!booth) {
     return (
       <div className="glass-card">
+        <p>부스를 찾을 수 없습니다.</p>
         <Link to="/" className="btn btn-primary">
           홈으로
         </Link>
@@ -42,21 +49,24 @@ export function AccessCodePage() {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const trimmed = code.trim();
+    const trimmed = normalizeAccessCode(code);
     if (!trimmed) {
       setError('현장코드를 입력해 주세요.');
       return;
     }
 
-    if (currentBooth.accessCodeConfigured && currentBooth.accessCode) {
-      if (trimmed !== currentBooth.accessCode) {
-        setError('현장코드가 올바르지 않습니다.');
-        return;
-      }
+    if (
+      currentBooth.accessCodeConfigured &&
+      currentBooth.accessCode &&
+      !accessCodesMatch(currentBooth.accessCode, trimmed)
+    ) {
+      setError('현장코드가 올바르지 않습니다. 안내판의 6자리 숫자를 확인해 주세요.');
+      return;
     }
 
+    grantBoothAccess(currentBooth.id, trimmed);
+
     if (walkIn) {
-      grantWalkInAccess(currentBooth.id, trimmed);
       navigate(`/booths/${currentBooth.id}/walk-in-register`);
       return;
     }
@@ -70,7 +80,7 @@ export function AccessCodePage() {
     <form className="glass-card form-card" onSubmit={handleSubmit}>
       <h2 className="section-title">참가자 현장코드</h2>
       <p className="hint-text">
-        부스 안내판에 공개된 코드입니다. 운영자 PIN과 다릅니다.
+        부스 안내판에 공개된 숫자 6자리 코드입니다. 운영자 PIN과 다릅니다.
       </p>
       <label className="field-label" htmlFor="access-code">
         현장코드
@@ -83,7 +93,9 @@ export function AccessCodePage() {
           setCode(event.target.value);
           setError('');
         }}
-        autoComplete="off"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        placeholder="예: 381462"
       />
       {!currentBooth.accessCodeConfigured ? (
         <p className="hint-text">

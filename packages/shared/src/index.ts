@@ -8,4 +8,5 @@ export * from './services/storageService';
 export * from './services/reservationService';
 export * from './services/reservationStatusService';
 export * from './services/walkInRegistrationService';
+export * from './services/boothAccessService';
 export * from './firebase/collections';

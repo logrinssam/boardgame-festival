@@ -6,11 +6,14 @@ import type {
   WalkInRegistrationStatistics,
 } from '../types';
 import { getPhoneLast4, maskPhone } from './reservationService';
+import {
+  clearBoothAccess,
+  grantBoothAccess,
+  hasValidBoothAccess,
+} from './boothAccessService';
 
 const REGISTRATIONS_KEY = 'bgf.walkInRegistrations.v1';
 const SETTINGS_KEY = 'bgf.walkInBoothSettings.v1';
-const ACCESS_PREFIX = 'bgf.walkInAccess.';
-const ACCESS_TTL_MS = 15 * 60 * 1000;
 
 function digitsOnly(value: string): string {
   return value.replace(/\D/g, '');
@@ -105,33 +108,15 @@ function generateConfirmationNumber(existing: Set<string>): string {
 }
 
 export function grantWalkInAccess(boothId: string, accessCode: string): void {
-  sessionStorage.setItem(
-    `${ACCESS_PREFIX}${boothId}`,
-    JSON.stringify({
-      accessCode,
-      expiresAt: Date.now() + ACCESS_TTL_MS,
-    }),
-  );
+  grantBoothAccess(boothId, accessCode);
 }
 
 export function hasValidWalkInAccess(boothId: string): boolean {
-  const raw = sessionStorage.getItem(`${ACCESS_PREFIX}${boothId}`);
-  if (!raw) return false;
-  try {
-    const parsed = JSON.parse(raw) as { expiresAt?: number };
-    if (!parsed.expiresAt || parsed.expiresAt < Date.now()) {
-      sessionStorage.removeItem(`${ACCESS_PREFIX}${boothId}`);
-      return false;
-    }
-    return true;
-  } catch {
-    sessionStorage.removeItem(`${ACCESS_PREFIX}${boothId}`);
-    return false;
-  }
+  return hasValidBoothAccess(boothId);
 }
 
 export function clearWalkInAccess(boothId: string): void {
-  sessionStorage.removeItem(`${ACCESS_PREFIX}${boothId}`);
+  clearBoothAccess(boothId);
 }
 
 export function findExistingWalkInRegistration(

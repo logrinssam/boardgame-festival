@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
 import { formatTimeRange } from '@bgf/shared';
-import { canBookSlot } from '@bgf/shared';
+import { canBookSlot, getGrantedBoothAccessCode } from '@bgf/shared';
 
 interface BookingState {
   boothId?: string;
@@ -73,7 +73,10 @@ export function ConsentPage() {
             state: {
               boothId: booth.id,
               slotId: slot.id,
-              accessCode: state.accessCode,
+              accessCode:
+                state.accessCode ||
+                getGrantedBoothAccessCode(booth.id) ||
+                undefined,
             },
           })
         }

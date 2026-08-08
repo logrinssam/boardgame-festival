@@ -129,7 +129,10 @@ export function asBooth(id: string, data: Record<string, unknown>): Booth {
     durationMinutes: Number(data.durationMinutes ?? 25),
     accentColor: String(data.accentColor ?? '#4c6ef5'),
     accessCodeConfigured: Boolean(data.accessCodeConfigured),
-    accessCode: (data.accessCode as string | null) ?? null,
+    accessCode:
+      data.accessCode == null || data.accessCode === ''
+        ? null
+        : String(data.accessCode),
     operatorPinConfigured: Boolean(data.operatorPinConfigured),
     capacity: (data.capacity as number | null) ?? null,
     waitlistCapacity: (data.waitlistCapacity as number | null) ?? null,

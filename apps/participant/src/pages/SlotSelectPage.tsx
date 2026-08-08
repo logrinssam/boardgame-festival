@@ -6,6 +6,7 @@ import type { BoothSlot } from '@bgf/shared';
 import {
   canBookSlot,
   getEffectiveCapacity,
+  getGrantedBoothAccessCode,
   getRemainingSeats,
   getSlotAvailabilityStatus,
   isWalkInBooth,
@@ -55,9 +56,12 @@ export function SlotSelectPage() {
                       state: {
                         boothId: currentBooth.id,
                         slotId: slot.id,
-                        accessCode: (
-                          location.state as { accessCode?: string } | null
-                        )?.accessCode,
+                        accessCode:
+                          (
+                            location.state as { accessCode?: string } | null
+                          )?.accessCode ||
+                          getGrantedBoothAccessCode(currentBooth.id) ||
+                          undefined,
                       },
                     })
                   }
