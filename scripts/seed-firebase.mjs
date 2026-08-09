@@ -312,7 +312,10 @@ async function upsertDocument(accessToken, collection, docId, data) {
   }
 }
 
-function sanitizeBooth(booth) {
+function sanitizeBooth(booth, existingSlots = []) {
+  const existingById = new Map(
+    (existingSlots || []).map((slot) => [slot.id, slot]),
+  );
   return {
     id: booth.id,
     number: booth.number,
@@ -334,16 +337,20 @@ function sanitizeBooth(booth) {
     staffingType: booth.staffingType,
     activities: booth.activities ?? [],
     operationMode: booth.operationMode ?? 'TIME_RESERVATION',
-    slots: booth.slots.map((slot) => ({
-      id: slot.id,
-      scheduleSlotId: slot.scheduleSlotId,
-      startTime: slot.startTime,
-      endTime: slot.endTime,
-      period: slot.period,
-      confirmedCount: 0,
-      waitlistCount: 0,
-      bookingOpen: true,
-    })),
+    slots: booth.slots.map((slot) => {
+      const prev = existingById.get(slot.id);
+      return {
+        id: slot.id,
+        scheduleSlotId: slot.scheduleSlotId,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        period: slot.period,
+        confirmedCount: Number(prev?.confirmedCount ?? 0),
+        waitlistCount: Number(prev?.waitlistCount ?? 0),
+        bookingOpen:
+          prev?.bookingOpen === undefined ? true : Boolean(prev.bookingOpen),
+      };
+    }),
   };
 }
 
@@ -374,6 +381,38 @@ async function seedOperator(accessToken, person, assignment) {
   });
 }
 
+function fromFirestoreValue(value) {
+  if (!value || typeof value !== 'object') return null;
+  if ('stringValue' in value) return value.stringValue;
+  if ('integerValue' in value) return Number(value.integerValue);
+  if ('doubleValue' in value) return Number(value.doubleValue);
+  if ('booleanValue' in value) return Boolean(value.booleanValue);
+  if ('nullValue' in value) return null;
+  if ('mapValue' in value) {
+    const out = {};
+    for (const [k, v] of Object.entries(value.mapValue.fields || {})) {
+      out[k] = fromFirestoreValue(v);
+    }
+    return out;
+  }
+  if ('arrayValue' in value) {
+    return (value.arrayValue.values || []).map((item) => fromFirestoreValue(item));
+  }
+  return null;
+}
+
+async function fetchExistingBoothSlots(accessToken, boothId) {
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/booths/${encodeURIComponent(boothId)}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (res.status === 404) return [];
+  if (!res.ok) return [];
+  const body = await res.json();
+  const slots = fromFirestoreValue(body.fields?.slots);
+  return Array.isArray(slots) ? slots : [];
+}
+
 async function main() {
   console.log('Loading Firebase access token...');
   const accessToken = await getAccessToken();
@@ -385,7 +424,13 @@ async function main() {
 
   console.log(`Seeding ${booths.length} booths...`);
   for (const booth of booths) {
-    await upsertDocument(accessToken, 'booths', booth.id, sanitizeBooth(booth));
+    const existingSlots = await fetchExistingBoothSlots(accessToken, booth.id);
+    await upsertDocument(
+      accessToken,
+      'booths',
+      booth.id,
+      sanitizeBooth(booth, existingSlots),
+    );
     console.log(`  booth ${booth.id}`);
   }
 

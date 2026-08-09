@@ -102,13 +102,16 @@ export function canBookSlot(
   if (!slot.bookingOpen) {
     return { allowed: false, isWaitlist: false, reason: '예약이 마감되었습니다.' };
   }
-  if (slot.confirmedCount < effective.capacity) {
+  const capacity = Number(effective.capacity);
+  const waitlistCapacity =
+    effective.waitlistCapacity == null ? null : Number(effective.waitlistCapacity);
+  const confirmedCount = Number(slot.confirmedCount ?? 0);
+  const waitlistCount = Number(slot.waitlistCount ?? 0);
+
+  if (confirmedCount < capacity) {
     return { allowed: true, isWaitlist: false };
   }
-  if (
-    effective.waitlistCapacity !== null &&
-    slot.waitlistCount < effective.waitlistCapacity
-  ) {
+  if (waitlistCapacity !== null && waitlistCount < waitlistCapacity) {
     return { allowed: true, isWaitlist: true };
   }
   return { allowed: false, isWaitlist: false, reason: '정원이 마감되었습니다.' };
@@ -134,15 +137,27 @@ export function asBooth(id: string, data: Record<string, unknown>): Booth {
         ? null
         : String(data.accessCode),
     operatorPinConfigured: Boolean(data.operatorPinConfigured),
-    capacity: (data.capacity as number | null) ?? null,
-    waitlistCapacity: (data.waitlistCapacity as number | null) ?? null,
+    capacity:
+      data.capacity === null || data.capacity === undefined
+        ? null
+        : Number(data.capacity),
+    waitlistCapacity:
+      data.waitlistCapacity === null || data.waitlistCapacity === undefined
+        ? null
+        : Number(data.waitlistCapacity),
     status: data.status as Booth['status'],
     staffingType: data.staffingType as Booth['staffingType'],
     activities: data.activities as string[] | undefined,
     operationMode:
       data.operationMode === 'WALK_IN_CHECKIN' ||
+      id === 'booth-03' ||
+      id === 'booth-06' ||
+      id === 'booth-07' ||
       id === 'booth-08' ||
       id === 'booth-09' ||
+      Number(data.number) === 3 ||
+      Number(data.number) === 6 ||
+      Number(data.number) === 7 ||
       Number(data.number) === 8 ||
       Number(data.number) === 9
         ? 'WALK_IN_CHECKIN'

@@ -146,7 +146,25 @@ export const createReservation = onCall(callableOpts, async (request) => {
       }
     }
 
-    const bookable = canBookSlot(booth, slot);
+    // 슬롯 카운터 대신 실제 예약 문서를 세어 정원 초과를 막는다.
+    const slotReservationsSnap = await tx.get(
+      db
+        .collection('reservations')
+        .where('boothId', '==', data.boothId)
+        .where('slotId', '==', data.slotId),
+    );
+    const usage = countSeatUsage(
+      slotReservationsSnap.docs.map((doc) =>
+        asReservation(doc.id, doc.data() as Record<string, unknown>),
+      ),
+    );
+    const slotWithLiveCounts = {
+      ...slot,
+      confirmedCount: usage.confirmed,
+      waitlistCount: usage.waitlist,
+    };
+
+    const bookable = canBookSlot(booth, slotWithLiveCounts);
     if (!bookable.allowed) {
       throw new Error(
         `FAILED_PRECONDITION:${bookable.reason ?? '예약할 수 없습니다.'}`,
@@ -181,20 +199,22 @@ export const createReservation = onCall(callableOpts, async (request) => {
       gradeOrAge: data.gradeOrAge!.trim(),
       gender: data.gender as 'MALE' | 'FEMALE',
       status,
-      waitlistOrder: bookable.isWaitlist ? slot.waitlistCount + 1 : null,
+      waitlistOrder: bookable.isWaitlist ? usage.waitlist + 1 : null,
       createdAt: now,
       updatedAt: now,
       updatedBy: null,
       previousStatus: null,
     };
 
+    const nextConfirmed =
+      usage.confirmed + (status === 'CONFIRMED' ? 1 : 0);
+    const nextWaitlist = usage.waitlist + (status === 'WAITLIST' ? 1 : 0);
     const nextSlots = booth.slots.map((item) =>
       item.id === slot.id
         ? {
             ...item,
-            confirmedCount:
-              item.confirmedCount + (status === 'CONFIRMED' ? 1 : 0),
-            waitlistCount: item.waitlistCount + (status === 'WAITLIST' ? 1 : 0),
+            confirmedCount: nextConfirmed,
+            waitlistCount: nextWaitlist,
           }
         : item,
     );
@@ -430,10 +450,18 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
     patch.accessCodeConfigured = code.length > 0;
   }
   if ('capacity' in (request.data ?? {})) {
-    patch.capacity = request.data.capacity ?? null;
+    const raw = request.data.capacity;
+    patch.capacity =
+      raw === null || raw === undefined || raw === ''
+        ? null
+        : Number(raw);
   }
   if ('waitlistCapacity' in (request.data ?? {})) {
-    patch.waitlistCapacity = request.data.waitlistCapacity ?? null;
+    const raw = request.data.waitlistCapacity;
+    patch.waitlistCapacity =
+      raw === null || raw === undefined || raw === ''
+        ? null
+        : Number(raw);
   }
   if ('capacity' in patch || 'waitlistCapacity' in patch) {
     const boothSnap = await db.collection('booths').doc(boothId).get();
@@ -463,5 +491,17 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
     throw new HttpsError('invalid-argument', '변경할 설정이 없습니다.');
   }
   await db.collection('booths').doc(boothId).update(patch);
+
+  // 정원 변경 후 슬롯 카운터를 실제 예약 기준으로 재동기화
+  if ('capacity' in patch || 'waitlistCapacity' in patch) {
+    const boothSnap = await db.collection('booths').doc(boothId).get();
+    if (boothSnap.exists) {
+      const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+      for (const slot of booth.slots) {
+        await recountAndUpdateBooth(boothId, slot.id);
+      }
+    }
+  }
+
   return { ok: true };
 });

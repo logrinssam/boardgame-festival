@@ -6,10 +6,19 @@ import {
 import type { Booth, BoothSlot, EffectiveCapacity, SlotAvailabilityStatus } from '../types';
 
 export function getEffectiveCapacity(booth: Booth): EffectiveCapacity {
-  if (booth.capacity !== null && booth.waitlistCapacity !== null) {
+  const capacity =
+    booth.capacity === null || booth.capacity === undefined
+      ? null
+      : Number(booth.capacity);
+  const waitlistCapacity =
+    booth.waitlistCapacity === null || booth.waitlistCapacity === undefined
+      ? null
+      : Number(booth.waitlistCapacity);
+
+  if (capacity !== null && waitlistCapacity !== null && !Number.isNaN(capacity)) {
     return {
-      capacity: booth.capacity,
-      waitlistCapacity: booth.waitlistCapacity,
+      capacity,
+      waitlistCapacity: Number.isNaN(waitlistCapacity) ? null : waitlistCapacity,
       isDemo: false,
       isConfigured: true,
     };
@@ -52,13 +61,13 @@ export function getSlotAvailabilityStatus(
     // 예약 자체는 허용. 화면에서 BEFORE_OPEN은 선택적으로 사용.
   }
 
-  if (slot.confirmedCount < effective.capacity) {
+  if (Number(slot.confirmedCount) < Number(effective.capacity)) {
     return 'AVAILABLE';
   }
 
   if (
     effective.waitlistCapacity !== null &&
-    slot.waitlistCount < effective.waitlistCapacity
+    Number(slot.waitlistCount) < Number(effective.waitlistCapacity)
   ) {
     return 'WAITLIST';
   }
