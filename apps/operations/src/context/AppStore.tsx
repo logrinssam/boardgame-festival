@@ -14,6 +14,7 @@ import type {
   OperationLog,
   Reservation,
   ReservationStatus,
+  WalkInRegistration,
 } from '@bgf/shared';
 import {
   callNextWaitlistRemote,
@@ -25,11 +26,13 @@ import {
   subscribeOperationLogs,
   updateBoothSettingsRemote,
 } from '@bgf/shared/firebase/reservations';
+import { subscribeAllWalkIns } from '@bgf/shared';
 import { logoutOperator, verifyOperatorPin } from '../services/authService';
 
 interface AppStoreValue {
   booths: Booth[];
   reservations: Reservation[];
+  walkIns: WalkInRegistration[];
   logs: OperationLog[];
   session: AuthSession | null;
   loading: boolean;
@@ -37,6 +40,7 @@ interface AppStoreValue {
   getSlot: (boothId: string, slotId: string) => BoothSlot | undefined;
   getReservationsForBooth: (boothId: string) => Reservation[];
   getReservationsForSlot: (boothId: string, slotId: string) => Reservation[];
+  getWalkInsForBooth: (boothId: string) => WalkInRegistration[];
   loginOperator: (
     loginId: string,
     pin: string,
@@ -85,6 +89,7 @@ const AppStoreContext = createContext<AppStoreValue | null>(null);
 export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [booths, setBooths] = useState<Booth[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [walkIns, setWalkIns] = useState<WalkInRegistration[]>([]);
   const [logs, setLogs] = useState<OperationLog[]>([]);
   const [session, setSession] = useState<AuthSession | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,13 +108,16 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!session) {
       setReservations([]);
+      setWalkIns([]);
       setLogs([]);
       return;
     }
     const unsubReservations = subscribeAllReservations(setReservations);
+    const unsubWalkIns = subscribeAllWalkIns(setWalkIns);
     const unsubLogs = subscribeOperationLogs(setLogs);
     return () => {
       unsubReservations();
+      unsubWalkIns();
       unsubLogs();
     };
   }, [session]);
@@ -137,6 +145,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         (item) => item.boothId === boothId && item.slotId === slotId,
       ),
     [reservations],
+  );
+
+  const getWalkInsForBooth = useCallback(
+    (boothId: string) => walkIns.filter((item) => item.boothId === boothId),
+    [walkIns],
   );
 
   const loginOperator = useCallback(async (loginId: string, pin: string) => {
@@ -224,6 +237,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     () => ({
       booths,
       reservations,
+      walkIns,
       logs,
       session,
       loading,
@@ -231,6 +245,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       getSlot,
       getReservationsForBooth,
       getReservationsForSlot,
+      getWalkInsForBooth,
       loginOperator,
       logout,
       setAccessCode,
@@ -244,6 +259,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     [
       booths,
       reservations,
+      walkIns,
       logs,
       session,
       loading,
@@ -251,6 +267,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       getSlot,
       getReservationsForBooth,
       getReservationsForSlot,
+      getWalkInsForBooth,
       loginOperator,
       logout,
       setAccessCode,

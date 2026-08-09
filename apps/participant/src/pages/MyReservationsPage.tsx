@@ -34,8 +34,9 @@ export function MyReservationsPage() {
     setMessage('');
     try {
       const rows = await getMyReservations(phone.trim());
+      const walkInRows = await getParticipantWalkInRegistrations(phone.trim());
       setList(rows);
-      setWalkIns(getParticipantWalkInRegistrations(phone.trim()));
+      setWalkIns(walkInRows);
       setSearched(true);
     } catch {
       setMessage('조회 중 오류가 발생했습니다.');

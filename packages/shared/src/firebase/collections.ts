@@ -22,6 +22,7 @@
 export const FIRESTORE_COLLECTIONS = {
   booths: 'booths',
   reservations: 'reservations',
+  walkInRegistrations: 'walkInRegistrations',
   staffAssignments: 'staffAssignments',
   operationLogs: 'operationLogs',
 } as const;

@@ -52,7 +52,7 @@ export function WalkInRegisterPage() {
     return <Navigate to={`/booths/${currentBooth.id}/access`} replace />;
   }
 
-  const publicStatus = getWalkInPublicStatus(currentBooth.id);
+  const publicStatus = getWalkInPublicStatus(currentBooth);
   if (publicStatus !== 'OPEN') {
     return (
       <div className="glass-card notice warning">
@@ -92,7 +92,7 @@ export function WalkInRegisterPage() {
 
     setPending(true);
     setError('');
-    const result = createWalkInRegistration({
+    const result = await createWalkInRegistration({
       boothId: currentBooth.id,
       participantName,
       phone,
@@ -110,6 +110,7 @@ export function WalkInRegisterPage() {
     navigate(`/walk-in-registration/${result.registration.id}`, {
       state: {
         duplicate: result.duplicate,
+        registration: result.registration,
         message: result.duplicate
           ? '이미 이 부스에 현장 참여 등록을 완료했어요.'
           : undefined,

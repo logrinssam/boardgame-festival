@@ -12,7 +12,7 @@ import {
 } from '@bgf/shared';
 
 export function StaffGroupPage({ group }: { group: ExperienceGroup }) {
-  const { session, booths, reservations, getReservationsForBooth } =
+  const { session, booths, reservations, walkIns, getReservationsForBooth } =
     useAppStore();
 
   if (!session) return null;
@@ -51,7 +51,7 @@ export function StaffGroupPage({ group }: { group: ExperienceGroup }) {
       </div>
       {accessible.map((booth) => {
         if (isWalkInBooth(booth)) {
-          const stats = getWalkInRegistrationStatistics(booth.id);
+          const stats = getWalkInRegistrationStatistics(booth, walkIns);
           return (
             <Link
               key={booth.id}

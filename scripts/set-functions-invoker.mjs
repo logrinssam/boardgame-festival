@@ -28,6 +28,11 @@ const services = [
   'changereservationstatus',
   'callnextwaitlist',
   'updateboothsettings',
+  'createwalkinregistration',
+  'getmywalkinregistrations',
+  'getwalkinregistration',
+  'setwalkinboothstatus',
+  'cancelwalkinregistration',
 ];
 
 const body = JSON.stringify({

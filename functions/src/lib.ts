@@ -3,6 +3,8 @@ import type {
   BoothSlot,
   Reservation,
   ReservationStatus,
+  WalkInBoothPublicStatus,
+  WalkInRegistration,
 } from './types';
 
 export const BLOCKING_STATUSES: ReservationStatus[] = [
@@ -36,6 +38,24 @@ export function digitsOnly(value: string): string {
 export function getPhoneLast4(phone: string): string {
   const digits = digitsOnly(phone);
   return digits.slice(-4).padStart(4, '0').slice(-4);
+}
+
+export function maskPhone(phone: string): string {
+  const digits = digitsOnly(phone);
+  if (digits.length < 4) return '***';
+  const last4 = digits.slice(-4);
+  if (digits.length >= 10) {
+    return `010-****-${last4}`;
+  }
+  return `***-****-${last4}`;
+}
+
+export function todayKey(date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+export function isSameLocalDay(iso: string, now = new Date()): boolean {
+  return todayKey(new Date(iso)) === todayKey(now);
 }
 
 export function generateReservationCode(existing: Set<string>): string {
@@ -168,6 +188,51 @@ export function asBooth(id: string, data: Record<string, unknown>): Booth {
       waitlistCount: Number(slot.waitlistCount ?? 0),
       bookingOpen: slot.bookingOpen !== false,
     })),
+    walkInPublicStatus: normalizeWalkInPublicStatus(data.walkInPublicStatus),
+    walkInDuplicateBlockCount: Number(data.walkInDuplicateBlockCount ?? 0),
+  };
+}
+
+function normalizeWalkInPublicStatus(
+  value: unknown,
+): WalkInBoothPublicStatus {
+  if (
+    value === 'OPEN' ||
+    value === 'PAUSED' ||
+    value === 'PREPARING' ||
+    value === 'CLOSED'
+  ) {
+    return value;
+  }
+  return 'OPEN';
+}
+
+export function asWalkInRegistration(
+  id: string,
+  data: Record<string, unknown>,
+): WalkInRegistration {
+  return {
+    id,
+    boothId: String(data.boothId),
+    participantName: String(data.participantName),
+    phone: String(data.phone),
+    maskedPhone: String(data.maskedPhone ?? maskPhone(String(data.phone ?? ''))),
+    phoneLastFour: String(
+      data.phoneLastFour ?? getPhoneLast4(String(data.phone ?? '')),
+    ),
+    gradeOrAge:
+      data.gradeOrAge == null || data.gradeOrAge === ''
+        ? null
+        : String(data.gradeOrAge),
+    gender:
+      data.gender === 'MALE' || data.gender === 'FEMALE' ? data.gender : null,
+    confirmationNumber: String(data.confirmationNumber),
+    status: data.status === 'CANCELLED' ? 'CANCELLED' : 'REGISTERED',
+    createdAt: String(data.createdAt),
+    cancelledAt:
+      data.cancelledAt == null || data.cancelledAt === ''
+        ? null
+        : String(data.cancelledAt),
   };
 }
 

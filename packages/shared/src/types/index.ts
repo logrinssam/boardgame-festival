@@ -119,6 +119,10 @@ export interface Booth {
   staffingType: StaffingType;
   activities?: string[];
   operationMode: BoothOperationMode;
+  /** 현장 등록형 부스 공개 상태. 미설정 시 OPEN으로 취급 */
+  walkInPublicStatus?: WalkInBoothPublicStatus;
+  /** 현장 등록 중복 시도 누적 (통계용) */
+  walkInDuplicateBlockCount?: number;
 }
 
 export interface StaffRotation {

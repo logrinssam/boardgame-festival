@@ -19,7 +19,7 @@ export function BoothCard({ booth }: BoothCardProps) {
   const walkIn = isWalkInBooth(booth);
   const effective = getEffectiveCapacity(booth);
   const availability = getBoothAvailabilityStatus(booth);
-  const walkInStatus = walkIn ? getWalkInPublicStatus(booth.id) : null;
+  const walkInStatus = walkIn ? getWalkInPublicStatus(booth) : null;
   const groupClass =
     booth.experienceGroup === 'BOARD_GAME' ? 'group-board' : 'group-creative';
 

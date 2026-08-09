@@ -1,5 +1,10 @@
 import { httpsCallable } from 'firebase/functions';
-import type { Reservation, ReservationStatus } from '../types';
+import type {
+  Reservation,
+  ReservationStatus,
+  WalkInBoothPublicStatus,
+  WalkInRegistration,
+} from '../types';
 import { getFirebaseFunctions } from './client';
 
 function fn<Request, Response>(name: string) {
@@ -86,6 +91,86 @@ export async function updateBoothSettingsCallable(input: {
   try {
     await fn<typeof input, { ok: boolean }>('updateBoothSettings')(input);
     return { ok: true };
+  } catch (error) {
+    return { ok: false, message: callableErrorMessage(error) };
+  }
+}
+
+export async function createWalkInRegistrationCallable(input: {
+  boothId: string;
+  participantName: string;
+  phone: string;
+  phoneConfirm: string;
+  gradeOrAge?: string;
+  gender: 'MALE' | 'FEMALE';
+  accessCode?: string;
+}): Promise<
+  | { ok: true; registration: WalkInRegistration; duplicate: boolean }
+  | { ok: false; message: string }
+> {
+  try {
+    const result = await fn<
+      typeof input,
+      { registration: WalkInRegistration; duplicate: boolean }
+    >('createWalkInRegistration')(input);
+    return {
+      ok: true,
+      registration: result.data.registration,
+      duplicate: Boolean(result.data.duplicate),
+    };
+  } catch (error) {
+    return { ok: false, message: callableErrorMessage(error) };
+  }
+}
+
+export async function getMyWalkInRegistrationsCallable(
+  phone: string,
+): Promise<WalkInRegistration[]> {
+  const result = await fn<
+    { phone: string },
+    { registrations: WalkInRegistration[] }
+  >('getMyWalkInRegistrations')({ phone });
+  return result.data.registrations;
+}
+
+export async function getWalkInRegistrationCallable(
+  registrationId: string,
+): Promise<WalkInRegistration | null> {
+  try {
+    const result = await fn<
+      { registrationId: string },
+      { registration: WalkInRegistration }
+    >('getWalkInRegistration')({ registrationId });
+    return result.data.registration;
+  } catch {
+    return null;
+  }
+}
+
+export async function setWalkInBoothStatusCallable(input: {
+  boothId: string;
+  publicStatus: WalkInBoothPublicStatus;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    await fn<typeof input, { ok: boolean }>('setWalkInBoothStatus')(input);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: callableErrorMessage(error) };
+  }
+}
+
+export async function cancelWalkInRegistrationCallable(input: {
+  registrationId: string;
+  phone?: string;
+}): Promise<
+  | { ok: true; registration: WalkInRegistration }
+  | { ok: false; message: string }
+> {
+  try {
+    const result = await fn<typeof input, { registration: WalkInRegistration }>(
+      'cancelWalkInRegistration',
+    )(input);
+    return { ok: true, registration: result.data.registration };
   } catch (error) {
     return { ok: false, message: callableErrorMessage(error) };
   }

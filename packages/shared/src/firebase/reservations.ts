@@ -8,6 +8,7 @@ import { getEffectiveCapacity } from '../utils/capacity';
 import { resolveOperationMode } from '../utils/operationMode';
 import { getFirebaseDb } from './client';
 import { FIRESTORE_COLLECTIONS } from './collections';
+import { normalizeWalkInPublicStatus } from './walkIns';
 
 export {
   createReservationCallable as createReservationRemote,
@@ -60,6 +61,8 @@ function asBooth(id: string, data: Record<string, unknown>): Booth {
       waitlistCount: Number(slot.waitlistCount ?? 0),
       bookingOpen: slot.bookingOpen !== false,
     })),
+    walkInPublicStatus: normalizeWalkInPublicStatus(data.walkInPublicStatus),
+    walkInDuplicateBlockCount: Number(data.walkInDuplicateBlockCount ?? 0),
   };
 }
 

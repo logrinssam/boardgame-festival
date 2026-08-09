@@ -2,17 +2,26 @@ import { initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { setGlobalOptions } from 'firebase-functions/v2/options';
-import type { Reservation, ReservationStatus, StaffAssignment } from './types';
+import type {
+  Reservation,
+  ReservationStatus,
+  StaffAssignment,
+  WalkInBoothPublicStatus,
+  WalkInRegistration,
+} from './types';
 import {
   ALLOWED_STATUS_TRANSITIONS,
   BLOCKING_STATUSES,
   asBooth,
   asReservation,
+  asWalkInRegistration,
   canBookSlot,
   countSeatUsage,
   digitsOnly,
   generateReservationCode,
   getPhoneLast4,
+  isSameLocalDay,
+  maskPhone,
 } from './lib';
 
 // Import from v2/https + v2/options only — the v2 barrel pulls in RTDB and
@@ -504,4 +513,238 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
   }
 
   return { ok: true };
+});
+
+function generateWalkInConfirmationNumber(existing: Set<string>): string {
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    if (!existing.has(code)) return code;
+  }
+  return String(Date.now()).slice(-6);
+}
+
+export const createWalkInRegistration = onCall(callableOpts, async (request) => {
+  const data = request.data as {
+    boothId?: string;
+    participantName?: string;
+    phone?: string;
+    phoneConfirm?: string;
+    gradeOrAge?: string;
+    gender?: string;
+    accessCode?: string;
+  };
+
+  if (!data.boothId || !data.participantName || !data.phone || !data.phoneConfirm) {
+    throw new HttpsError('invalid-argument', '필수 등록 정보가 없습니다.');
+  }
+  if (data.gender !== 'MALE' && data.gender !== 'FEMALE') {
+    throw new HttpsError('invalid-argument', '성별을 선택해 주세요.');
+  }
+
+  const phoneDigits = digitsOnly(data.phone);
+  const phoneConfirm = digitsOnly(data.phoneConfirm);
+  if (phoneDigits.length < 10) {
+    throw new HttpsError('invalid-argument', '연락처를 정확히 입력해 주세요.');
+  }
+  if (phoneDigits !== phoneConfirm) {
+    throw new HttpsError(
+      'invalid-argument',
+      '휴대폰 번호 확인이 일치하지 않습니다.',
+    );
+  }
+
+  const boothRef = db.collection('booths').doc(data.boothId);
+  const boothSnap = await boothRef.get();
+  if (!boothSnap.exists) {
+    throw new HttpsError('not-found', '부스를 찾을 수 없습니다.');
+  }
+  const booth = asBooth(
+    boothSnap.id,
+    boothSnap.data() as Record<string, unknown>,
+  );
+  if (booth.operationMode !== 'WALK_IN_CHECKIN') {
+    throw new HttpsError(
+      'failed-precondition',
+      '현장 등록 부스가 아닙니다.',
+    );
+  }
+
+  if (booth.accessCodeConfigured && booth.accessCode) {
+    if (!data.accessCode || data.accessCode.trim() !== booth.accessCode) {
+      throw new HttpsError('permission-denied', '현장코드가 올바르지 않습니다.');
+    }
+  }
+
+  const publicStatus = booth.walkInPublicStatus ?? 'OPEN';
+  if (publicStatus !== 'OPEN') {
+    throw new HttpsError(
+      'failed-precondition',
+      '지금은 현장 참여 등록을 받지 않습니다.',
+    );
+  }
+
+  const name = data.participantName.trim();
+  const existingSnap = await db
+    .collection('walkInRegistrations')
+    .where('boothId', '==', data.boothId)
+    .where('phone', '==', phoneDigits)
+    .get();
+  const existingToday = existingSnap.docs
+    .map((doc) =>
+      asWalkInRegistration(doc.id, doc.data() as Record<string, unknown>),
+    )
+    .find(
+      (item) =>
+        item.status === 'REGISTERED' &&
+        isSameLocalDay(item.createdAt) &&
+        item.participantName.trim().toLowerCase() === name.toLowerCase(),
+    );
+
+  if (existingToday) {
+    await boothRef.update({
+      walkInDuplicateBlockCount: FieldValue.increment(1),
+    });
+    return { registration: existingToday, duplicate: true };
+  }
+
+  const now = new Date().toISOString();
+  const registrationId = `walkin-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 7)}`;
+  const registration: WalkInRegistration = {
+    id: registrationId,
+    boothId: booth.id,
+    participantName: name,
+    phone: phoneDigits,
+    maskedPhone: maskPhone(phoneDigits),
+    phoneLastFour: getPhoneLast4(phoneDigits),
+    gradeOrAge: data.gradeOrAge?.trim() || null,
+    gender: data.gender,
+    confirmationNumber: generateWalkInConfirmationNumber(new Set()),
+    status: 'REGISTERED',
+    createdAt: now,
+    cancelledAt: null,
+  };
+
+  await db
+    .collection('walkInRegistrations')
+    .doc(registrationId)
+    .set(registration);
+  return { registration, duplicate: false };
+});
+
+export const getMyWalkInRegistrations = onCall(callableOpts, async (request) => {
+  const phone = digitsOnly(String(request.data?.phone ?? ''));
+  if (phone.length < 10) {
+    throw new HttpsError('invalid-argument', '연락처를 정확히 입력해 주세요.');
+  }
+  const snap = await db
+    .collection('walkInRegistrations')
+    .where('phone', '==', phone)
+    .get();
+  const registrations = snap.docs
+    .map((doc) =>
+      asWalkInRegistration(doc.id, doc.data() as Record<string, unknown>),
+    )
+    .filter(
+      (item) => item.status === 'REGISTERED' && isSameLocalDay(item.createdAt),
+    )
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return { registrations };
+});
+
+export const getWalkInRegistration = onCall(callableOpts, async (request) => {
+  const registrationId = String(request.data?.registrationId ?? '');
+  if (!registrationId) {
+    throw new HttpsError('invalid-argument', '등록 ID가 필요합니다.');
+  }
+  const snap = await db
+    .collection('walkInRegistrations')
+    .doc(registrationId)
+    .get();
+  if (!snap.exists) {
+    throw new HttpsError('not-found', '등록 정보를 찾을 수 없습니다.');
+  }
+  return {
+    registration: asWalkInRegistration(
+      snap.id,
+      snap.data() as Record<string, unknown>,
+    ),
+  };
+});
+
+export const setWalkInBoothStatus = onCall(callableOpts, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const staff = await getStaff(request.auth.uid);
+  const boothId = String(request.data?.boothId ?? '');
+  const publicStatus = request.data?.publicStatus as
+    | WalkInBoothPublicStatus
+    | undefined;
+  if (!boothId || !publicStatus) {
+    throw new HttpsError('invalid-argument', '필수 정보가 없습니다.');
+  }
+  if (
+    publicStatus !== 'OPEN' &&
+    publicStatus !== 'PAUSED' &&
+    publicStatus !== 'PREPARING' &&
+    publicStatus !== 'CLOSED'
+  ) {
+    throw new HttpsError('invalid-argument', '상태 값이 올바르지 않습니다.');
+  }
+  if (!canAccessBooth(staff, boothId)) {
+    throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
+  }
+
+  await db.collection('booths').doc(boothId).update({
+    walkInPublicStatus: publicStatus,
+  });
+  return { ok: true };
+});
+
+export const cancelWalkInRegistration = onCall(callableOpts, async (request) => {
+  const registrationId = String(request.data?.registrationId ?? '');
+  const phone = digitsOnly(String(request.data?.phone ?? ''));
+  if (!registrationId) {
+    throw new HttpsError('invalid-argument', '등록 ID가 필요합니다.');
+  }
+
+  const ref = db.collection('walkInRegistrations').doc(registrationId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new HttpsError('not-found', '등록 정보를 찾을 수 없습니다.');
+  }
+  const current = asWalkInRegistration(
+    snap.id,
+    snap.data() as Record<string, unknown>,
+  );
+
+  if (request.auth?.uid) {
+    const staff = await getStaff(request.auth.uid);
+    if (!canAccessBooth(staff, current.boothId)) {
+      throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
+    }
+  } else if (!phone || phone !== current.phone) {
+    throw new HttpsError(
+      'permission-denied',
+      '예약자 연락처가 일치하지 않습니다.',
+    );
+  }
+
+  if (current.status === 'CANCELLED') {
+    return { registration: current };
+  }
+
+  const now = new Date().toISOString();
+  const updated: WalkInRegistration = {
+    ...current,
+    status: 'CANCELLED',
+    cancelledAt: now,
+  };
+  await ref.update({
+    status: 'CANCELLED',
+    cancelledAt: now,
+  });
+  return { registration: updated };
 });

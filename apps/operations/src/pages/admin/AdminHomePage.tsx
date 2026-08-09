@@ -13,7 +13,7 @@ import { EXPERIENCE_GROUP_LABELS } from '@bgf/shared';
 import { getEffectiveCapacity, minutesFromTime } from '@bgf/shared';
 
 export function AdminHomePage() {
-  const { booths, reservations, logs } = useAppStore();
+  const { booths, reservations, walkIns, logs } = useAppStore();
   const now = new Date();
   const minutes = now.getHours() * 60 + now.getMinutes();
   const { current, next } = getCurrentAndNextSlot(minutes);
@@ -32,12 +32,13 @@ export function AdminHomePage() {
   const completed = timeReservations.filter(
     (item) => item.status === 'COMPLETED',
   ).length;
-  const walkInTotal = booths
-    .filter((booth) => isWalkInBooth(booth))
-    .reduce(
-      (sum, booth) => sum + getWalkInRegistrationStatistics(booth.id).totalToday,
-      0,
-    );
+  const walkInBooths = booths.filter((booth) => isWalkInBooth(booth));
+  const walkInTotal = walkInBooths.reduce(
+    (sum, booth) =>
+      sum + getWalkInRegistrationStatistics(booth, walkIns).totalToday,
+    0,
+  );
+  const walkInNumbers = walkInBooths.map((booth) => booth.number).join('·');
 
   return (
     <>
@@ -79,14 +80,17 @@ export function AdminHomePage() {
           </div>
           <div>
             <dt>현장 참여 등록형</dt>
-            <dd>오늘 등록 {walkInTotal}명 (부스 8·9)</dd>
+            <dd>
+              오늘 등록 {walkInTotal}명
+              {walkInNumbers ? ` (부스 ${walkInNumbers})` : ''}
+            </dd>
           </div>
         </dl>
       </section>
 
       {booths.map((booth) => {
         if (isWalkInBooth(booth)) {
-          const stats = getWalkInRegistrationStatistics(booth.id);
+          const stats = getWalkInRegistrationStatistics(booth, walkIns);
           return (
             <Link
               key={booth.id}

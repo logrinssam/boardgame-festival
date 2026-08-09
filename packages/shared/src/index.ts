@@ -10,3 +10,12 @@ export * from './services/reservationStatusService';
 export * from './services/walkInRegistrationService';
 export * from './services/boothAccessService';
 export * from './firebase/collections';
+export {
+  subscribeAllWalkIns,
+  subscribeWalkInsForBooth,
+  createWalkInRegistrationRemote,
+  fetchMyWalkInRegistrations,
+  fetchWalkInRegistration,
+  setWalkInBoothStatusRemote,
+  cancelWalkInRegistrationRemote,
+} from './firebase/walkIns';

@@ -85,6 +85,8 @@ function createBooth(seed: BoothSeed): Booth {
       number: seed.number,
       operationMode: seed.operationMode ?? 'TIME_RESERVATION',
     }),
+    walkInPublicStatus: 'OPEN',
+    walkInDuplicateBlockCount: 0,
   };
 }
 

@@ -337,6 +337,8 @@ function sanitizeBooth(booth, existingSlots = []) {
     staffingType: booth.staffingType,
     activities: booth.activities ?? [],
     operationMode: booth.operationMode ?? 'TIME_RESERVATION',
+    walkInPublicStatus: booth.walkInPublicStatus ?? 'OPEN',
+    walkInDuplicateBlockCount: Number(booth.walkInDuplicateBlockCount ?? 0),
     slots: booth.slots.map((slot) => {
       const prev = existingById.get(slot.id);
       return {

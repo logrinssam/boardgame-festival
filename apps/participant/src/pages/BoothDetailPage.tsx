@@ -32,7 +32,7 @@ export function BoothDetailPage() {
   const walkIn = isWalkInBooth(booth);
   const effective = getEffectiveCapacity(booth);
   const availability = getBoothAvailabilityStatus(booth);
-  const walkInStatus = walkIn ? getWalkInPublicStatus(booth.id) : null;
+  const walkInStatus = walkIn ? getWalkInPublicStatus(booth) : null;
 
   return (
     <>

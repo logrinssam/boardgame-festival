@@ -1,14 +1,14 @@
-import { useMemo, useState } from 'react';
-import type { WalkInBoothPublicStatus } from '@bgf/shared';
+import { useEffect, useMemo, useState } from 'react';
+import type { WalkInBoothPublicStatus, WalkInRegistration } from '@bgf/shared';
 import {
-  getBoothWalkInRegistrations,
-  getWalkInRegistrationStatistics,
   OPERATION_MODE_LABELS,
-  setWalkInBoothPublicStatus,
   WALK_IN_PUBLIC_STATUS_LABELS,
+  filterBoothWalkInsToday,
+  getWalkInRegistrationStatistics,
+  setWalkInBoothPublicStatus,
+  subscribeWalkInsForBooth,
   type Booth,
 } from '@bgf/shared';
-import { StaffBoothCapacityForm } from './StaffBoothCapacityForm';
 
 function formatClock(iso: string): string {
   const date = new Date(iso);
@@ -29,18 +29,31 @@ interface StaffWalkInOpsPanelProps {
 }
 
 export function StaffWalkInOpsPanel({ booth }: StaffWalkInOpsPanelProps) {
-  const [tick, setTick] = useState(0);
+  const [rows, setRows] = useState<WalkInRegistration[]>([]);
+  const [statusPending, setStatusPending] = useState(false);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    return subscribeWalkInsForBooth(booth.id, setRows);
+  }, [booth.id]);
+
   const stats = useMemo(
-    () => getWalkInRegistrationStatistics(booth.id),
-    [booth.id, tick],
+    () => getWalkInRegistrationStatistics(booth, rows),
+    [booth, rows],
   );
-  const rows = useMemo(
-    () => getBoothWalkInRegistrations(booth.id),
-    [booth.id, tick],
+  const todayRows = useMemo(
+    () => filterBoothWalkInsToday(booth.id, rows),
+    [booth.id, rows],
   );
 
-  function refresh() {
-    setTick((value) => value + 1);
+  async function changeStatus(status: WalkInBoothPublicStatus) {
+    setStatusPending(true);
+    setMessage('');
+    const result = await setWalkInBoothPublicStatus(booth.id, status);
+    setStatusPending(false);
+    if (!result.ok) {
+      setMessage(result.message);
+    }
   }
 
   return (
@@ -52,7 +65,7 @@ export function StaffWalkInOpsPanel({ booth }: StaffWalkInOpsPanelProps) {
         <h2>
           부스 {booth.number} {booth.name}
         </h2>
-        <p className="hint-text">현장 참여 집계 · 호출/대기 기능 없음</p>
+        <p className="hint-text">현장 참여 집계 · 호출/대기 기능 없음 · 정원 제한 없음</p>
         <div className="status-row">
           <span className="status-chip confirmed active">
             오늘 {stats.totalToday}
@@ -78,8 +91,6 @@ export function StaffWalkInOpsPanel({ booth }: StaffWalkInOpsPanelProps) {
         </p>
       </section>
 
-      <StaffBoothCapacityForm booth={booth} />
-
       <section className="glass-card">
         <h3 className="section-title">현장 등록 운영 상태</h3>
         <div className="choice-row">
@@ -88,24 +99,23 @@ export function StaffWalkInOpsPanel({ booth }: StaffWalkInOpsPanelProps) {
               key={status}
               type="button"
               className={`choice-chip${stats.publicStatus === status ? ' selected' : ''}`}
-              onClick={() => {
-                setWalkInBoothPublicStatus(booth.id, status);
-                refresh();
-              }}
+              disabled={statusPending}
+              onClick={() => void changeStatus(status)}
             >
               {WALK_IN_PUBLIC_STATUS_LABELS[status]}
             </button>
           ))}
         </div>
+        {message ? <p className="error-text">{message}</p> : null}
       </section>
 
       <section className="glass-card">
         <h3 className="section-title">최근 등록 참가자</h3>
-        {rows.length === 0 ? (
+        {todayRows.length === 0 ? (
           <div className="empty-state">오늘 등록된 참가자가 없습니다.</div>
         ) : (
           <ul className="plain-list">
-            {rows.slice(0, 20).map((item) => (
+            {todayRows.slice(0, 40).map((item) => (
               <li key={item.id}>
                 <strong>{item.participantName}</strong> · 뒤 {item.phoneLastFour}{' '}
                 · {item.maskedPhone}
@@ -118,9 +128,6 @@ export function StaffWalkInOpsPanel({ booth }: StaffWalkInOpsPanelProps) {
             ))}
           </ul>
         )}
-        <button type="button" className="btn btn-ghost" onClick={refresh}>
-          목록 새로고침
-        </button>
       </section>
     </>
   );

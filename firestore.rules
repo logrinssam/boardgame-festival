@@ -33,6 +33,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /walkInRegistrations/{registrationId} {
+      allow read: if isActiveStaff();
+      allow write: if false;
+    }
+
     match /staffAssignments/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
       allow write: if false;

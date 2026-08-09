@@ -17,6 +17,12 @@ export type BoothOperationalStatus =
   | 'BOOKING_OPEN'
   | 'BOOKING_CLOSED';
 export type BoothOperationMode = 'TIME_RESERVATION' | 'WALK_IN_CHECKIN';
+export type WalkInBoothPublicStatus =
+  | 'OPEN'
+  | 'PAUSED'
+  | 'PREPARING'
+  | 'CLOSED';
+export type WalkInRegistrationStatus = 'REGISTERED' | 'CANCELLED';
 export type ReservationStatus =
   | 'CONFIRMED'
   | 'CHECKED_IN'
@@ -62,6 +68,23 @@ export interface Booth {
   staffingType: StaffingType;
   activities?: string[];
   operationMode: BoothOperationMode;
+  walkInPublicStatus?: WalkInBoothPublicStatus;
+  walkInDuplicateBlockCount?: number;
+}
+
+export interface WalkInRegistration {
+  id: string;
+  boothId: string;
+  participantName: string;
+  phone: string;
+  maskedPhone: string;
+  phoneLastFour: string;
+  gradeOrAge: string | null;
+  gender: 'MALE' | 'FEMALE' | null;
+  confirmationNumber: string;
+  status: WalkInRegistrationStatus;
+  createdAt: string;
+  cancelledAt: string | null;
 }
 
 export interface Reservation {
