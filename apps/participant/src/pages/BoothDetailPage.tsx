@@ -36,7 +36,7 @@ export function BoothDetailPage() {
 
   return (
     <>
-      <section className="glass-card">
+      <section className="glass-card booth-detail">
         <div className="detail-row">
           <span
             className={`group-badge ${
@@ -98,22 +98,18 @@ export function BoothDetailPage() {
         {walkIn ? (
           <>
             <h3 className="section-title">현장 참여 방법</h3>
-            <p className="body-text">
-              이 부스는 시간 예약 없이 현장에서 등록한 뒤 바로 참여하는
-              부스입니다.
-            </p>
-            <p className="body-text">
-              실제 등록을 위해 부스에 표시된 현장코드가 필요합니다.
-            </p>
+            <div className="notice walkin-notice">
+              <ul className="plain-list">
+                <li>시간 예약 없이 현장에서 등록한 뒤 바로 참여합니다.</li>
+                <li>등록 시 부스에 표시된 현장코드가 필요합니다.</li>
+              </ul>
+            </div>
           </>
         ) : null}
 
         {booth.activities && booth.activities.length > 0 ? (
           <>
             <h3 className="section-title">주요 체험</h3>
-            <p className="hint-text">
-              활용 프로그램 예시입니다. 부스별 배정은 추후 안내됩니다.
-            </p>
             <ul className="activity-list">
               {booth.activities.map((activity) => (
                 <li key={activity}>{activity}</li>

@@ -558,6 +558,24 @@ input {
   background: rgba(255, 196, 120, 0.35);
 }
 
+.walkin-notice {
+  margin-top: 8px;
+  background: rgba(91, 141, 239, 0.12);
+}
+
+.walkin-notice .plain-list {
+  margin: 0;
+}
+
+.walkin-notice .plain-list li {
+  word-break: keep-all;
+  line-height: 1.6;
+}
+
+.booth-detail .section-title {
+  margin-top: 20px;
+}
+
 .notice strong {
   display: block;
   margin-bottom: 4px;
