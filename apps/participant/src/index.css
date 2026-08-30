@@ -731,10 +731,11 @@ input {
   word-break: keep-all;
 }
 
-.open-line-compact {
-  gap: 12px;
-  font-size: 13px;
+.session-open-desc {
+  margin: 10px 0 18px;
+  font-size: 14px;
   color: var(--text-secondary);
+  word-break: keep-all;
 }
 
 /* 조회 전용 칩(부스 상세) — 눌리지 않으므로 커서를 바꾸지 않는다 */

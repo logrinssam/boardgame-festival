@@ -7,7 +7,7 @@ import {
   useBoothSessions,
 } from '../components/SessionGrid';
 import { useAppStore } from '../context/AppStore';
-import { BOOKING_OPEN_TIMES, EVENT_SCHEDULE, formatTimeRange } from '@bgf/shared';
+import { EVENT_SCHEDULE, formatTimeRange } from '@bgf/shared';
 import { EXPERIENCE_GROUP_LABELS } from '@bgf/shared';
 import type { Booth } from '@bgf/shared';
 import {
@@ -27,11 +27,10 @@ function BoothSessionOverview({ booth }: { booth: Booth }) {
   return (
     <section className="glass-card">
       <TestClockBanner testClock={testClock} />
-      <h3 className="section-title">회차별 현황</h3>
-      <div className="open-line open-line-compact">
-        <span>오전 예약 {BOOKING_OPEN_TIMES.MORNING}부터</span>
-        <span>오후 예약 {BOOKING_OPEN_TIMES.AFTERNOON}부터</span>
-      </div>
+      <h3 className="section-title">회차별 예약 현황</h3>
+      <p className="session-open-desc">
+        오전 예약은 8시 30분부터, 오후 예약은 12시 45분부터 열립니다.
+      </p>
       {loadError ? <SessionLoadError onRetry={() => void refresh()} /> : null}
       {loading && !visibleSessions ? (
         <p className="body-text">회차 정보를 불러오는 중입니다…</p>
