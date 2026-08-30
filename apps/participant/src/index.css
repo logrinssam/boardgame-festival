@@ -720,6 +720,28 @@ input {
   color: var(--text-secondary);
 }
 
+.test-clock-banner {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(214, 48, 49, 0.4);
+  border-radius: 12px;
+  background: rgba(214, 48, 49, 0.12);
+  font-size: 13px;
+  color: #b02525;
+  word-break: keep-all;
+}
+
+.open-line-compact {
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* 조회 전용 칩(부스 상세) — 눌리지 않으므로 커서를 바꾸지 않는다 */
+.session-readonly {
+  cursor: default;
+}
+
 .session-error {
   margin-bottom: 12px;
 }

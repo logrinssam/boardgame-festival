@@ -1,17 +1,45 @@
 import { Link, useParams } from 'react-router-dom';
 import { StatusBadge } from '../components/StatusBadge';
+import {
+  SessionLoadError,
+  SessionSections,
+  TestClockBanner,
+  useBoothSessions,
+} from '../components/SessionGrid';
 import { useAppStore } from '../context/AppStore';
-import { EVENT_SCHEDULE, formatTimeRange } from '@bgf/shared';
+import { BOOKING_OPEN_TIMES, EVENT_SCHEDULE, formatTimeRange } from '@bgf/shared';
 import { EXPERIENCE_GROUP_LABELS } from '@bgf/shared';
+import type { Booth } from '@bgf/shared';
 import {
   getBoothAvailabilityStatus,
   getEffectiveCapacity,
-  getSlotAvailabilityStatus,
   getWalkInPublicStatus,
   isWalkInBooth,
   OPERATION_MODE_LABELS,
   WALK_IN_PUBLIC_STATUS_LABELS,
 } from '@bgf/shared';
+
+/** 부스 상세의 회차 현황 — 조회 전용(선택은 회차 선택 화면에서) */
+function BoothSessionOverview({ booth }: { booth: Booth }) {
+  const { visibleSessions, loadError, loading, refresh, testClock } =
+    useBoothSessions(booth);
+
+  return (
+    <section className="glass-card">
+      <TestClockBanner testClock={testClock} />
+      <h3 className="section-title">회차별 현황</h3>
+      <div className="open-line open-line-compact">
+        <span>오전 예약 {BOOKING_OPEN_TIMES.MORNING}부터</span>
+        <span>오후 예약 {BOOKING_OPEN_TIMES.AFTERNOON}부터</span>
+      </div>
+      {loadError ? <SessionLoadError onRetry={() => void refresh()} /> : null}
+      {loading && !visibleSessions ? (
+        <p className="body-text">회차 정보를 불러오는 중입니다…</p>
+      ) : null}
+      {visibleSessions ? <SessionSections sessions={visibleSessions} /> : null}
+    </section>
+  );
+}
 
 export function BoothDetailPage() {
   const { boothId = '' } = useParams();
@@ -144,19 +172,7 @@ export function BoothDetailPage() {
         ) : null}
       </section>
 
-      {!walkIn ? (
-        <section className="glass-card">
-          <h3 className="section-title">회차별 시간</h3>
-          <ul className="slot-mini-list">
-            {booth.slots.map((slot) => (
-              <li key={slot.id}>
-                <span>{formatTimeRange(slot.startTime, slot.endTime)}</span>
-                <StatusBadge status={getSlotAvailabilityStatus(booth, slot)} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      {!walkIn ? <BoothSessionOverview booth={booth} /> : null}
 
       <div className="action-stack">
         {walkIn ? (

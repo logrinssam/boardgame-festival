@@ -93,6 +93,57 @@ async function recountAndUpdateBooth(boothId: string, slotId: string) {
 
 const callableOpts = { invoker: 'public' as const };
 
+/**
+ * 점검용 가상 시계.
+ *
+ * Firestore `config/testClock` 문서:
+ *   { enabled: true, simulatedTime: "08:29", expiresAt: "2026-09-01T12:00:00Z" }
+ *
+ * 실수로 켜둔 채 행사를 맞는 사고를 막기 위해 아래 경우 모두 실제 시각으로 되돌린다
+ * (안전한 기본값 = 진짜 시간):
+ *   - 문서가 없거나 enabled !== true
+ *   - expiresAt 이 없거나, 형식이 잘못됐거나, 이미 지났음
+ *   - simulatedTime 이 HH:MM 형식이 아님
+ */
+async function resolveNowMinutes(): Promise<{
+  nowMinutes: number;
+  testMode: boolean;
+  simulatedTime: string | null;
+}> {
+  const real = {
+    nowMinutes: getKstNowMinutes(),
+    testMode: false,
+    simulatedTime: null,
+  };
+  try {
+    const snap = await db.collection('config').doc('testClock').get();
+    if (!snap.exists) return real;
+    const data = snap.data() as {
+      enabled?: boolean;
+      simulatedTime?: string;
+      expiresAt?: string;
+    };
+    if (data.enabled !== true) return real;
+
+    const expiresAt = Date.parse(String(data.expiresAt ?? ''));
+    if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) return real;
+
+    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(
+      String(data.simulatedTime ?? ''),
+    );
+    if (!match) return real;
+
+    return {
+      nowMinutes: Number(match[1]) * 60 + Number(match[2]),
+      testMode: true,
+      simulatedTime: String(data.simulatedTime),
+    };
+  } catch {
+    // 설정 조회 실패는 점검 기능의 문제일 뿐 — 실제 시각으로 정상 운영한다.
+    return real;
+  }
+}
+
 export const createReservation = onCall(callableOpts, async (request) => {
   const data = request.data as {
     boothId?: string;
@@ -121,6 +172,7 @@ export const createReservation = onCall(callableOpts, async (request) => {
   }
 
   const boothRef = db.collection('booths').doc(data.boothId);
+  const { nowMinutes } = await resolveNowMinutes();
   const existingForPhone = await loadReservationsByPhone(phoneDigits);
 
   if (
@@ -178,7 +230,7 @@ export const createReservation = onCall(callableOpts, async (request) => {
       waitlistCount: usage.waitlist,
     };
 
-    const bookable = canBookSlot(booth, slotWithLiveCounts);
+    const bookable = canBookSlot(booth, slotWithLiveCounts, nowMinutes);
     if (!bookable.allowed) {
       throw new Error(
         `FAILED_PRECONDITION:${bookable.reason ?? '예약할 수 없습니다.'}`,
@@ -785,7 +837,7 @@ export const getBoothSessions = onCall(callableOpts, async (request) => {
   }
 
   const effective = getEffectiveCapacity(booth);
-  const nowMinutes = getKstNowMinutes();
+  const { nowMinutes, testMode, simulatedTime } = await resolveNowMinutes();
 
   const sessions = booth.slots.map((slot) => {
     const usage = countSeatUsage(bySlot.get(slot.id) ?? []);
@@ -830,6 +882,8 @@ export const getBoothSessions = onCall(callableOpts, async (request) => {
   return {
     serverTime: new Date().toISOString(),
     openTimes: BOOKING_OPEN_LABELS,
+    testMode,
+    simulatedTime,
     sessions,
   };
 });

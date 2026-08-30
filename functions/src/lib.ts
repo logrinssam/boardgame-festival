@@ -128,11 +128,15 @@ export function minutesFromTime(time: string): number {
   return hours * 60 + minutes;
 }
 
+/**
+ * @param nowMinutes KST 자정 기준 분. 호출자가 명시 전달한다 —
+ *   인스턴스가 동시 요청을 처리해도 서로 간섭하지 않게 하기 위함.
+ */
 export function canBookSlot(
   booth: Booth,
   slot: BoothSlot,
+  nowMinutes: number = getKstNowMinutes(),
 ): { allowed: boolean; isWaitlist: boolean; reason?: string } {
-  const nowMinutes = getKstNowMinutes();
   if (nowMinutes < BOOKING_OPEN_MINUTES[slot.period]) {
     const label =
       slot.period === 'MORNING' ? '오전 회차 예약은 08:30' : '오후 회차 예약은 12:45';

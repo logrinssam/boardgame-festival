@@ -224,6 +224,9 @@ export interface BoothSession {
 export interface BoothSessionsResult {
   serverTime: string;
   openTimes: { MORNING: string; AFTERNOON: string };
+  /** 점검용 가상 시계가 켜져 있으면 true — 화면에 반드시 표시한다 */
+  testMode?: boolean;
+  simulatedTime?: string | null;
   sessions: BoothSession[];
 }
 
