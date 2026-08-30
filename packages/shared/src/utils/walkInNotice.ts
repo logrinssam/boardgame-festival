@@ -7,7 +7,7 @@ import type { Booth } from '../types';
  * (operationMode 오버라이드와 동일한 방식)
  */
 const WALK_IN_COMPLETION_NOTICES: Record<string, string> = {
-  // 부스 3 [1-2학년A, 자율체험] 비버타워 챌린지 — 챌린지형이라 예약 정원 없이 대기 안내만 제공
+  // 부스 3 [1-2학년A, 자유체험] 비버타워 챌린지 — 챌린지형이라 예약 정원 없이 대기 안내만 제공
   'booth-03':
     '해당 부스는 챌린지형 체험이므로 한 사람당 5분 정도 소요됩니다. 줄이 길 경우 잠시만 기다려주세요^^',
 };

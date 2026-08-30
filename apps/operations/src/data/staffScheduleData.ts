@@ -109,7 +109,7 @@ export const HEADQUARTERS_STAFFING: HeadquartersStaffing = {
 
 export const STAFFING_SUMMARIES: StaffingSummary[] = [
   {
-    boothRangeLabel: 'Booths 1-6',
+    boothRangeLabel: 'Booths 1-4, 6-7',
     teachers: 18,
     miraeItda: 3,
     note: '3-person team, 2 active / 1 rest',
@@ -127,9 +127,9 @@ export const BOOTH_STAFFING: BoothStaffing[] = [
   createThreePersonStaffing('booth-02'),
   createThreePersonStaffing('booth-03'),
   createThreePersonStaffing('booth-04'),
-  createThreePersonStaffing('booth-05'),
+  createFixedStaffing('booth-05', 'D'),
   createThreePersonStaffing('booth-06'),
-  createFixedStaffing('booth-07', 'D'),
+  createThreePersonStaffing('booth-07'),
   createFourPersonStaffing('booth-08'),
   createFourPersonStaffing('booth-09'),
   createFourPersonStaffing('booth-10'),
