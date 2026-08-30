@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
+import { NoticeModal } from '../components/NoticeModal';
 import {
+  getWalkInCompletionNotice,
   getWalkInRegistrationById,
   type WalkInRegistration,
 } from '@bgf/shared';
@@ -27,6 +29,7 @@ export function WalkInConfirmPage() {
     state.registration ?? null,
   );
   const [loading, setLoading] = useState(!state.registration);
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +50,7 @@ export function WalkInConfirmPage() {
   }, [registrationId, state.registration]);
 
   const booth = registration ? getBooth(registration.boothId) : undefined;
+  const completionNotice = booth ? getWalkInCompletionNotice(booth) : null;
 
   if (loading) {
     return <div className="glass-card">등록 정보를 불러오는 중…</div>;
@@ -64,34 +68,39 @@ export function WalkInConfirmPage() {
   }
 
   return (
-    <section className="glass-card success-card">
-      <p className="hero-kicker">현장 참여 등록</p>
-      <h2 className="section-title">현장 참여 등록 완료</h2>
-      {state.duplicate || state.message ? (
-        <div className="notice">
-          {state.message ?? '이미 이 부스에 현장 참여 등록을 완료했어요.'}
-        </div>
+    <>
+      {completionNotice && !noticeDismissed ? (
+        <NoticeModal
+          message={completionNotice}
+          onConfirm={() => setNoticeDismissed(true)}
+        />
       ) : null}
-      <p className="body-text">
-        부스 {booth.number} · {booth.name}
-      </p>
-      <p className="body-text">참가자: {registration.participantName}</p>
-      <p className="admin-meta">{registration.maskedPhone}</p>
-      <p className="admin-meta">등록 시각: {formatClock(registration.createdAt)}</p>
-      <p className="reservation-code walkin-code">
-        {registration.confirmationNumber}
-      </p>
-      <p className="hint-text">
-        운영자에게 이 화면을 보여준 뒤 참여해 주세요.
-      </p>
-      <div className="action-stack">
-        <Link to="/my-reservations" className="btn btn-primary">
-          내 이용 현황
-        </Link>
-        <Link to="/" className="btn btn-ghost">
-          홈으로
-        </Link>
-      </div>
-    </section>
+      <section className="glass-card success-card">
+        <p className="hero-kicker">현장 참여 등록</p>
+        <h2 className="section-title">현장 참여 등록 완료</h2>
+        {state.duplicate || state.message ? (
+          <div className="notice">
+            {state.message ?? '이미 이 부스에 현장 참여 등록을 완료했어요.'}
+          </div>
+        ) : null}
+        <p className="body-text">
+          부스 {booth.number} · {booth.name}
+        </p>
+        <p className="body-text">참가자: {registration.participantName}</p>
+        <p className="admin-meta">{registration.maskedPhone}</p>
+        <p className="admin-meta">등록 시각: {formatClock(registration.createdAt)}</p>
+        <p className="hint-text">
+          운영자에게 이 화면을 보여준 뒤 참여해 주세요.
+        </p>
+        <div className="action-stack">
+          <Link to="/my-reservations" className="btn btn-primary">
+            내 이용 현황
+          </Link>
+          <Link to="/" className="btn btn-ghost">
+            홈으로
+          </Link>
+        </div>
+      </section>
+    </>
   );
 }

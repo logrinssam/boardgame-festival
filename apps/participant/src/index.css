@@ -1261,3 +1261,44 @@ input {
   background: rgba(230, 126, 34, 0.16);
   color: #c45f0c;
 }
+
+/* 안내 팝업 (현장 등록 완료 등) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(31, 27, 46, 0.45);
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 340px;
+  padding: 22px 20px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--card-border);
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(31, 27, 46, 0.22);
+}
+
+.modal-title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--creative-accent);
+}
+
+.modal-message {
+  margin: 0 0 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  white-space: pre-line;
+}
+
+.modal-card .btn {
+  width: 100%;
+}
