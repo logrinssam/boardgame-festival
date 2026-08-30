@@ -117,7 +117,10 @@ export interface Booth {
   status: BoothOperationalStatus;
   slots: BoothSlot[];
   staffingType: StaffingType;
+  /** 자유체험 게임 목록 */
   activities?: string[];
+  /** 예약 보드게임 목록 */
+  reserveGames?: string[];
   operationMode: BoothOperationMode;
   /** 현장 등록형 부스 공개 상태. 미설정 시 OPEN으로 취급 */
   walkInPublicStatus?: WalkInBoothPublicStatus;

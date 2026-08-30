@@ -338,6 +338,7 @@ function sanitizeBooth(booth, existingSlots = []) {
     status: booth.status,
     staffingType: booth.staffingType,
     activities: booth.activities ?? [],
+    reserveGames: booth.reserveGames ?? [],
     operationMode: booth.operationMode ?? 'TIME_RESERVATION',
     walkInPublicStatus: booth.walkInPublicStatus ?? 'OPEN',
     walkInDuplicateBlockCount: Number(booth.walkInDuplicateBlockCount ?? 0),

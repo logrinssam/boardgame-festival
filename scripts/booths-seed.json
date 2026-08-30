@@ -7,7 +7,7 @@
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
     "description": "기억력·순발력·균형감각을 기르는 테마형 보드게임 체험",
-    "location": "추후 안내",
+    "location": "지혜의 광장 북측 (어린이실 방향)",
     "target": "유치부",
     "groupLabel": "A",
     "durationMinutes": 25,
@@ -18,6 +18,9 @@
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [
       "카프라"
+    ],
+    "reserveGames": [
+      "픽미업 등"
     ],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
@@ -124,7 +127,7 @@
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
     "description": "보드게임으로 집중력 키우기",
-    "location": "추후 안내",
+    "location": "지혜의 광장 북측",
     "target": "유치부",
     "groupLabel": "B",
     "durationMinutes": 25,
@@ -135,6 +138,9 @@
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [
       "코잉스"
+    ],
+    "reserveGames": [
+      "미니우봉고 등"
     ],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
@@ -241,7 +247,7 @@
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
     "description": "보드게임으로 즐기는 조작 활동으로 집중력, 순발력 기르기",
-    "location": "추후 안내",
+    "location": "지혜의 광장 북측",
     "target": "초등학교 1~2학년",
     "groupLabel": "A",
     "durationMinutes": 25,
@@ -251,8 +257,10 @@
     "status": "BOOKING_OPEN",
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [
+      "비버타워",
       "고고젤라또"
     ],
+    "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
     "accessCode": "649028",
@@ -358,7 +366,7 @@
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
     "description": "보드게임으로 기르는 집중력과 절차적 사고력",
-    "location": "추후 안내",
+    "location": "지혜의 광장 북측",
     "target": "초등학교 1~2학년",
     "groupLabel": "B",
     "durationMinutes": 25,
@@ -369,6 +377,9 @@
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [
       "스틱스택"
+    ],
+    "reserveGames": [
+      "닥터유레카 등"
     ],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
@@ -475,7 +486,7 @@
     "experienceGroup": "BOARD_GAME",
     "boothType": "GRAVITRAX",
     "description": "중력과 자석의 힘을 이해하고 전략적으로 활용하는 보드게임 체험",
-    "location": "추후 안내",
+    "location": "지혜의 광장 서측",
     "target": "학년 무관",
     "groupLabel": null,
     "durationMinutes": 25,
@@ -484,7 +495,12 @@
     "waitlistCapacity": 2,
     "status": "BOOKING_OPEN",
     "staffingType": "FIXED_STAFF",
-    "activities": [],
+    "activities": [
+      "그래비트랙스",
+      "클러스터",
+      "클라스크"
+    ],
+    "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
     "accessCode": "148273",
@@ -590,7 +606,7 @@
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
     "description": "보드게임으로 키우는 순발력, 창의적 사고력",
-    "location": "추후 안내",
+    "location": "지혜의 광장 서측",
     "target": "초등학교 3~4학년",
     "groupLabel": null,
     "durationMinutes": 25,
@@ -600,7 +616,10 @@
     "status": "BOOKING_OPEN",
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [
-      "스택버거 [1인/2인버전]"
+      "스택버거"
+    ],
+    "reserveGames": [
+      "블리츠 등"
     ],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
@@ -707,7 +726,7 @@
     "experienceGroup": "BOARD_GAME",
     "boothType": "AGE_BOARD_GAME",
     "description": "사고력을 키우는 1 대 1 대결과 1인 챌린지",
-    "location": "추후 안내",
+    "location": "지혜의 광장 서측",
     "target": "초등학교 4학년 이상",
     "groupLabel": null,
     "durationMinutes": 25,
@@ -717,8 +736,10 @@
     "status": "BOOKING_OPEN",
     "staffingType": "THREE_PERSON_ROTATION",
     "activities": [
+      "포메이션",
       "러시아워"
     ],
+    "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
     "accessCode": "903517",
@@ -824,7 +845,7 @@
     "experienceGroup": "CREATIVE_CONVERGENCE",
     "boothType": "MAKING",
     "description": "관성의 원리로 무게 중심을 이동하며 움직이는 자벌레 만들기",
-    "location": "추후 안내",
+    "location": "지혜의 광장 남서측",
     "target": "추후 안내",
     "groupLabel": null,
     "durationMinutes": 25,
@@ -834,6 +855,7 @@
     "status": "BOOKING_OPEN",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "reserveGames": [],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
     "accessCode": "367514",
@@ -939,7 +961,7 @@
     "experienceGroup": "CREATIVE_CONVERGENCE",
     "boothType": "MAKING",
     "description": "슬라이딩 퍼즐을 직접 만들며 두뇌 깨우기",
-    "location": "추후 안내",
+    "location": "지혜의 광장 동측 (어린이실 앞)",
     "target": "추후 안내",
     "groupLabel": null,
     "durationMinutes": 25,
@@ -949,6 +971,7 @@
     "status": "BOOKING_OPEN",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "reserveGames": [],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
     "accessCode": "256839",
@@ -1054,7 +1077,7 @@
     "experienceGroup": "CREATIVE_CONVERGENCE",
     "boothType": "ROBOT",
     "description": "카미봇에 장착된 지게차를 활용하여 자원을 획득하고, 상대 팀과 경쟁하며 가장 많은 자원을 확보하는 미션 수행",
-    "location": "추후 안내",
+    "location": "지혜의 광장 동측 (어린이실 앞)",
     "target": "추후 안내",
     "groupLabel": null,
     "durationMinutes": 25,
@@ -1064,6 +1087,7 @@
     "status": "BOOKING_OPEN",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "reserveGames": [],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
     "accessCode": "691850",
@@ -1169,7 +1193,7 @@
     "experienceGroup": "CREATIVE_CONVERGENCE",
     "boothType": "ROBOT",
     "description": "햄스터봇 조작을 통한 2대2 축구 경기",
-    "location": "추후 안내",
+    "location": "지혜의 광장 동측 (어린이실 앞)",
     "target": "추후 안내",
     "groupLabel": null,
     "durationMinutes": 25,
@@ -1179,6 +1203,7 @@
     "status": "BOOKING_OPEN",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "reserveGames": [],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
     "accessCode": "713946",
@@ -1284,7 +1309,7 @@
     "experienceGroup": "CREATIVE_CONVERGENCE",
     "boothType": "ACTIVITY",
     "description": "무게중심과 빛의 굴절로 알아보는 과학",
-    "location": "추후 안내",
+    "location": "지혜의 광장 동측 (어린이실 앞)",
     "target": "추후 안내",
     "groupLabel": null,
     "durationMinutes": 25,
@@ -1294,6 +1319,7 @@
     "status": "BOOKING_OPEN",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "reserveGames": [],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
     "accessCode": "479026",
@@ -1399,7 +1425,7 @@
     "experienceGroup": "CREATIVE_CONVERGENCE",
     "boothType": "ACTIVITY",
     "description": "창의 수학 챌린지(소마큐브, 에그퍼즐)",
-    "location": "추후 안내",
+    "location": "지혜의 광장 남측 (본부 옆)",
     "target": "추후 안내",
     "groupLabel": null,
     "durationMinutes": 25,
@@ -1409,6 +1435,7 @@
     "status": "BOOKING_OPEN",
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
+    "reserveGames": [],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
     "accessCode": "584173",
@@ -1524,6 +1551,7 @@
     "status": "BOOKING_OPEN",
     "staffingType": "FIXED_STAFF",
     "activities": [],
+    "reserveGames": [],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
     "accessCode": "825307",

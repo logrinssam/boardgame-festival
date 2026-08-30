@@ -65,17 +65,43 @@ export function BoothDetailPage() {
           {booth.subtitle ? ` · ${booth.subtitle}` : ''}
         </h2>
 
+        {(booth.reserveGames?.length ?? 0) > 0 ||
+        (booth.activities?.length ?? 0) > 0 ? (
+          <div className="game-rows">
+            {booth.reserveGames && booth.reserveGames.length > 0 ? (
+              <div className="game-row game-row-reserve">
+                <span className="game-chip game-chip-reserve">
+                  예약 보드게임
+                </span>
+                <span className="game-row-text">
+                  {booth.reserveGames.join(', ')}
+                </span>
+              </div>
+            ) : null}
+            {booth.activities && booth.activities.length > 0 ? (
+              <div className="game-row game-row-free">
+                <span className="game-chip game-chip-free">자유체험</span>
+                <span className="game-row-text">
+                  {booth.activities.join(', ')}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
         <dl className="detail-list">
           {booth.target && booth.target !== '추후 안내' ? (
             <div>
-              <dt>대상</dt>
+              <dt>추천 학년</dt>
               <dd>{booth.target}</dd>
             </div>
           ) : null}
-          <div>
-            <dt>위치</dt>
-            <dd>{booth.location}</dd>
-          </div>
+          {booth.location && booth.location !== '추후 안내' ? (
+            <div>
+              <dt>위치</dt>
+              <dd>{booth.location}</dd>
+            </div>
+          ) : null}
           <div>
             <dt>운영 시간</dt>
             <dd>
@@ -104,17 +130,6 @@ export function BoothDetailPage() {
                 <li>등록 시 부스에 표시된 현장코드가 필요합니다.</li>
               </ul>
             </div>
-          </>
-        ) : null}
-
-        {booth.activities && booth.activities.length > 0 ? (
-          <>
-            <h3 className="section-title">주요 체험</h3>
-            <ul className="activity-list">
-              {booth.activities.map((activity) => (
-                <li key={activity}>{activity}</li>
-              ))}
-            </ul>
           </>
         ) : null}
 

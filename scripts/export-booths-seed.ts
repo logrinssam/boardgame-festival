@@ -20,6 +20,7 @@ const out = BOOTHS.map((booth) => ({
   status: booth.status,
   staffingType: booth.staffingType,
   activities: booth.activities ?? [],
+  reserveGames: booth.reserveGames ?? [],
   operationMode: booth.operationMode,
   accessCodeConfigured: booth.accessCodeConfigured,
   accessCode: booth.accessCode,

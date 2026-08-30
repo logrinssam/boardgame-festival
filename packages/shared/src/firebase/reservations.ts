@@ -50,6 +50,7 @@ function asBooth(id: string, data: Record<string, unknown>): Booth {
     status: data.status as Booth['status'],
     staffingType: data.staffingType as Booth['staffingType'],
     activities: (data.activities as string[] | undefined) ?? undefined,
+    reserveGames: (data.reserveGames as string[] | undefined) ?? undefined,
     operationMode: resolveOperationMode({
       id,
       number: Number(data.number),

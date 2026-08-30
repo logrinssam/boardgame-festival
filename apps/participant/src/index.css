@@ -563,6 +563,53 @@ input {
   background: rgba(91, 141, 239, 0.12);
 }
 
+.game-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.game-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.game-row-reserve {
+  background: rgba(31, 157, 108, 0.1);
+}
+
+.game-row-free {
+  background: rgba(240, 165, 60, 0.14);
+}
+
+.game-chip {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.game-chip-reserve {
+  background: #1f9d6c;
+}
+
+.game-chip-free {
+  background: #e08a1e;
+}
+
+.game-row-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: keep-all;
+}
+
 .walkin-notice .plain-list {
   margin: 0;
 }
