@@ -2,10 +2,14 @@
  * 점검용 가상 시계 스위치.
  *
  * 사용:
- *   node scripts/test-clock.mjs 08:29      # 서버가 08:29 기준으로 동작 (기본 2시간 후 자동 만료)
- *   node scripts/test-clock.mjs 12:46 30   # 12:46 기준, 30분 후 자동 만료
- *   node scripts/test-clock.mjs off        # 즉시 해제
- *   node scripts/test-clock.mjs status     # 현재 상태 확인
+ *   node scripts/test-clock.mjs 08:29             # 서버가 08:29 기준으로 동작 (기본 2시간 후 자동 만료)
+ *   node scripts/test-clock.mjs 12:46 30          # 12:46 기준, 30분 후 자동 만료
+ *   node scripts/test-clock.mjs open 2026-09-02   # 그날 자정(KST)까지 모든 회차 상시 개방
+ *   node scripts/test-clock.mjs off               # 즉시 해제
+ *   node scripts/test-clock.mjs status            # 현재 상태 확인
+ *
+ * open 모드는 시간 검사(08:30/12:45 오픈, 지난 회차 종료)를 통째로 생략해
+ * 언제 접속해도 13개 회차가 전부 예약 가능한 점검 상태를 만든다.
  *
  * 서버(Cloud Functions)는 expiresAt 이 지나면 설정을 무시하고 실제 시각으로 돌아간다.
  * 끄는 걸 잊어도 행사 당일 사고로 이어지지 않게 하기 위한 안전장치다.
@@ -78,6 +82,7 @@ async function readConfig(accessToken) {
   const f = json.fields ?? {};
   return {
     enabled: f.enabled?.booleanValue ?? false,
+    mode: f.mode?.stringValue ?? null,
     simulatedTime: f.simulatedTime?.stringValue ?? null,
     expiresAt: f.expiresAt?.stringValue ?? null,
   };
@@ -94,9 +99,31 @@ if (!arg || arg === 'status') {
   } else {
     const expired = Date.now() >= Date.parse(config.expiresAt ?? '');
     console.log(`점검 모드: ${expired ? '만료됨 (실제 시각으로 동작)' : '켜짐'}`);
-    console.log(`  가상 시각: ${config.simulatedTime}`);
+    console.log(
+      `  방식: ${config.mode === 'OPEN' ? '상시 개방 (모든 회차 예약 가능)' : `가상 시각 ${config.simulatedTime}`}`,
+    );
     console.log(`  만료: ${config.expiresAt}`);
   }
+} else if (arg === 'open') {
+  const dateArg = (process.argv[3] ?? '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateArg)) {
+    console.error('만료 날짜를 YYYY-MM-DD 형식으로 지정하세요. 예: open 2026-09-02');
+    process.exit(1);
+  }
+  // 지정한 날짜의 자정(KST)이 지나는 순간 만료 = 그날 하루가 끝날 때까지 개방
+  const expiresAt = new Date(`${dateArg}T15:00:00.000Z`).toISOString();
+  if (Date.parse(expiresAt) <= Date.now()) {
+    console.error('이미 지난 날짜입니다.');
+    process.exit(1);
+  }
+  await writeConfig(accessToken, {
+    enabled: { booleanValue: true },
+    mode: { stringValue: 'OPEN' },
+    simulatedTime: { nullValue: null },
+    expiresAt: { stringValue: expiresAt },
+  });
+  console.log(`상시 개방 모드 켜짐 — ${dateArg} 자정(KST)까지 모든 회차가 예약 가능합니다.`);
+  console.log(`이후 자동으로 실제 시각 규칙(오전 08:30 · 오후 12:45)으로 돌아갑니다.`);
 } else if (arg === 'off') {
   await writeConfig(accessToken, { enabled: { booleanValue: false } });
   console.log('점검 모드를 껐습니다. 서버가 실제 시각으로 동작합니다.');
@@ -112,6 +139,7 @@ if (!arg || arg === 'status') {
   const expiresAt = new Date(Date.now() + ttlMinutes * 60_000).toISOString();
   await writeConfig(accessToken, {
     enabled: { booleanValue: true },
+    mode: { nullValue: null },
     simulatedTime: { stringValue: arg },
     expiresAt: { stringValue: expiresAt },
   });

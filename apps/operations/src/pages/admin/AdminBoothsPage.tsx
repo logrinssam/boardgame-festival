@@ -131,33 +131,54 @@ export function AdminBoothsPage() {
 
       <section className="glass-card">
         <h3 className="section-title">회차별 예약 시작/중지</h3>
-        <ul className="admin-slot-list">
-          {currentBooth.slots.map((slot) => (
-            <li key={slot.id} className="admin-slot-item">
-              <div>
-                <strong>
-                  {slot.startTime}~{slot.endTime}
-                </strong>
-                <p className="admin-meta">
-                  확정 {slot.confirmedCount} · 예비 {slot.waitlistCount}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="btn btn-small"
-                onClick={() => {
-                  void setSlotBookingOpen(
-                    currentBooth.id,
-                    slot.id,
-                    !slot.bookingOpen,
-                  );
-                }}
-              >
-                {slot.bookingOpen ? '예약 중지' : '예약 시작'}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <p className="admin-meta slot-section-desc">
+          참가자 예약은 오전 08:30 · 오후 12:45부터 자동으로 열립니다. 아래
+          버튼은 회차를 수동으로 중지/재개할 때만 사용하세요.
+        </p>
+        {(
+          [
+            { period: 'MORNING', label: '오전' },
+            { period: 'AFTERNOON', label: '오후' },
+          ] as const
+        ).map(({ period, label }, index) => (
+          <div key={period}>
+            {index === 1 ? (
+              <div className="lunch-divider">점심시간 12:00 ~ 13:00</div>
+            ) : null}
+            <h4 className="admin-slot-group-label">{label}</h4>
+            <div className="admin-slot-grid">
+              {currentBooth.slots
+                .filter((slot) => slot.period === period)
+                .map((slot) => (
+                  <div
+                    key={slot.id}
+                    className={`admin-slot-cell${slot.bookingOpen ? '' : ' closed'}`}
+                  >
+                    <strong>{slot.startTime}</strong>
+                    <span className="admin-slot-counts">
+                      확정 {slot.confirmedCount} · 예비 {slot.waitlistCount}
+                    </span>
+                    {!slot.bookingOpen ? (
+                      <span className="admin-slot-closed-tag">중지됨</span>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="btn btn-small"
+                      onClick={() => {
+                        void setSlotBookingOpen(
+                          currentBooth.id,
+                          slot.id,
+                          !slot.bookingOpen,
+                        );
+                      }}
+                    >
+                      {slot.bookingOpen ? '중지' : '재개'}
+                    </button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        ))}
       </section>
       {message ? <p className="notice success-inline">{message}</p> : null}
     </>

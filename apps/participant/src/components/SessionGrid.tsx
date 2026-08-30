@@ -53,7 +53,7 @@ export function useBoothSessions(booth: Booth) {
     try {
       const result = await getBoothSessionsCallable(boothId);
       setSessions(result.sessions);
-      setTestClock(result.testMode ? (result.simulatedTime ?? '설정 시각') : null);
+      setTestClock(result.testMode ? (result.simulatedTime ?? 'OPEN') : null);
       setLoadError(false);
     } catch {
       setLoadError(true);
@@ -97,13 +97,22 @@ export function useBoothSessions(booth: Booth) {
   return { visibleSessions, loadError, loading, refresh, testClock };
 }
 
-/** 가상 시계가 켜져 있을 때 화면에 띄우는 경고 — 실제 운영과 헷갈리지 않게 한다 */
+/** 점검 모드가 켜져 있을 때 화면에 띄우는 경고 — 실제 운영과 헷갈리지 않게 한다 */
 export function TestClockBanner({ testClock }: { testClock: string | null }) {
   if (!testClock) return null;
   return (
     <div className="test-clock-banner" role="status">
-      점검 모드 — 서버가 <strong>{testClock}</strong> 기준으로 동작 중입니다.
-      실제 예약이 아닙니다.
+      {testClock === 'OPEN' ? (
+        <>
+          점검 모드 — 모든 회차가 연습용으로 열려 있습니다. 실제 행사 예약이
+          아닙니다.
+        </>
+      ) : (
+        <>
+          점검 모드 — 서버가 <strong>{testClock}</strong> 기준으로 동작
+          중입니다. 실제 예약이 아닙니다.
+        </>
+      )}
     </div>
   );
 }

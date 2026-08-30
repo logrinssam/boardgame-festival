@@ -44,6 +44,7 @@ npm run build
 ```bash
 npm run test-clock 08:29      # 서버가 08:29 기준으로 동작 (기본 2시간 후 자동 해제)
 npm run test-clock 12:46 30   # 12:46 기준, 30분 후 자동 해제
+npm run test-clock open 2026-09-02   # 그날 자정(KST)까지 모든 회차 상시 개방
 npm run test-clock status     # 현재 상태 확인
 npm run test-clock off        # 즉시 해제
 ```

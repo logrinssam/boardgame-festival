@@ -1117,6 +1117,114 @@ input {
   padding-bottom: 4px;
 }
 
+/* 회차 선택 — 오전/오후로 나눠 전부 보이게 (가로 스크롤 제거) */
+.slot-chip-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slot-chip-group-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.slot-chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.slot-chip-count {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.slot-chip.active .slot-chip-count,
+.time-slot.selected .slot-chip-count {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* 관리자 부스 관리 — 회차 그리드 */
+.slot-section-desc {
+  margin: 6px 0 14px;
+  word-break: keep-all;
+}
+
+.admin-slot-group-label {
+  margin: 12px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.admin-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .admin-slot-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.admin-slot-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background: var(--surface-1);
+}
+
+.admin-slot-cell strong {
+  font-size: 15px;
+}
+
+.admin-slot-cell.closed {
+  background: rgba(0, 0, 0, 0.05);
+  border-style: dashed;
+}
+
+.admin-slot-counts {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.admin-slot-closed-tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(214, 48, 49, 0.15);
+  color: #b02525;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-slot-cell .btn {
+  margin-top: 4px;
+}
+
+.lunch-divider {
+  margin: 14px 0;
+  padding: 6px 0;
+  border-top: 1px dashed rgba(0, 0, 0, 0.15);
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.15);
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 .slot-chip,
 .time-slot {
   flex: 0 0 auto;

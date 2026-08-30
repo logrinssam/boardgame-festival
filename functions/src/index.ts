@@ -94,19 +94,23 @@ async function recountAndUpdateBooth(boothId: string, slotId: string) {
 const callableOpts = { invoker: 'public' as const };
 
 /**
- * 점검용 가상 시계.
+ * 점검용 시간 정책.
  *
  * Firestore `config/testClock` 문서:
- *   { enabled: true, simulatedTime: "08:29", expiresAt: "2026-09-01T12:00:00Z" }
+ *   { enabled: true, simulatedTime: "08:29", expiresAt: "..." }  → 가상 시각으로 판정
+ *   { enabled: true, mode: "OPEN", expiresAt: "..." }            → 시간 검사 자체를 생략
+ *                                                                   (모든 회차 상시 예약 가능)
  *
  * 실수로 켜둔 채 행사를 맞는 사고를 막기 위해 아래 경우 모두 실제 시각으로 되돌린다
  * (안전한 기본값 = 진짜 시간):
  *   - 문서가 없거나 enabled !== true
  *   - expiresAt 이 없거나, 형식이 잘못됐거나, 이미 지났음
- *   - simulatedTime 이 HH:MM 형식이 아님
+ *   - OPEN 모드가 아닌데 simulatedTime 이 HH:MM 형식이 아님
+ *
+ * nowMinutes 가 null 이면 "시간 검사 생략(상시 개방)"을 뜻한다.
  */
 async function resolveNowMinutes(): Promise<{
-  nowMinutes: number;
+  nowMinutes: number | null;
   testMode: boolean;
   simulatedTime: string | null;
 }> {
@@ -120,6 +124,7 @@ async function resolveNowMinutes(): Promise<{
     if (!snap.exists) return real;
     const data = snap.data() as {
       enabled?: boolean;
+      mode?: string;
       simulatedTime?: string;
       expiresAt?: string;
     };
@@ -127,6 +132,10 @@ async function resolveNowMinutes(): Promise<{
 
     const expiresAt = Date.parse(String(data.expiresAt ?? ''));
     if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) return real;
+
+    if (data.mode === 'OPEN') {
+      return { nowMinutes: null, testMode: true, simulatedTime: null };
+    }
 
     const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(
       String(data.simulatedTime ?? ''),
@@ -851,9 +860,12 @@ export const getBoothSessions = onCall(callableOpts, async (request) => {
         : null;
 
     let status: 'AVAILABLE' | 'WAITLIST' | 'FULL' | 'LOCKED' | 'PAST';
-    if (nowMinutes >= minutesFromTime(slot.startTime)) {
+    if (nowMinutes !== null && nowMinutes >= minutesFromTime(slot.startTime)) {
       status = 'PAST';
-    } else if (nowMinutes < BOOKING_OPEN_MINUTES[slot.period]) {
+    } else if (
+      nowMinutes !== null &&
+      nowMinutes < BOOKING_OPEN_MINUTES[slot.period]
+    ) {
       status = 'LOCKED';
     } else if (!slot.bookingOpen) {
       status = 'FULL';

@@ -298,25 +298,42 @@ export function StaffBoothOpsPage() {
 
       <StaffBoothCapacityForm booth={currentBooth} />
 
-      <div className="slot-chip-row" role="tablist" aria-label="회차 선택">
-        {currentBooth.slots.map((slot) => {
-          const schedule = SCHEDULE_SLOTS.find(
-            (item) => item.id === slot.scheduleSlotId,
-          );
-          if (!schedule) return null;
-          const active = currentBoothSlot.id === slot.id;
-          const isCurrent = current?.id === schedule.id;
-          return (
-            <button
-              key={slot.id}
-              type="button"
-              className={`slot-chip time-slot${active ? ' active selected' : ''}${isCurrent ? ' is-current' : ''}`}
-              onClick={() => setFocusSlotId(schedule.id)}
-            >
-              {schedule.startTime}
-            </button>
-          );
-        })}
+      <div className="slot-chip-groups" role="tablist" aria-label="회차 선택">
+        {(
+          [
+            { period: 'MORNING', label: '오전' },
+            { period: 'AFTERNOON', label: '오후' },
+          ] as const
+        ).map(({ period, label }) => (
+          <div key={period} className="slot-chip-group">
+            <span className="slot-chip-group-label">{label}</span>
+            <div className="slot-chip-wrap">
+              {currentBooth.slots
+                .filter((slot) => slot.period === period)
+                .map((slot) => {
+                  const schedule = SCHEDULE_SLOTS.find(
+                    (item) => item.id === slot.scheduleSlotId,
+                  );
+                  if (!schedule) return null;
+                  const active = currentBoothSlot.id === slot.id;
+                  const isCurrent = current?.id === schedule.id;
+                  return (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      className={`slot-chip time-slot${active ? ' active selected' : ''}${isCurrent ? ' is-current' : ''}`}
+                      onClick={() => setFocusSlotId(schedule.id)}
+                    >
+                      {schedule.startTime}
+                      <span className="slot-chip-count">
+                        {slot.confirmedCount}
+                      </span>
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+        ))}
       </div>
 
       {openSeats !== null && openSeats > 0 && nextWaitlist ? (

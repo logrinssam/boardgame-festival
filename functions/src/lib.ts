@@ -131,23 +131,26 @@ export function minutesFromTime(time: string): number {
 /**
  * @param nowMinutes KST 자정 기준 분. 호출자가 명시 전달한다 —
  *   인스턴스가 동시 요청을 처리해도 서로 간섭하지 않게 하기 위함.
+ *   null 이면 시간 검사를 생략한다 (점검용 상시 개방 모드).
  */
 export function canBookSlot(
   booth: Booth,
   slot: BoothSlot,
-  nowMinutes: number = getKstNowMinutes(),
+  nowMinutes: number | null = getKstNowMinutes(),
 ): { allowed: boolean; isWaitlist: boolean; reason?: string } {
-  if (nowMinutes < BOOKING_OPEN_MINUTES[slot.period]) {
-    const label =
-      slot.period === 'MORNING' ? '오전 회차 예약은 08:30' : '오후 회차 예약은 12:45';
-    return { allowed: false, isWaitlist: false, reason: `${label}부터 가능합니다.` };
-  }
-  if (nowMinutes >= minutesFromTime(slot.startTime)) {
-    return {
-      allowed: false,
-      isWaitlist: false,
-      reason: '이미 시작된 회차는 예약할 수 없습니다.',
-    };
+  if (nowMinutes !== null) {
+    if (nowMinutes < BOOKING_OPEN_MINUTES[slot.period]) {
+      const label =
+        slot.period === 'MORNING' ? '오전 회차 예약은 08:30' : '오후 회차 예약은 12:45';
+      return { allowed: false, isWaitlist: false, reason: `${label}부터 가능합니다.` };
+    }
+    if (nowMinutes >= minutesFromTime(slot.startTime)) {
+      return {
+        allowed: false,
+        isWaitlist: false,
+        reason: '이미 시작된 회차는 예약할 수 없습니다.',
+      };
+    }
   }
 
   const effective = getEffectiveCapacity(booth);
