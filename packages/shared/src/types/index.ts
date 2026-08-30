@@ -266,7 +266,8 @@ export const EXPERIENCE_GROUP_LABELS: Record<ExperienceGroup, string> = {
 
 export const EXPERIENCE_GROUP_DESCRIPTIONS: Record<ExperienceGroup, string> = {
   BOARD_GAME: '연령별 수학 보드게임과 그래비트랙스 체험',
-  CREATIVE_CONVERGENCE: '만들기·체험·로봇·넥슨 창의융합 프로그램',
+  CREATIVE_CONVERGENCE:
+    '만들기·체험·로봇·넥슨 창의융합 프로그램 · 예약 없이 선착순 체험 (카미봇·햄스터봇 제외)',
 };
 
 export const OPERATION_MODE_LABELS: Record<BoothOperationMode, string> = {

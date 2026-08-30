@@ -107,10 +107,26 @@ export function countSeatUsage(reservations: Reservation[]): {
   };
 }
 
+/** 회차별 예약 허용 시작 시각 (KST 자정 기준 분) — 오전 08:30, 오후 12:45 */
+const BOOKING_OPEN_MINUTES = {
+  MORNING: 8 * 60 + 30,
+  AFTERNOON: 12 * 60 + 45,
+} as const;
+
+function getKstNowMinutes(): number {
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return kst.getUTCHours() * 60 + kst.getUTCMinutes();
+}
+
 export function canBookSlot(
   booth: Booth,
   slot: BoothSlot,
 ): { allowed: boolean; isWaitlist: boolean; reason?: string } {
+  if (getKstNowMinutes() < BOOKING_OPEN_MINUTES[slot.period]) {
+    const label = slot.period === 'MORNING' ? '오전 회차 예약은 08:30' : '오후 회차 예약은 12:45';
+    return { allowed: false, isWaitlist: false, reason: `${label}부터 가능합니다.` };
+  }
+
   const effective = getEffectiveCapacity(booth);
   if (!effective.isConfigured || effective.capacity === null) {
     return {

@@ -856,7 +856,7 @@
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
     "reserveGames": [],
-    "operationMode": "TIME_RESERVATION",
+    "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
     "accessCode": "367514",
     "slots": [
@@ -972,7 +972,7 @@
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
     "reserveGames": [],
-    "operationMode": "TIME_RESERVATION",
+    "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
     "accessCode": "256839",
     "slots": [
@@ -1320,7 +1320,7 @@
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
     "reserveGames": [],
-    "operationMode": "TIME_RESERVATION",
+    "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
     "accessCode": "479026",
     "slots": [
@@ -1436,7 +1436,7 @@
     "staffingType": "FOUR_PERSON_ROTATION",
     "activities": [],
     "reserveGames": [],
-    "operationMode": "TIME_RESERVATION",
+    "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
     "accessCode": "584173",
     "slots": [
@@ -1552,7 +1552,7 @@
     "staffingType": "FIXED_STAFF",
     "activities": [],
     "reserveGames": [],
-    "operationMode": "TIME_RESERVATION",
+    "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
     "accessCode": "825307",
     "slots": [

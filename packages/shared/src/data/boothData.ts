@@ -210,6 +210,7 @@ export const BOOTHS: Booth[] = [
     location: '지혜의 광장 남서측',
     accentColor: '#8A74F0',
     staffingType: 'FOUR_PERSON_ROTATION',
+    operationMode: 'WALK_IN_CHECKIN',
   }),
   createBooth({
     id: 'booth-09',
@@ -222,6 +223,7 @@ export const BOOTHS: Booth[] = [
     location: '지혜의 광장 동측 (어린이실 앞)',
     accentColor: '#7B6CF6',
     staffingType: 'FOUR_PERSON_ROTATION',
+    operationMode: 'WALK_IN_CHECKIN',
   }),
   createBooth({
     id: 'booth-10',
@@ -259,6 +261,7 @@ export const BOOTHS: Booth[] = [
     location: '지혜의 광장 동측 (어린이실 앞)',
     accentColor: '#6E63E8',
     staffingType: 'FOUR_PERSON_ROTATION',
+    operationMode: 'WALK_IN_CHECKIN',
   }),
   createBooth({
     id: 'booth-13',
@@ -271,6 +274,7 @@ export const BOOTHS: Booth[] = [
     location: '지혜의 광장 남측 (본부 옆)',
     accentColor: '#7A5FE0',
     staffingType: 'FOUR_PERSON_ROTATION',
+    operationMode: 'WALK_IN_CHECKIN',
   }),
   createBooth({
     id: 'booth-14',
@@ -282,6 +286,7 @@ export const BOOTHS: Booth[] = [
     description: '헬로메이플 「슬라이딩 수학도둑」으로 즐기는 수학 미션 체험',
     accentColor: '#1ABC9C',
     staffingType: 'FIXED_STAFF',
+    operationMode: 'WALK_IN_CHECKIN',
   }),
 ];
 

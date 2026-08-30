@@ -6,7 +6,7 @@ import {
   EXPERIENCE_GROUP_LABELS,
   type ExperienceGroup,
 } from '@bgf/shared';
-import { EVENT_SCHEDULE, formatTimeRange } from '@bgf/shared';
+import { BOOKING_OPEN_TIMES, EVENT_SCHEDULE, formatTimeRange } from '@bgf/shared';
 import { getEffectiveCapacity, isWalkInBooth } from '@bgf/shared';
 
 type Filter = 'ALL' | ExperienceGroup;
@@ -52,6 +52,14 @@ export function HomePage() {
             <strong>
               {formatTimeRange(EVENT_SCHEDULE.lunchStart, EVENT_SCHEDULE.lunchEnd)}
             </strong>
+          </div>
+          <div className="info-chip">
+            <span className="info-label">오전 예약</span>
+            <strong>{BOOKING_OPEN_TIMES.MORNING}부터</strong>
+          </div>
+          <div className="info-chip">
+            <span className="info-label">오후 예약</span>
+            <strong>{BOOKING_OPEN_TIMES.AFTERNOON}부터</strong>
           </div>
         </div>
       </section>

@@ -3,6 +3,11 @@ import {
   DEMO_MODE,
   DEMO_WAITLIST_CAPACITY,
 } from '../config/demoConfig';
+import {
+  BOOKING_OPEN_TIMES,
+  getBookingOpenMinutes,
+  getKstNowMinutes,
+} from '../data/scheduleData';
 import type { Booth, BoothSlot, EffectiveCapacity, SlotAvailabilityStatus } from '../types';
 
 export function getEffectiveCapacity(booth: Booth): EffectiveCapacity {
@@ -121,10 +126,30 @@ export function getSlotStatusLabel(status: SlotAvailabilityStatus): string {
   }
 }
 
+/** 예약 허용 시간대 확인 — 오전 회차 08:30부터, 오후 회차 12:45부터 (KST) */
+export function isBookingWindowOpen(slot: Pick<BoothSlot, 'period'>): boolean {
+  return getKstNowMinutes() >= getBookingOpenMinutes(slot.period);
+}
+
+export function getBookingWindowMessage(
+  slot: Pick<BoothSlot, 'period'>,
+): string {
+  const label = slot.period === 'MORNING' ? '오전' : '오후';
+  return `${label} 회차 예약은 ${BOOKING_OPEN_TIMES[slot.period]}부터 가능합니다.`;
+}
+
 export function canBookSlot(
   booth: Booth,
   slot: BoothSlot,
 ): { allowed: boolean; isWaitlist: boolean; reason?: string } {
+  if (!isBookingWindowOpen(slot)) {
+    return {
+      allowed: false,
+      isWaitlist: false,
+      reason: getBookingWindowMessage(slot),
+    };
+  }
+
   const status = getSlotAvailabilityStatus(booth, slot);
 
   if (status === 'CAPACITY_PENDING') {

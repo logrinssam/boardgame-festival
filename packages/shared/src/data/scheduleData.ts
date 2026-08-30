@@ -29,7 +29,7 @@ export const EVENT_SCHEDULE = {
   closeTime: '16:25',
   morningStart: '09:00',
   morningEnd: '11:55',
-  lunchStart: '11:55',
+  lunchStart: '12:00',
   lunchEnd: '13:00',
   afternoonStart: '13:00',
   afternoonEnd: '16:25',
@@ -38,7 +38,25 @@ export const EVENT_SCHEDULE = {
   totalSlots: 13,
 } as const;
 
-/** 예약 가능한 13개 운영 회차 (점심 11:55~13:00 제외) */
+/** 회차별 예약 허용 시작 시각 (KST) — 오전 회차 08:30, 오후 회차 12:45 */
+export const BOOKING_OPEN_TIMES = {
+  MORNING: '08:30',
+  AFTERNOON: '12:45',
+} as const;
+
+/** 현재 시각(KST)을 자정 기준 분으로 반환 */
+export function getKstNowMinutes(): number {
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return kst.getUTCHours() * 60 + kst.getUTCMinutes();
+}
+
+export function getBookingOpenMinutes(
+  period: ScheduleSlot['period'],
+): number {
+  return toMinutes(BOOKING_OPEN_TIMES[period]);
+}
+
+/** 예약 가능한 13개 운영 회차 (점심 12:00~13:00 제외) */
 export const SCHEDULE_SLOTS: ScheduleSlot[] = [
   createSlot(1, '09:00', '09:25', 'MORNING'),
   createSlot(2, '09:30', '09:55', 'MORNING'),
