@@ -202,3 +202,36 @@ function callableErrorMessage(error: unknown): string {
   }
   return '예약 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
 }
+
+/** 회차 선택 화면 세션 상태 — 서버가 계산한 값을 렌더링만 한다. */
+export type BoothSessionStatus =
+  | 'AVAILABLE'
+  | 'WAITLIST'
+  | 'FULL'
+  | 'LOCKED'
+  | 'PAST';
+
+export interface BoothSession {
+  id: string;
+  startTime: string;
+  endTime: string;
+  period: 'MORNING' | 'AFTERNOON';
+  status: BoothSessionStatus;
+  seatsLeft: number | null;
+  waitlistLeft: number | null;
+}
+
+export interface BoothSessionsResult {
+  serverTime: string;
+  openTimes: { MORNING: string; AFTERNOON: string };
+  sessions: BoothSession[];
+}
+
+export async function getBoothSessionsCallable(
+  boothId: string,
+): Promise<BoothSessionsResult> {
+  const result = await fn<{ boothId: string }, BoothSessionsResult>(
+    'getBoothSessions',
+  )({ boothId });
+  return result.data;
+}

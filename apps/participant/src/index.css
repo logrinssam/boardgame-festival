@@ -623,6 +623,111 @@ input {
   margin-top: 20px;
 }
 
+/* 회차 선택 — 상단 고정 안내 */
+.booking-open-notice .open-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  font-size: 15px;
+}
+
+.booking-open-notice .open-line strong {
+  font-size: 16px;
+}
+
+.booking-open-notice .open-rule {
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* 회차 선택 — 칩 그리드 */
+.session-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+@media (min-width: 640px) {
+  .session-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.session-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 48px;
+  padding: 6px 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background: var(--surface-1, #fff);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.session-chip strong {
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.session-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.session-available {
+  border-color: rgba(79, 140, 255, 0.5);
+  background: rgba(79, 140, 255, 0.08);
+}
+
+.session-waitlist {
+  border-color: rgba(240, 165, 60, 0.5);
+  background: rgba(240, 165, 60, 0.12);
+}
+
+.session-full,
+.session-locked {
+  background: rgba(0, 0, 0, 0.05);
+  cursor: not-allowed;
+}
+
+.session-full strong,
+.session-locked strong {
+  color: var(--text-secondary);
+}
+
+.session-past {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.lunch-divider {
+  margin: 14px 0;
+  padding: 6px 0;
+  border-top: 1px dashed rgba(0, 0, 0, 0.15);
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.15);
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.session-error {
+  margin-bottom: 12px;
+}
+
+.session-error .btn {
+  margin-top: 8px;
+}
+
 .notice strong {
   display: block;
   margin-bottom: 4px;

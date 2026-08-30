@@ -12,6 +12,12 @@ export * from './services/walkInRegistrationService';
 export * from './services/boothAccessService';
 export * from './firebase/collections';
 export {
+  getBoothSessionsCallable,
+  type BoothSession,
+  type BoothSessionStatus,
+  type BoothSessionsResult,
+} from './firebase/callables';
+export {
   subscribeAllWalkIns,
   subscribeWalkInsForBooth,
   createWalkInRegistrationRemote,

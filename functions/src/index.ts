@@ -12,6 +12,8 @@ import type {
 import {
   ALLOWED_STATUS_TRANSITIONS,
   BLOCKING_STATUSES,
+  BOOKING_OPEN_LABELS,
+  BOOKING_OPEN_MINUTES,
   asBooth,
   asReservation,
   asWalkInRegistration,
@@ -19,9 +21,12 @@ import {
   countSeatUsage,
   digitsOnly,
   generateReservationCode,
+  getEffectiveCapacity,
+  getKstNowMinutes,
   getPhoneLast4,
   isSameLocalDay,
   maskPhone,
+  minutesFromTime,
 } from './lib';
 
 // Import from v2/https + v2/options only — the v2 barrel pulls in RTDB and
@@ -747,4 +752,84 @@ export const cancelWalkInRegistration = onCall(callableOpts, async (request) => 
     cancelledAt: now,
   });
   return { registration: updated };
+});
+
+/**
+ * 회차 선택 화면용 세션 목록.
+ * 상태(status)·잔여 좌석(seatsLeft)은 전적으로 서버가 계산한다 —
+ * 클라이언트는 이 값을 렌더링만 하고 시간 판정을 하지 않는다.
+ */
+export const getBoothSessions = onCall(callableOpts, async (request) => {
+  const boothId = String(request.data?.boothId ?? '');
+  if (!boothId) {
+    throw new HttpsError('invalid-argument', '부스 ID가 필요합니다.');
+  }
+
+  const boothSnap = await db.collection('booths').doc(boothId).get();
+  if (!boothSnap.exists) {
+    throw new HttpsError('not-found', '부스를 찾을 수 없습니다.');
+  }
+  const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+
+  // 슬롯 카운터 대신 실제 예약 문서를 세어 최신 잔여 좌석을 계산한다.
+  const resSnap = await db
+    .collection('reservations')
+    .where('boothId', '==', boothId)
+    .get();
+  const bySlot = new Map<string, Reservation[]>();
+  for (const doc of resSnap.docs) {
+    const reservation = asReservation(doc.id, doc.data() as Record<string, unknown>);
+    const list = bySlot.get(reservation.slotId) ?? [];
+    list.push(reservation);
+    bySlot.set(reservation.slotId, list);
+  }
+
+  const effective = getEffectiveCapacity(booth);
+  const nowMinutes = getKstNowMinutes();
+
+  const sessions = booth.slots.map((slot) => {
+    const usage = countSeatUsage(bySlot.get(slot.id) ?? []);
+    const seatsLeft =
+      effective.isConfigured && effective.capacity !== null
+        ? Math.max(0, Number(effective.capacity) - usage.confirmed)
+        : null;
+    const waitlistLeft =
+      effective.isConfigured && effective.waitlistCapacity !== null
+        ? Math.max(0, Number(effective.waitlistCapacity) - usage.waitlist)
+        : null;
+
+    let status: 'AVAILABLE' | 'WAITLIST' | 'FULL' | 'LOCKED' | 'PAST';
+    if (nowMinutes >= minutesFromTime(slot.startTime)) {
+      status = 'PAST';
+    } else if (nowMinutes < BOOKING_OPEN_MINUTES[slot.period]) {
+      status = 'LOCKED';
+    } else if (!slot.bookingOpen) {
+      status = 'FULL';
+    } else if (seatsLeft === null) {
+      // 정원 미설정 — 숨기지 않고 노출한다. 실제 예약은 createReservation이 거절한다.
+      status = 'AVAILABLE';
+    } else if (seatsLeft > 0) {
+      status = 'AVAILABLE';
+    } else if (waitlistLeft !== null && waitlistLeft > 0) {
+      status = 'WAITLIST';
+    } else {
+      status = 'FULL';
+    }
+
+    return {
+      id: slot.id,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      period: slot.period,
+      status,
+      seatsLeft,
+      waitlistLeft,
+    };
+  });
+
+  return {
+    serverTime: new Date().toISOString(),
+    openTimes: BOOKING_OPEN_LABELS,
+    sessions,
+  };
 });
