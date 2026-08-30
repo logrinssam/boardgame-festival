@@ -66,10 +66,12 @@ export function BoothDetailPage() {
         </h2>
 
         <dl className="detail-list">
-          <div>
-            <dt>대상</dt>
-            <dd>{booth.target}</dd>
-          </div>
+          {booth.target && booth.target !== '추후 안내' ? (
+            <div>
+              <dt>대상</dt>
+              <dd>{booth.target}</dd>
+            </div>
+          ) : null}
           <div>
             <dt>위치</dt>
             <dd>{booth.location}</dd>

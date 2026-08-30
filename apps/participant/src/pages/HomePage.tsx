@@ -104,10 +104,6 @@ export function HomePage() {
           </div>
         </section>
       ))}
-
-      <p className="hint-text center-hint">
-        운영자·관리자 접속은 별도 안내 경로를 이용합니다.
-      </p>
     </>
   );
 }

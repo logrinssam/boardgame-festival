@@ -49,7 +49,9 @@ export function BoothCard({ booth }: BoothCardProps) {
           <span className="booth-subtitle"> · {booth.subtitle}</span>
         ) : null}
       </h3>
-      <p className="booth-card-target">대상: {booth.target}</p>
+      {booth.target && booth.target !== '추후 안내' ? (
+        <p className="booth-card-target">대상: {booth.target}</p>
+      ) : null}
       {walkIn ? (
         <>
           <p className="hint-text">
