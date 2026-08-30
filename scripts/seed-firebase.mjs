@@ -63,7 +63,8 @@ const BOOTH_STAFF = [
     assignedBoothIds: ['booth-04'],
   },
   {
-    name: '부스5',
+    // 본부 관리자 이지수와 이름이 겹쳐 loginId는 부스5
+    name: '이지수',
     loginId: '부스5',
     emailLocal: 'booth5',
     pin: '0808',
@@ -87,16 +88,16 @@ const BOOTH_STAFF = [
     assignedBoothIds: ['booth-07'],
   },
   {
-    name: '이서헌',
-    loginId: '이서헌',
+    name: '이서현',
+    loginId: '이서현',
     emailLocal: 'iseohon',
     pin: '0808',
     experienceGroup: 'CREATIVE_CONVERGENCE',
     assignedBoothIds: ['booth-08'],
   },
   {
-    name: '김서헌',
-    loginId: '김서헌',
+    name: '김서현',
+    loginId: '김서현',
     emailLocal: 'seohon',
     pin: '0808',
     experienceGroup: 'CREATIVE_CONVERGENCE',
@@ -127,7 +128,8 @@ const BOOTH_STAFF = [
     assignedBoothIds: ['booth-12'],
   },
   {
-    name: '부스13',
+    // 본부 관리자 오현수와 이름이 겹쳐 loginId는 부스13
+    name: '오현수',
     loginId: '부스13',
     emailLocal: 'booth13',
     pin: '0808',

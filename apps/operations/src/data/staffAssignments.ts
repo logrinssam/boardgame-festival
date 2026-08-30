@@ -44,7 +44,8 @@ export const BOOTH_STAFF_DIRECTORY = [
     assignedBoothIds: ['booth-04'] as const,
   },
   {
-    name: '부스5',
+    // 본부 관리자 이지수와 이름이 겹쳐 loginId는 부스5
+    name: '이지수',
     loginId: '부스5',
     experienceGroup: 'BOARD_GAME' as const,
     assignedBoothIds: ['booth-05'] as const,
@@ -62,14 +63,14 @@ export const BOOTH_STAFF_DIRECTORY = [
     assignedBoothIds: ['booth-07'] as const,
   },
   {
-    name: '이서헌',
-    loginId: '이서헌',
+    name: '이서현',
+    loginId: '이서현',
     experienceGroup: 'CREATIVE_CONVERGENCE' as const,
     assignedBoothIds: ['booth-08'] as const,
   },
   {
-    name: '김서헌',
-    loginId: '김서헌',
+    name: '김서현',
+    loginId: '김서현',
     experienceGroup: 'CREATIVE_CONVERGENCE' as const,
     assignedBoothIds: ['booth-09'] as const,
   },
@@ -92,7 +93,8 @@ export const BOOTH_STAFF_DIRECTORY = [
     assignedBoothIds: ['booth-12'] as const,
   },
   {
-    name: '부스13',
+    // 본부 관리자 오현수와 이름이 겹쳐 loginId는 부스13
+    name: '오현수',
     loginId: '부스13',
     experienceGroup: 'CREATIVE_CONVERGENCE' as const,
     assignedBoothIds: ['booth-13'] as const,
