@@ -1553,7 +1553,7 @@ input {
 }
 
 /* .notice strong 의 display:block 을 되돌린다 — 문장 중간 강조라 줄바꿈되면 안 된다 */
-.site-gate-strong {
+.notice strong.site-gate-strong {
   display: inline;
   margin: 0;
   font-weight: 700;
