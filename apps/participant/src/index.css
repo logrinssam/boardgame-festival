@@ -1551,3 +1551,8 @@ input {
   color: inherit;
   font-weight: 700;
 }
+
+.site-gate-strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}

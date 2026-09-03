@@ -89,7 +89,7 @@ export function SiteGate({ children }: { children: ReactNode }) {
           </strong>
           <p>
             부스 안내판에 있는{' '}
-            <mark className="site-gate-hl">현장코드를 입력</mark>하면 예약을
+            <strong className="site-gate-strong">현장코드를 입력</strong>하면 예약을
             진행할 수 있어요.
           </p>
         </div>
