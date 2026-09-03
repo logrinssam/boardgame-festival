@@ -28,6 +28,10 @@ export const EVENT_SCHEDULE = {
   /** 행사일 (KST) */
   date: '2026-09-19',
   dateLabel: '9월 19일(토)',
+  dateShort: '9/19',
+  /** 참여자 사이트 오픈일 (KST) — 이전에는 잠금 화면만 보인다 */
+  siteOpenDate: '2026-09-18',
+  siteOpenLabel: '9월 18일(금)',
   openTime: '09:00',
   closeTime: '16:25',
   morningStart: '09:00',
@@ -51,6 +55,33 @@ export const BOOKING_OPEN_TIMES = {
 export function getKstNowMinutes(): number {
   const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   return kst.getUTCHours() * 60 + kst.getUTCMinutes();
+}
+
+/** 현재 날짜(KST)를 YYYY-MM-DD 로 반환 */
+export function getKstDateKey(ms = Date.now()): string {
+  const kst = new Date(ms + 9 * 60 * 60 * 1000);
+  return `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2, '0')}-${String(kst.getUTCDate()).padStart(2, '0')}`;
+}
+
+/**
+ * 행사 단계 (서버 getSiteStatus/getBoothSessions 와 같은 규칙).
+ *   BEFORE_SITE_OPEN  사이트 잠금
+ *   SITE_OPEN         부스 둘러보기만 가능, 회차는 전부 🔒
+ *   EVENT_DAY         08:30 / 12:45 오픈 규칙
+ *   AFTER_EVENT       전 회차 종료
+ * 클라이언트 시계로 계산한 값은 화면 힌트일 뿐, 최종 판정은 서버가 한다.
+ */
+export type EventPhase =
+  | 'BEFORE_SITE_OPEN'
+  | 'SITE_OPEN'
+  | 'EVENT_DAY'
+  | 'AFTER_EVENT';
+
+export function resolveEventPhase(dateKey: string): EventPhase {
+  if (dateKey < EVENT_SCHEDULE.siteOpenDate) return 'BEFORE_SITE_OPEN';
+  if (dateKey < EVENT_SCHEDULE.date) return 'SITE_OPEN';
+  if (dateKey === EVENT_SCHEDULE.date) return 'EVENT_DAY';
+  return 'AFTER_EVENT';
 }
 
 export function getBookingOpenMinutes(

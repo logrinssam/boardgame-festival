@@ -123,6 +123,30 @@ export function getKstNowMinutes(): number {
   return kst.getUTCHours() * 60 + kst.getUTCMinutes();
 }
 
+/** 행사 날짜 정책 (KST) — 사이트는 9/18 오픈, 예약은 9/19 당일 규칙으로만 */
+export const SITE_OPEN_DATE = '2026-09-18';
+export const EVENT_DATE = '2026-09-19';
+export const EVENT_DATE_LABEL = '9월 19일(토)';
+
+export type EventPhase =
+  | 'BEFORE_SITE_OPEN'
+  | 'SITE_OPEN'
+  | 'EVENT_DAY'
+  | 'AFTER_EVENT';
+
+/** 현재 날짜(KST)를 YYYY-MM-DD 로 반환. todayKey()는 서버 로컬(UTC) 기준이라 쓰지 않는다. */
+export function getKstDateKey(ms = Date.now()): string {
+  const kst = new Date(ms + 9 * 60 * 60 * 1000);
+  return `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2, '0')}-${String(kst.getUTCDate()).padStart(2, '0')}`;
+}
+
+export function resolveEventPhase(dateKey: string): EventPhase {
+  if (dateKey < SITE_OPEN_DATE) return 'BEFORE_SITE_OPEN';
+  if (dateKey < EVENT_DATE) return 'SITE_OPEN';
+  if (dateKey === EVENT_DATE) return 'EVENT_DAY';
+  return 'AFTER_EVENT';
+}
+
 export function minutesFromTime(time: string): number {
   const [hours, minutes] = time.split(':').map(Number);
   return hours * 60 + minutes;

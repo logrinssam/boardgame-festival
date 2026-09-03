@@ -33,6 +33,8 @@ const services = [
   'getwalkinregistration',
   'setwalkinboothstatus',
   'cancelwalkinregistration',
+  'getboothsessions',
+  'getsitestatus',
 ];
 
 const body = JSON.stringify({

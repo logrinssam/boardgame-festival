@@ -13,9 +13,11 @@ export * from './services/boothAccessService';
 export * from './firebase/collections';
 export {
   getBoothSessionsCallable,
+  getSiteStatusCallable,
   type BoothSession,
   type BoothSessionStatus,
   type BoothSessionsResult,
+  type SiteStatusResult,
 } from './firebase/callables';
 export {
   subscribeAllWalkIns,

@@ -14,6 +14,10 @@ import {
   BLOCKING_STATUSES,
   BOOKING_OPEN_LABELS,
   BOOKING_OPEN_MINUTES,
+  EVENT_DATE,
+  EVENT_DATE_LABEL,
+  SITE_OPEN_DATE,
+  type EventPhase,
   asBooth,
   asReservation,
   asWalkInRegistration,
@@ -22,11 +26,13 @@ import {
   digitsOnly,
   generateReservationCode,
   getEffectiveCapacity,
+  getKstDateKey,
   getKstNowMinutes,
   getPhoneLast4,
   isSameLocalDay,
   maskPhone,
   minutesFromTime,
+  resolveEventPhase,
 } from './lib';
 
 // Import from v2/https + v2/options only — the v2 barrel pulls in RTDB and
@@ -94,9 +100,15 @@ async function recountAndUpdateBooth(boothId: string, slotId: string) {
 const callableOpts = { invoker: 'public' as const };
 
 /**
- * 점검용 시간 정책.
+ * 서버 시계 — 행사 단계(날짜) + KST 분 + 점검용 시간 정책.
  *
- * Firestore `config/testClock` 문서:
+ * 날짜 정책 (KST):
+ *   ~ 9/17          BEFORE_SITE_OPEN  참여자 사이트 잠금, 예약 불가
+ *   9/18            SITE_OPEN         부스 둘러보기만, 회차 전부 🔒
+ *   9/19 (행사일)   EVENT_DAY         08:30 / 12:45 오픈 규칙
+ *   9/20 ~          AFTER_EVENT       전 회차 종료
+ *
+ * Firestore `config/testClock` 문서 (점검 모드 — 켜지면 행사 당일로 취급한다):
  *   { enabled: true, simulatedTime: "08:29", expiresAt: "..." }  → 가상 시각으로 판정
  *   { enabled: true, mode: "OPEN", expiresAt: "..." }            → 시간 검사 자체를 생략
  *                                                                   (모든 회차 상시 예약 가능)
@@ -109,12 +121,14 @@ const callableOpts = { invoker: 'public' as const };
  *
  * nowMinutes 가 null 이면 "시간 검사 생략(상시 개방)"을 뜻한다.
  */
-async function resolveNowMinutes(): Promise<{
+async function resolveClock(): Promise<{
+  phase: EventPhase;
   nowMinutes: number | null;
   testMode: boolean;
   simulatedTime: string | null;
 }> {
   const real = {
+    phase: resolveEventPhase(getKstDateKey()),
     nowMinutes: getKstNowMinutes(),
     testMode: false,
     simulatedTime: null,
@@ -134,7 +148,12 @@ async function resolveNowMinutes(): Promise<{
     if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) return real;
 
     if (data.mode === 'OPEN') {
-      return { nowMinutes: null, testMode: true, simulatedTime: null };
+      return {
+        phase: 'EVENT_DAY',
+        nowMinutes: null,
+        testMode: true,
+        simulatedTime: null,
+      };
     }
 
     const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(
@@ -143,6 +162,7 @@ async function resolveNowMinutes(): Promise<{
     if (!match) return real;
 
     return {
+      phase: 'EVENT_DAY',
       nowMinutes: Number(match[1]) * 60 + Number(match[2]),
       testMode: true,
       simulatedTime: String(data.simulatedTime),
@@ -181,7 +201,10 @@ export const createReservation = onCall(callableOpts, async (request) => {
   }
 
   const boothRef = db.collection('booths').doc(data.boothId);
-  const { nowMinutes } = await resolveNowMinutes();
+  const { phase, nowMinutes } = await resolveClock();
+  if (phase !== 'EVENT_DAY') {
+    throw new HttpsError('failed-precondition', phaseBlockedMessage(phase));
+  }
   const existingForPhone = await loadReservationsByPhone(phoneDigits);
 
   if (
@@ -635,6 +658,14 @@ export const createWalkInRegistration = onCall(callableOpts, async (request) => 
     );
   }
 
+  const { phase: walkInPhase } = await resolveClock();
+  if (walkInPhase !== 'EVENT_DAY') {
+    throw new HttpsError(
+      'failed-precondition',
+      phaseBlockedMessage(walkInPhase),
+    );
+  }
+
   if (booth.accessCodeConfigured && booth.accessCode) {
     if (!data.accessCode || data.accessCode.trim() !== booth.accessCode) {
       throw new HttpsError('permission-denied', '현장코드가 올바르지 않습니다.');
@@ -846,7 +877,7 @@ export const getBoothSessions = onCall(callableOpts, async (request) => {
   }
 
   const effective = getEffectiveCapacity(booth);
-  const { nowMinutes, testMode, simulatedTime } = await resolveNowMinutes();
+  const { phase, nowMinutes, testMode, simulatedTime } = await resolveClock();
 
   const sessions = booth.slots.map((slot) => {
     const usage = countSeatUsage(bySlot.get(slot.id) ?? []);
@@ -860,7 +891,15 @@ export const getBoothSessions = onCall(callableOpts, async (request) => {
         : null;
 
     let status: 'AVAILABLE' | 'WAITLIST' | 'FULL' | 'LOCKED' | 'PAST';
-    if (nowMinutes !== null && nowMinutes >= minutesFromTime(slot.startTime)) {
+    if (phase === 'AFTER_EVENT') {
+      status = 'PAST';
+    } else if (phase !== 'EVENT_DAY') {
+      // 행사 전(사이트 오픈일 포함) — 시각과 무관하게 전부 잠금
+      status = 'LOCKED';
+    } else if (
+      nowMinutes !== null &&
+      nowMinutes >= minutesFromTime(slot.startTime)
+    ) {
       status = 'PAST';
     } else if (
       nowMinutes !== null &&
@@ -896,6 +935,27 @@ export const getBoothSessions = onCall(callableOpts, async (request) => {
     openTimes: BOOKING_OPEN_LABELS,
     testMode,
     simulatedTime,
+    phase,
     sessions,
+  };
+});
+
+function phaseBlockedMessage(phase: EventPhase): string {
+  if (phase === 'AFTER_EVENT') {
+    return '행사가 종료되어 예약할 수 없습니다.';
+  }
+  return `예약은 ${EVENT_DATE_LABEL} 오전 ${BOOKING_OPEN_LABELS.MORNING} · 오후 ${BOOKING_OPEN_LABELS.AFTERNOON}부터 가능합니다.`;
+}
+
+/** 참여자 사이트 잠금 판정 — 서버 시각 기준 행사 단계. 점검 모드면 EVENT_DAY */
+export const getSiteStatus = onCall(callableOpts, async () => {
+  const { phase, testMode, simulatedTime } = await resolveClock();
+  return {
+    serverTime: new Date().toISOString(),
+    phase,
+    siteOpenDate: SITE_OPEN_DATE,
+    eventDate: EVENT_DATE,
+    testMode,
+    simulatedTime,
   };
 });

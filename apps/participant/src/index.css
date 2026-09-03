@@ -1495,3 +1495,41 @@ input {
 .modal-card .btn {
   width: 100%;
 }
+
+/* 오픈 전 잠금 화면 — 날짜별 오픈 일정 */
+.site-gate-timeline {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.site-gate-timeline li {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-1);
+}
+
+.site-gate-timeline strong {
+  display: block;
+  font-size: 15px;
+  word-break: keep-all;
+}
+
+.site-gate-date {
+  color: var(--creative-accent);
+}
+
+.site-gate-timeline p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  word-break: keep-all;
+}
+
+.site-gate-warn {
+  font-weight: 600;
+  color: #b02525;
+}

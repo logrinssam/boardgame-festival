@@ -6,6 +6,7 @@ import type {
   WalkInRegistration,
 } from '../types';
 import { getFirebaseFunctions } from './client';
+import type { EventPhase } from '../data/scheduleData';
 
 function fn<Request, Response>(name: string) {
   return httpsCallable<Request, Response>(getFirebaseFunctions(), name);
@@ -227,6 +228,8 @@ export interface BoothSessionsResult {
   /** 점검용 가상 시계가 켜져 있으면 true — 화면에 반드시 표시한다 */
   testMode?: boolean;
   simulatedTime?: string | null;
+  /** 서버가 판정한 행사 단계 — 구버전 서버는 내려주지 않는다 */
+  phase?: EventPhase;
   sessions: BoothSession[];
 }
 
@@ -236,5 +239,22 @@ export async function getBoothSessionsCallable(
   const result = await fn<{ boothId: string }, BoothSessionsResult>(
     'getBoothSessions',
   )({ boothId });
+  return result.data;
+}
+
+export interface SiteStatusResult {
+  serverTime: string;
+  phase: EventPhase;
+  siteOpenDate: string;
+  eventDate: string;
+  testMode?: boolean;
+  simulatedTime?: string | null;
+}
+
+/** 참여자 사이트 잠금 여부 — 서버 시각으로 판정한 행사 단계를 받는다 */
+export async function getSiteStatusCallable(): Promise<SiteStatusResult> {
+  const result = await fn<Record<string, never>, SiteStatusResult>(
+    'getSiteStatus',
+  )({});
   return result.data;
 }

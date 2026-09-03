@@ -21,21 +21,33 @@ import {
 
 /** 부스 상세의 회차 현황 — 조회 전용(선택은 회차 선택 화면에서) */
 function BoothSessionOverview({ booth }: { booth: Booth }) {
-  const { visibleSessions, loadError, loading, refresh, testClock } =
-    useBoothSessions(booth);
+  const {
+    visibleSessions,
+    loadError,
+    loading,
+    refresh,
+    testClock,
+    lockedDateLabel,
+  } = useBoothSessions(booth);
 
   return (
     <section className="glass-card">
       <TestClockBanner testClock={testClock} />
       <h3 className="section-title">회차별 예약 현황</h3>
       <p className="session-open-desc">
-        오전 예약은 8시 30분부터, 오후 예약은 12시 45분부터 열립니다.
+        {EVENT_SCHEDULE.dateLabel} 오전 예약은 8시 30분부터, 오후 예약은 12시
+        45분부터 열립니다.
       </p>
       {loadError ? <SessionLoadError onRetry={() => void refresh()} /> : null}
       {loading && !visibleSessions ? (
         <p className="body-text">회차 정보를 불러오는 중입니다…</p>
       ) : null}
-      {visibleSessions ? <SessionSections sessions={visibleSessions} /> : null}
+      {visibleSessions ? (
+        <SessionSections
+          sessions={visibleSessions}
+          lockedDateLabel={lockedDateLabel}
+        />
+      ) : null}
     </section>
   );
 }

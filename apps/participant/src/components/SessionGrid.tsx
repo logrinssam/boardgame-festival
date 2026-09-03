@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BOOKING_OPEN_TIMES } from '@bgf/shared';
-import type { Booth, BoothSession, BoothSessionStatus } from '@bgf/shared';
+import { BOOKING_OPEN_TIMES, EVENT_SCHEDULE } from '@bgf/shared';
+import type {
+  Booth,
+  BoothSession,
+  BoothSessionStatus,
+  EventPhase,
+} from '@bgf/shared';
 import {
   getBoothSessionsCallable,
   getEffectiveCapacity,
@@ -45,6 +50,7 @@ export function useBoothSessions(booth: Booth) {
   const boothId = booth.id;
   const [sessions, setSessions] = useState<BoothSession[] | null>(null);
   const [testClock, setTestClock] = useState<string | null>(null);
+  const [phase, setPhase] = useState<EventPhase | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(true);
   const timerRef = useRef<number | null>(null);
@@ -54,6 +60,7 @@ export function useBoothSessions(booth: Booth) {
       const result = await getBoothSessionsCallable(boothId);
       setSessions(result.sessions);
       setTestClock(result.testMode ? (result.simulatedTime ?? 'OPEN') : null);
+      setPhase(result.phase ?? null);
       setLoadError(false);
     } catch {
       setLoadError(true);
@@ -94,7 +101,18 @@ export function useBoothSessions(booth: Booth) {
   const visibleSessions =
     sessions ?? (loadError ? sessionsFromBooth(booth) : null);
 
-  return { visibleSessions, loadError, loading, refresh, testClock };
+  // 행사 당일이 아니면 🔒 칩에 날짜를 붙여 "오늘 08:30"으로 오해하지 않게 한다
+  const lockedDateLabel =
+    phase && phase !== 'EVENT_DAY' ? EVENT_SCHEDULE.dateShort : undefined;
+
+  return {
+    visibleSessions,
+    loadError,
+    loading,
+    refresh,
+    testClock,
+    lockedDateLabel,
+  };
 }
 
 /** 점검 모드가 켜져 있을 때 화면에 띄우는 경고 — 실제 운영과 헷갈리지 않게 한다 */
@@ -120,7 +138,9 @@ export function TestClockBanner({ testClock }: { testClock: string | null }) {
 function chipLabel(
   session: BoothSession,
   openTime: string,
+  lockedDateLabel?: string,
 ): { sub: string | null; ariaLabel: string } {
+  const openAt = lockedDateLabel ? `${lockedDateLabel} ${openTime}` : openTime;
   switch (session.status) {
     case 'AVAILABLE':
       return {
@@ -136,8 +156,8 @@ function chipLabel(
       return { sub: '마감', ariaLabel: `${session.startTime} 회차, 마감` };
     case 'LOCKED':
       return {
-        sub: `\u{1F512} ${openTime} 오픈`,
-        ariaLabel: `${session.startTime} 회차, ${openTime}부터 예약 가능`,
+        sub: `\u{1F512} ${openAt} 오픈`,
+        ariaLabel: `${session.startTime} 회차, ${openAt}부터 예약 가능`,
       };
     default:
       return { sub: '종료', ariaLabel: `${session.startTime} 회차, 종료` };
@@ -149,9 +169,16 @@ interface SessionGridProps {
   period: 'MORNING' | 'AFTERNOON';
   /** 없으면 조회 전용(부스 상세) — 칩이 눌리지 않는다 */
   onSelect?: (session: BoothSession) => void;
+  /** 행사 당일이 아닐 때 🔒 칩에 붙일 날짜 (예: 9/19) */
+  lockedDateLabel?: string;
 }
 
-export function SessionGrid({ sessions, period, onSelect }: SessionGridProps) {
+export function SessionGrid({
+  sessions,
+  period,
+  onSelect,
+  lockedDateLabel,
+}: SessionGridProps) {
   const openTime = BOOKING_OPEN_TIMES[period];
   return (
     <div className="session-grid">
@@ -161,7 +188,7 @@ export function SessionGrid({ sessions, period, onSelect }: SessionGridProps) {
           const selectable =
             session.status === 'AVAILABLE' || session.status === 'WAITLIST';
           const clickable = Boolean(onSelect) && selectable;
-          const { sub, ariaLabel } = chipLabel(session, openTime);
+          const { sub, ariaLabel } = chipLabel(session, openTime, lockedDateLabel);
           return (
             <button
               key={session.id}
@@ -186,17 +213,32 @@ export function SessionGrid({ sessions, period, onSelect }: SessionGridProps) {
 interface SessionSectionsProps {
   sessions: BoothSession[];
   onSelect?: (session: BoothSession) => void;
+  lockedDateLabel?: string;
 }
 
 /** 오전 · 점심 구분선 · 오후 한 묶음 */
-export function SessionSections({ sessions, onSelect }: SessionSectionsProps) {
+export function SessionSections({
+  sessions,
+  onSelect,
+  lockedDateLabel,
+}: SessionSectionsProps) {
   return (
     <>
       <h3 className="section-title">오전</h3>
-      <SessionGrid sessions={sessions} period="MORNING" onSelect={onSelect} />
+      <SessionGrid
+        sessions={sessions}
+        period="MORNING"
+        onSelect={onSelect}
+        lockedDateLabel={lockedDateLabel}
+      />
       <div className="lunch-divider">점심시간 12:00 ~ 13:00</div>
       <h3 className="section-title">오후</h3>
-      <SessionGrid sessions={sessions} period="AFTERNOON" onSelect={onSelect} />
+      <SessionGrid
+        sessions={sessions}
+        period="AFTERNOON"
+        onSelect={onSelect}
+        lockedDateLabel={lockedDateLabel}
+      />
     </>
   );
 }
