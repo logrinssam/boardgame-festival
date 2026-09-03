@@ -2,11 +2,11 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
 import {
-  accessCodesMatch,
   getEffectiveCapacity,
   grantBoothAccess,
   isWalkInBooth,
   normalizeAccessCode,
+  verifyBoothAccessCodeCallable,
 } from '@bgf/shared';
 
 export function AccessCodePage() {
@@ -16,6 +16,7 @@ export function AccessCodePage() {
   const booth = getBooth(boothId);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [checking, setChecking] = useState(false);
 
   if (loading && !booth) {
     return <div className="glass-card">부스 정보를 불러오는 중…</div>;
@@ -47,7 +48,11 @@ export function AccessCodePage() {
     );
   }
 
-  function handleSubmit(event: FormEvent) {
+  /**
+   * 현장코드는 서버(boothSecrets)에만 있어서 기기에서는 맞는지 알 수 없다.
+   * 여기서 한 번 서버에 확인받고, 예약 생성 시 서버가 다시 최종 검사한다.
+   */
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const trimmed = normalizeAccessCode(code);
     if (!trimmed) {
@@ -55,13 +60,20 @@ export function AccessCodePage() {
       return;
     }
 
-    if (
-      currentBooth.accessCodeConfigured &&
-      currentBooth.accessCode &&
-      !accessCodesMatch(currentBooth.accessCode, trimmed)
-    ) {
-      setError('현장코드가 올바르지 않습니다. 안내판의 6자리 숫자를 확인해 주세요.');
-      return;
+    if (currentBooth.accessCodeConfigured) {
+      setChecking(true);
+      const result = await verifyBoothAccessCodeCallable({
+        boothId: currentBooth.id,
+        accessCode: trimmed,
+      });
+      setChecking(false);
+      if (!result.ok) {
+        setError(
+          result.message ??
+            '현장코드가 올바르지 않습니다. 안내판의 6자리 숫자를 확인해 주세요.',
+        );
+        return;
+      }
     }
 
     grantBoothAccess(currentBooth.id, trimmed);
@@ -77,7 +89,10 @@ export function AccessCodePage() {
   }
 
   return (
-    <form className="glass-card form-card" onSubmit={handleSubmit}>
+    <form
+      className="glass-card form-card"
+      onSubmit={(event) => void handleSubmit(event)}
+    >
       <h2 className="section-title">참가자 현장코드</h2>
       <p className="hint-text">
         부스 안내판에 공개된 숫자 6자리 코드입니다.
@@ -96,6 +111,7 @@ export function AccessCodePage() {
         inputMode="numeric"
         autoComplete="one-time-code"
         placeholder="예: 123456"
+        disabled={checking}
       />
       {!currentBooth.accessCodeConfigured ? (
         <p className="hint-text">
@@ -103,8 +119,8 @@ export function AccessCodePage() {
         </p>
       ) : null}
       {error ? <p className="error-text">{error}</p> : null}
-      <button type="submit" className="btn btn-primary">
-        확인
+      <button type="submit" className="btn btn-primary" disabled={checking}>
+        {checking ? '확인 중…' : '확인'}
       </button>
     </form>
   );

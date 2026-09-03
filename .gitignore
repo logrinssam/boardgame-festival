@@ -29,3 +29,6 @@ firebase-debug.*.log
 *.njsproj
 *.sln
 *.sw?
+
+# 운영 스크립트가 만드는 비밀 목록 (현장코드·PIN) — 절대 커밋하지 않는다
+*.local.csv

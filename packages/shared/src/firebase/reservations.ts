@@ -34,10 +34,8 @@ function asBooth(id: string, data: Record<string, unknown>): Booth {
     durationMinutes: Number(data.durationMinutes ?? 25),
     accentColor: String(data.accentColor ?? '#4c6ef5'),
     accessCodeConfigured: Boolean(data.accessCodeConfigured),
-    accessCode:
-      data.accessCode == null || data.accessCode === ''
-        ? null
-        : String(data.accessCode),
+    // 현장코드는 boothSecrets(운영자 전용)에만 있다 — 공개 문서에서는 읽지 않는다
+    accessCode: null,
     operatorPinConfigured: Boolean(data.operatorPinConfigured),
     capacity:
       data.capacity === null || data.capacity === undefined

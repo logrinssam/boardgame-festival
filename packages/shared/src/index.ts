@@ -14,6 +14,7 @@ export * from './firebase/collections';
 export {
   getBoothSessionsCallable,
   getSiteStatusCallable,
+  verifyBoothAccessCodeCallable,
   type BoothSession,
   type BoothSessionStatus,
   type BoothSessionsResult,

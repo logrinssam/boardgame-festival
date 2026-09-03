@@ -18,7 +18,10 @@
     "preview": "npm run preview -w @bgf/participant",
     "functions:build": "npm --prefix functions run build",
     "seed:firebase": "node scripts/seed-firebase.mjs",
-    "test-clock": "node scripts/test-clock.mjs"
+    "test-clock": "node scripts/test-clock.mjs",
+    "migrate:access-codes": "node scripts/migrate-access-codes.mjs",
+    "rotate:staff-pins": "node scripts/rotate-staff-pins.mjs",
+    "load-test": "node scripts/load-test.mjs"
   },
   "devDependencies": {
     "oxlint": "^1.75.0",

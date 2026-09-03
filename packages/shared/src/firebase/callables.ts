@@ -177,6 +177,27 @@ export async function cancelWalkInRegistrationCallable(input: {
   }
 }
 
+/** 현장코드 사전 확인 — 코드 자체는 서버에만 있어 클라이언트에서 비교할 수 없다 */
+export async function verifyBoothAccessCodeCallable(input: {
+  boothId: string;
+  accessCode: string;
+}): Promise<{ ok: true } | { ok: false; message?: string }> {
+  try {
+    const result = await fn<typeof input, { ok: boolean }>(
+      'verifyBoothAccessCode',
+    )(input);
+    return result.data.ok
+      ? { ok: true }
+      : {
+          ok: false,
+          message:
+            '현장코드가 올바르지 않습니다. 안내판의 6자리 숫자를 확인해 주세요.',
+        };
+  } catch (error) {
+    return { ok: false, message: callableErrorMessage(error) };
+  }
+}
+
 function callableErrorMessage(error: unknown): string {
   if (!error || typeof error !== 'object') {
     return '요청 처리 중 오류가 발생했습니다.';

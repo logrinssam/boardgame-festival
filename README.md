@@ -31,10 +31,41 @@ npm run build
 - `dist/` — 참여자 앱 (`/boardgame-festival/`)
 - `dist/ops/` — 운영 앱 (`/boardgame-festival/ops/`)
 
-## 테스트 운영 계정 (mock)
+## 운영자 로그인
 
-- ID: `staff`
-- PIN: `0000`
+이름(동명이인은 `부스N`) + 개별 PIN 6자리. PIN 은 `npm run rotate:staff-pins -- --apply` 로
+발급·교체하며 결과는 `staff-pins.local.csv`(git 제외)에만 남는다. 공용 PIN 은 없다.
+
+## 보안 운영 규칙
+
+이 저장소는 **공개**다. 현장코드·PIN·전화번호 같은 값은 절대 커밋하지 않는다.
+
+- 부스 현장코드는 Firestore `boothSecrets/{boothId}` 에만 있다 (본부 전체 / 팀장은 담당 부스만 읽기).
+  참가자가 읽는 `booths` 문서에는 코드 유무(`accessCodeConfigured`)만 있다.
+  - 코드 확인: 운영 앱 > 부스 관리(본부) / 부스 운영 화면(팀장)
+  - 일괄 교체: `npm run migrate:access-codes -- --apply --rotate` → `access-codes.local.csv`
+- 예약·현장등록·회차 판정·현장코드 비교는 전부 Cloud Functions 가 한다. 클라이언트는 표시만.
+- 비로그인 콜러블(`getMyReservations` 등)은 전화번호를 알아야만 조회된다. 현장 등록 확인 화면은 마스킹 번호만 받는다.
+- Firebase 콘솔에서 추가로 켜 둘 것 (코드로는 못 함):
+  1. **App Check** (reCAPTCHA v3) — 스크립트로 예약을 대량 생성하거나 코드를 무작위 대입하는 것을 막는다.
+  2. **Authentication > 설정 > 이메일 열거 보호** 켜기.
+  3. **Google Cloud > API 키** 의 웹 키에 HTTP 리퍼러 제한: `logrinssam.github.io/*`, `localhost:*`.
+- 규칙 변경 후 배포: `npx firebase-tools deploy --only firestore:rules`
+
+## 동시접속 대비
+
+- Functions: 인스턴스당 80 요청 동시 처리 × 최대 40 인스턴스. 참가자 콜러블
+  (`getSiteStatus`, `getBoothSessions`, `createReservation`)은 `minInstances: 1` 로 콜드 스타트를 피한다.
+- `getBoothSessions` 는 부스별 5초 캐시, 점검 시계 설정은 10초 캐시 — 폴링 읽기 비용을 줄인다.
+- 예약 트랜잭션은 부스 문서 충돌 시 최대 8회 재시도한다.
+- 부하 테스트(읽기 전용, 예약 생성 없음):
+
+```bash
+npm run load-test -- 300 3     # 동시 300명 × 3라운드
+npm run load-test -- 1000 2
+```
+
+  합격 기준: 오류 0건, p95 2초 미만. 넘으면 `functions/src/index.ts` 의 `minInstances`/`maxInstances` 를 올린다.
 
 ## 오픈 일정 (KST)
 

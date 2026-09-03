@@ -7,7 +7,7 @@ import {
 
 const ALL_BOOTH_IDS = [...BOARD_GAME_BOOTH_IDS, ...CREATIVE_BOOTH_IDS];
 
-/** 본부 관리자 (로그인 ID = 이름, PIN = 0000) */
+/** 본부 관리자 (로그인 ID = 이름) */
 export const HEAD_ADMIN_DIRECTORY = [
   { name: '조하나', loginId: '조하나' },
   { name: '김선아', loginId: '김선아' },
@@ -17,7 +17,7 @@ export const HEAD_ADMIN_DIRECTORY = [
   { name: '황보예린', loginId: '황보예린' },
 ] as const;
 
-/** 부스 운영자 (PIN = 0808). 본부와 이름 겹치면 loginId는 `부스N` */
+/** 부스 운영자. 본부와 이름 겹치면 loginId는 `부스N` */
 export const BOOTH_STAFF_DIRECTORY = [
   {
     name: '박미진',
@@ -113,12 +113,10 @@ export const STAFF_DIRECTORY = [
   ...BOOTH_STAFF_DIRECTORY.map(({ name, loginId }) => ({ name, loginId })),
 ] as const;
 
-export const INITIAL_OPERATOR_PIN = '0000';
-export const BOOTH_STAFF_PIN = '0808';
-
 /**
  * Firebase Auth 최소 비밀번호 길이(6) 대응.
- * UI에서는 PIN 0000/0808을 입력하고, Auth에는 padEnd(6,'0') 로 매핑한다.
+ * PIN 은 개별 6자리(scripts/rotate-staff-pins.mjs 로 발급)이며 그대로 비밀번호가 된다.
+ * 6자리 미만 PIN 이 남아 있는 경우만 padEnd(6,'0') 로 맞춘다.
  */
 export function pinToAuthPassword(pin: string): string {
   const trimmed = pin.trim();

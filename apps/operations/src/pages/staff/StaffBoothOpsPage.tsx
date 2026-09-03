@@ -18,6 +18,7 @@ import {
 } from '@bgf/shared';
 import { StaffWalkInOpsPanel } from '../../components/StaffWalkInOpsPanel';
 import { StaffBoothCapacityForm } from '../../components/StaffBoothCapacityForm';
+import { useBoothAccessCode } from '../../services/boothSecrets';
 function nowMinutes(): number {
   const now = new Date();
   return now.getHours() * 60 + now.getMinutes();
@@ -45,6 +46,8 @@ export function StaffBoothOpsPage() {
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState('');
   const [focusSlotId, setFocusSlotId] = useState<string | null>(null);
+  // 안내판에 붙일 현장코드 — 담당 부스만 읽을 수 있다
+  const accessCode = useBoothAccessCode(boothId);
 
   useEffect(() => {
     const timer = window.setInterval(() => setMinutes(nowMinutes()), 15000);
@@ -244,6 +247,12 @@ export function StaffBoothOpsPage() {
         <p className="staff-slot-time">
           운영 회차{' '}
           {formatTimeRange(currentSchedule.startTime, currentSchedule.endTime)}
+        </p>
+        <p className="hint-text">
+          참가자 현장코드{' '}
+          <strong>
+            {accessCode === undefined ? '…' : (accessCode ?? '미설정')}
+          </strong>
         </p>
         <div className="status-row" aria-label="회차 상태 요약">
           <span

@@ -53,6 +53,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // 부스 현장코드 — 참가자는 절대 읽을 수 없다. 본부는 전체, 팀장은 담당 부스만.
+    match /boothSecrets/{boothId} {
+      allow read: if isActiveStaff()
+        && (isHeadAdmin() || boothId in staffDoc().data.assignedBoothIds);
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

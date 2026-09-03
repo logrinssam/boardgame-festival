@@ -3,6 +3,7 @@ import { useAppStore } from '../../context/AppStore';
 import { EXPERIENCE_GROUP_LABELS } from '@bgf/shared';
 import { getEffectiveCapacity } from '@bgf/shared';
 import { DEMO_MODE } from '@bgf/shared';
+import { useBoothAccessCode } from '../../services/boothSecrets';
 
 export function AdminBoothsPage() {
   const { booths, setCapacity, setAccessCode, setSlotBookingOpen } =
@@ -16,6 +17,9 @@ export function AdminBoothsPage() {
   const [waitlistInput, setWaitlistInput] = useState('');
   const [codeInput, setCodeInput] = useState('');
   const [message, setMessage] = useState('');
+  const [codeVersion, setCodeVersion] = useState(0);
+  // 현장코드는 boothSecrets 에만 있어 booths 구독으로는 오지 않는다
+  const currentCode = useBoothAccessCode(selectedId, codeVersion);
 
   if (!booth) return <div className="glass-card">부스 없음</div>;
 
@@ -46,6 +50,8 @@ export function AdminBoothsPage() {
       return;
     }
     await setAccessCode(currentBooth.id, codeInput.trim());
+    setCodeInput('');
+    setCodeVersion((version) => version + 1);
     setMessage('현장코드가 저장되었습니다.');
   }
 
@@ -114,8 +120,16 @@ export function AdminBoothsPage() {
 
       <section className="glass-card form-card">
         <form onSubmit={(event) => void saveCode(event)}>
+          <p className="admin-meta">
+            현재 현장코드:{' '}
+            <strong>
+              {currentCode === undefined
+                ? '불러오는 중…'
+                : (currentCode ?? '미설정')}
+            </strong>
+          </p>
           <label className="field-label" htmlFor="code">
-            참가자 현장코드
+            참가자 현장코드 변경
           </label>
           <input
             id="code"

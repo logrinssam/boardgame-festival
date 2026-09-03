@@ -3,10 +3,12 @@
  *
  * 사용: node scripts/seed-firebase.mjs
  *
- * 본부 PIN: 0000 → Auth 000000
- * 부스 팀장 PIN: 0808 → Auth 080800
- * 앱에서 PIN 입력 시 padEnd(6,'0') 로 매핑
+ * 운영자 PIN 은 새 계정에 한해 무작위 6자리로 만들어 화면에 출력한다.
+ * 이미 있는 계정은 비밀번호를 건드리지 않는다 → 교체는 scripts/rotate-staff-pins.mjs.
+ * 부스 현장코드는 booths-seed.json 의 accessCode 가 있을 때만 boothSecrets 에 쓴다.
+ * (공개 저장소이므로 JSON 에는 코드를 두지 않는다. 운영 앱 또는 migrate-access-codes.mjs 로 관리.)
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -18,6 +20,10 @@ function pinToAuthPassword(pin) {
   const trimmed = String(pin).trim();
   if (trimmed.length >= 6) return trimmed;
   return trimmed.padEnd(6, '0');
+}
+
+function randomPin() {
+  return String(crypto.randomInt(100000, 1_000_000));
 }
 
 const HEAD_ADMINS = [
@@ -33,115 +39,87 @@ const BOOTH_STAFF = [
   {
     name: '박미진',
     loginId: '박미진',
-    emailLocal: 'mijin',
-    pin: '0808',
-    experienceGroup: 'BOARD_GAME',
+    emailLocal: 'mijin',    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-01'],
   },
   {
     name: '홍성준',
     loginId: '홍성준',
-    emailLocal: 'seongjun',
-    pin: '0808',
-    experienceGroup: 'BOARD_GAME',
+    emailLocal: 'seongjun',    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-02'],
   },
   {
     name: '오경서',
     loginId: '오경서',
-    emailLocal: 'gyeongseo',
-    pin: '0808',
-    experienceGroup: 'BOARD_GAME',
+    emailLocal: 'gyeongseo',    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-03'],
   },
   {
     name: '김선우',
     loginId: '김선우',
-    emailLocal: 'seonwoo',
-    pin: '0808',
-    experienceGroup: 'BOARD_GAME',
+    emailLocal: 'seonwoo',    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-04'],
   },
   {
     // 본부 관리자 이지수와 이름이 겹쳐 loginId는 부스5
     name: '이지수',
     loginId: '부스5',
-    emailLocal: 'booth5',
-    pin: '0808',
-    experienceGroup: 'BOARD_GAME',
+    emailLocal: 'booth5',    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-05'],
   },
   {
     name: '이현주',
     loginId: '이현주',
-    emailLocal: 'hyeonju',
-    pin: '0808',
-    experienceGroup: 'BOARD_GAME',
+    emailLocal: 'hyeonju',    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-06'],
   },
   {
     name: '박주홍',
     loginId: '박주홍',
-    emailLocal: 'juhong',
-    pin: '0808',
-    experienceGroup: 'BOARD_GAME',
+    emailLocal: 'juhong',    experienceGroup: 'BOARD_GAME',
     assignedBoothIds: ['booth-07'],
   },
   {
     name: '이서현',
     loginId: '이서현',
-    emailLocal: 'iseohon',
-    pin: '0808',
-    experienceGroup: 'CREATIVE_CONVERGENCE',
+    emailLocal: 'iseohon',    experienceGroup: 'CREATIVE_CONVERGENCE',
     assignedBoothIds: ['booth-08'],
   },
   {
     name: '김서현',
     loginId: '김서현',
-    emailLocal: 'seohon',
-    pin: '0808',
-    experienceGroup: 'CREATIVE_CONVERGENCE',
+    emailLocal: 'seohon',    experienceGroup: 'CREATIVE_CONVERGENCE',
     assignedBoothIds: ['booth-09'],
   },
   {
     name: '정규경',
     loginId: '정규경',
-    emailLocal: 'gyugyeong',
-    pin: '0808',
-    experienceGroup: 'CREATIVE_CONVERGENCE',
+    emailLocal: 'gyugyeong',    experienceGroup: 'CREATIVE_CONVERGENCE',
     assignedBoothIds: ['booth-10'],
   },
   {
     name: '이동한',
     loginId: '이동한',
-    emailLocal: 'donghan',
-    pin: '0808',
-    experienceGroup: 'CREATIVE_CONVERGENCE',
+    emailLocal: 'donghan',    experienceGroup: 'CREATIVE_CONVERGENCE',
     assignedBoothIds: ['booth-11'],
   },
   {
     name: '김영찬',
     loginId: '김영찬',
-    emailLocal: 'youngchan',
-    pin: '0808',
-    experienceGroup: 'CREATIVE_CONVERGENCE',
+    emailLocal: 'youngchan',    experienceGroup: 'CREATIVE_CONVERGENCE',
     assignedBoothIds: ['booth-12'],
   },
   {
     // 본부 관리자 오현수와 이름이 겹쳐 loginId는 부스13
     name: '오현수',
     loginId: '부스13',
-    emailLocal: 'booth13',
-    pin: '0808',
-    experienceGroup: 'CREATIVE_CONVERGENCE',
+    emailLocal: 'booth13',    experienceGroup: 'CREATIVE_CONVERGENCE',
     assignedBoothIds: ['booth-13'],
   },
   {
     name: '미래잇다',
     loginId: '미래잇다',
-    emailLocal: 'miraeitda',
-    pin: '0808',
-    experienceGroup: 'CREATIVE_CONVERGENCE',
+    emailLocal: 'miraeitda',    experienceGroup: 'CREATIVE_CONVERGENCE',
     assignedBoothIds: ['booth-14'],
   },
 ];
@@ -215,7 +193,7 @@ async function identitySignUp(email, password, displayName) {
   const body = await res.json();
   if (!res.ok) {
     if (body?.error?.message === 'EMAIL_EXISTS') {
-      return signIn(email, password);
+      return { exists: true };
     }
     throw new Error(`signUp ${email}: ${body?.error?.message || res.status}`);
   }
@@ -314,9 +292,10 @@ async function upsertDocument(accessToken, collection, docId, data) {
   }
 }
 
-function sanitizeBooth(booth, existingSlots = []) {
+function sanitizeBooth(booth, existing = null) {
+  const existingSlots = Array.isArray(existing?.slots) ? existing.slots : [];
   const existingById = new Map(
-    (existingSlots || []).map((slot) => [slot.id, slot]),
+    existingSlots.map((slot) => [slot.id, slot]),
   );
   return {
     id: booth.id,
@@ -331,8 +310,10 @@ function sanitizeBooth(booth, existingSlots = []) {
     groupLabel: booth.groupLabel ?? null,
     durationMinutes: booth.durationMinutes,
     accentColor: booth.accentColor,
-    accessCodeConfigured: Boolean(booth.accessCode),
-    accessCode: booth.accessCode ?? null,
+    // 코드 값은 공개 문서에 두지 않는다. JSON 에 코드가 없으면 기존 설정 여부를 유지한다.
+    accessCodeConfigured: booth.accessCode
+      ? true
+      : Boolean(existing?.accessCodeConfigured),
     capacity: booth.capacity,
     waitlistCapacity: booth.waitlistCapacity,
     status: booth.status,
@@ -361,10 +342,20 @@ function sanitizeBooth(booth, existingSlots = []) {
 
 async function seedOperator(accessToken, person, assignment) {
   const email = `${person.emailLocal}@boardgame-a06d1.firebaseapp.com`;
-  const authPassword = pinToAuthPassword(person.pin);
-  const auth = await identitySignUp(email, authPassword, person.name);
-  const uid = auth.localId;
-  console.log(`  auth ${person.loginId} → ${uid}`);
+  const pin = randomPin();
+  const auth = await identitySignUp(email, pinToAuthPassword(pin), person.name);
+  let uid = auth.localId;
+  if (auth.exists) {
+    // 기존 계정 — 비밀번호는 그대로 두고 uid 만 staffLoginIndex 에서 가져온다
+    const existingIndex = await fetchDocument(accessToken, 'staffLoginIndex', person.loginId);
+    uid = existingIndex?.uid;
+    if (!uid) {
+      throw new Error(`${person.loginId}: 계정은 있는데 staffLoginIndex 에 uid 가 없습니다. rotate-staff-pins.mjs 를 참고하세요.`);
+    }
+    console.log(`  auth ${person.loginId} → ${uid} (기존 계정, PIN 유지)`);
+  } else {
+    console.log(`  auth ${person.loginId} → ${uid}  새 PIN: ${pin}`);
+  }
 
   await upsertDocument(accessToken, 'staffAssignments', uid, {
     uid,
@@ -375,7 +366,6 @@ async function seedOperator(accessToken, person, assignment) {
     experienceGroup: assignment.experienceGroup,
     assignedBoothIds: assignment.assignedBoothIds,
     isActive: true,
-    pinHint: person.pin,
   });
 
   await upsertDocument(accessToken, 'staffLoginIndex', person.loginId, {
@@ -406,16 +396,15 @@ function fromFirestoreValue(value) {
   return null;
 }
 
-async function fetchExistingBoothSlots(accessToken, boothId) {
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/booths/${encodeURIComponent(boothId)}`;
+async function fetchDocument(accessToken, collection, docId) {
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${encodeURIComponent(docId)}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  if (res.status === 404) return [];
-  if (!res.ok) return [];
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
   const body = await res.json();
-  const slots = fromFirestoreValue(body.fields?.slots);
-  return Array.isArray(slots) ? slots : [];
+  return fromFirestoreValue({ mapValue: { fields: body.fields ?? {} } });
 }
 
 async function main() {
@@ -429,17 +418,24 @@ async function main() {
 
   console.log(`Seeding ${booths.length} booths...`);
   for (const booth of booths) {
-    const existingSlots = await fetchExistingBoothSlots(accessToken, booth.id);
+    const existing = await fetchDocument(accessToken, 'booths', booth.id);
     await upsertDocument(
       accessToken,
       'booths',
       booth.id,
-      sanitizeBooth(booth, existingSlots),
+      sanitizeBooth(booth, existing),
     );
+    if (booth.accessCode) {
+      await upsertDocument(accessToken, 'boothSecrets', booth.id, {
+        accessCode: String(booth.accessCode),
+        updatedAt: new Date().toISOString(),
+        updatedBy: 'seed',
+      });
+    }
     console.log(`  booth ${booth.id}`);
   }
 
-  console.log(`Seeding ${HEAD_ADMINS.length} head admins (PIN 0000)...`);
+  console.log(`Seeding ${HEAD_ADMINS.length} head admins...`);
   for (const person of HEAD_ADMINS) {
     await seedOperator(accessToken, person, {
       role: 'HEAD_ADMIN',
@@ -448,7 +444,7 @@ async function main() {
     });
   }
 
-  console.log(`Seeding ${BOOTH_STAFF.length} booth staff (PIN 0808)...`);
+  console.log(`Seeding ${BOOTH_STAFF.length} booth staff...`);
   for (const person of BOOTH_STAFF) {
     await seedOperator(accessToken, person, {
       role: 'BOOTH_STAFF',
@@ -457,7 +453,7 @@ async function main() {
     });
   }
 
-  console.log('\nDone. Head admin: name + 0000 / Booth staff: name + 0808');
+  console.log('\nDone. 새로 만든 계정의 PIN 은 위 출력에만 있으니 지금 옮겨 적으세요.');
 }
 
 main().catch((error) => {

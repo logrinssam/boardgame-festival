@@ -37,9 +37,15 @@ import {
 
 // Import from v2/https + v2/options only — the v2 barrel pulls in RTDB and
 // can fail cold start with "Cannot find module '@firebase/app'".
+// 동시접속 대비 기본값: 인스턴스당 80 요청 동시 처리, 최대 40 인스턴스(≈ 3,200 동시 요청).
+// 비용 상한을 위해 maxInstances 를 두고, 부하 테스트(scripts/load-test.mjs) 결과에 따라 조정한다.
 setGlobalOptions({
   region: 'asia-northeast3',
   invoker: 'public',
+  memory: '256MiB',
+  timeoutSeconds: 30,
+  concurrency: 80,
+  maxInstances: 40,
 });
 initializeApp();
 
@@ -100,6 +106,93 @@ async function recountAndUpdateBooth(boothId: string, slotId: string) {
 const callableOpts = { invoker: 'public' as const };
 
 /**
+ * 참가자가 몰리는 콜러블은 인스턴스 1개를 항상 띄워 둔다 (콜드 스타트 2~4초 회피).
+ * 대기 비용은 인스턴스당 월 수천 원 수준 — 행사 후 0으로 낮춰도 된다.
+ */
+const hotCallableOpts = { ...callableOpts, minInstances: 1 };
+
+// ---- 입력 검증 ----
+// 한국 휴대폰: 01X + 7~8자리 (하이픈 제거 후). 자릿수만 보던 이전 검사는 아무 숫자나 통과시켰다.
+const MOBILE_PHONE_RE = /^01\d{8,9}$/;
+const MAX_NAME_LENGTH = 20;
+const MAX_GRADE_LENGTH = 20;
+const MAX_CAPACITY = 500;
+
+function validateParticipantInput(input: {
+  participantName: string;
+  phoneDigits: string;
+  gradeOrAge?: string | null;
+}): void {
+  const name = input.participantName.trim();
+  if (name.length === 0 || name.length > MAX_NAME_LENGTH) {
+    throw new HttpsError(
+      'invalid-argument',
+      `이름은 1~${MAX_NAME_LENGTH}자로 입력해 주세요.`,
+    );
+  }
+  if (!MOBILE_PHONE_RE.test(input.phoneDigits)) {
+    throw new HttpsError(
+      'invalid-argument',
+      '휴대폰 번호를 정확히 입력해 주세요. (예: 010-1234-5678)',
+    );
+  }
+  if (input.gradeOrAge && input.gradeOrAge.trim().length > MAX_GRADE_LENGTH) {
+    throw new HttpsError('invalid-argument', '학년/나이 입력이 너무 깁니다.');
+  }
+}
+
+// ---- 현장코드 ----
+// 코드는 공개 booths 문서가 아니라 boothSecrets/{boothId} (운영자만 읽기)에 둔다.
+// 마이그레이션 전 문서는 booths.accessCode 를 그대로 쓰도록 폴백한다.
+function normalizeAccessCode(code: unknown): string {
+  return String(code ?? '')
+    .trim()
+    .replace(/[\s-]/g, '');
+}
+
+async function loadBoothAccessCode(
+  boothId: string,
+  legacyCode: string | null,
+  tx?: FirebaseFirestore.Transaction,
+): Promise<string | null> {
+  const ref = db.collection('boothSecrets').doc(boothId);
+  const snap = tx ? await tx.get(ref) : await ref.get();
+  if (snap.exists) {
+    const code = snap.data()?.accessCode;
+    return code ? String(code) : null;
+  }
+  return legacyCode;
+}
+
+function accessCodeMatches(expected: string | null, input: unknown): boolean {
+  if (!expected) return true;
+  return normalizeAccessCode(expected) === normalizeAccessCode(input);
+}
+
+// ---- 점검 시계 설정 캐시 ----
+// 모든 콜러블이 매번 config/testClock 을 읽으면 폴링 트래픽의 읽기 비용이 두 배가 된다.
+// 10초 캐시 — 점검 모드를 켜고 끌 때 최대 10초 늦게 반영되는 것은 감수한다.
+interface TestClockConfig {
+  enabled?: boolean;
+  mode?: string;
+  simulatedTime?: string;
+  expiresAt?: string;
+}
+const TEST_CLOCK_CACHE_MS = 10_000;
+let testClockCache: { expiresAt: number; value: TestClockConfig | null } | null =
+  null;
+
+async function readTestClockConfig(): Promise<TestClockConfig | null> {
+  if (testClockCache && Date.now() < testClockCache.expiresAt) {
+    return testClockCache.value;
+  }
+  const snap = await db.collection('config').doc('testClock').get();
+  const value = snap.exists ? (snap.data() as TestClockConfig) : null;
+  testClockCache = { expiresAt: Date.now() + TEST_CLOCK_CACHE_MS, value };
+  return value;
+}
+
+/**
  * 서버 시계 — 행사 단계(날짜) + KST 분 + 점검용 시간 정책.
  *
  * 날짜 정책 (KST):
@@ -134,15 +227,8 @@ async function resolveClock(): Promise<{
     simulatedTime: null,
   };
   try {
-    const snap = await db.collection('config').doc('testClock').get();
-    if (!snap.exists) return real;
-    const data = snap.data() as {
-      enabled?: boolean;
-      mode?: string;
-      simulatedTime?: string;
-      expiresAt?: string;
-    };
-    if (data.enabled !== true) return real;
+    const data = await readTestClockConfig();
+    if (!data || data.enabled !== true) return real;
 
     const expiresAt = Date.parse(String(data.expiresAt ?? ''));
     if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) return real;
@@ -173,7 +259,7 @@ async function resolveClock(): Promise<{
   }
 }
 
-export const createReservation = onCall(callableOpts, async (request) => {
+export const createReservation = onCall(hotCallableOpts, async (request) => {
   const data = request.data as {
     boothId?: string;
     slotId?: string;
@@ -196,9 +282,11 @@ export const createReservation = onCall(callableOpts, async (request) => {
   }
 
   const phoneDigits = digitsOnly(data.phone);
-  if (phoneDigits.length < 10) {
-    throw new HttpsError('invalid-argument', '연락처를 정확히 입력해 주세요.');
-  }
+  validateParticipantInput({
+    participantName: data.participantName,
+    phoneDigits,
+    gradeOrAge: data.gradeOrAge,
+  });
 
   const boothRef = db.collection('booths').doc(data.boothId);
   const { phase, nowMinutes } = await resolveClock();
@@ -238,8 +326,9 @@ export const createReservation = onCall(callableOpts, async (request) => {
       throw new Error('NOT_FOUND:회차 정보를 찾을 수 없습니다.');
     }
 
-    if (booth.accessCodeConfigured && booth.accessCode) {
-      if (!data.accessCode || data.accessCode.trim() !== booth.accessCode) {
+    if (booth.accessCodeConfigured) {
+      const expected = await loadBoothAccessCode(booth.id, booth.accessCode, tx);
+      if (!accessCodeMatches(expected, data.accessCode)) {
         throw new Error('PERMISSION:현장코드가 올바르지 않습니다.');
       }
     }
@@ -324,7 +413,7 @@ export const createReservation = onCall(callableOpts, async (request) => {
         booth.status === 'CAPACITY_PENDING' ? 'BOOKING_OPEN' : booth.status,
     });
     return record;
-  }).catch((error: unknown) => {
+  }, { maxAttempts: 8 }).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     if (message.startsWith('NOT_FOUND:')) {
       throw new HttpsError('not-found', message.slice('NOT_FOUND:'.length));
@@ -543,8 +632,26 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
 
   const patch: Record<string, unknown> = {};
   if ('accessCode' in (request.data ?? {})) {
-    const code = String(request.data.accessCode ?? '').trim();
-    patch.accessCode = code || null;
+    const code = normalizeAccessCode(request.data.accessCode);
+    if (code && !/^\d{4,8}$/.test(code)) {
+      throw new HttpsError(
+        'invalid-argument',
+        '현장코드는 숫자 4~8자리로 입력해 주세요.',
+      );
+    }
+    await db
+      .collection('boothSecrets')
+      .doc(boothId)
+      .set(
+        {
+          accessCode: code || null,
+          updatedAt: new Date().toISOString(),
+          updatedBy: staff.uid,
+        },
+        { merge: true },
+      );
+    // 공개 문서에는 코드 유무만 남기고 값은 지운다
+    patch.accessCode = FieldValue.delete();
     patch.accessCodeConfigured = code.length > 0;
   }
   if ('capacity' in (request.data ?? {})) {
@@ -560,6 +667,16 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
       raw === null || raw === undefined || raw === ''
         ? null
         : Number(raw);
+  }
+  for (const key of ['capacity', 'waitlistCapacity'] as const) {
+    if (!(key in patch) || patch[key] === null) continue;
+    const value = patch[key];
+    if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > MAX_CAPACITY) {
+      throw new HttpsError(
+        'invalid-argument',
+        `정원은 0~${MAX_CAPACITY} 사이의 정수여야 합니다.`,
+      );
+    }
   }
   if ('capacity' in patch || 'waitlistCapacity' in patch) {
     const boothSnap = await db.collection('booths').doc(boothId).get();
@@ -632,9 +749,11 @@ export const createWalkInRegistration = onCall(callableOpts, async (request) => 
 
   const phoneDigits = digitsOnly(data.phone);
   const phoneConfirm = digitsOnly(data.phoneConfirm);
-  if (phoneDigits.length < 10) {
-    throw new HttpsError('invalid-argument', '연락처를 정확히 입력해 주세요.');
-  }
+  validateParticipantInput({
+    participantName: data.participantName,
+    phoneDigits,
+    gradeOrAge: data.gradeOrAge,
+  });
   if (phoneDigits !== phoneConfirm) {
     throw new HttpsError(
       'invalid-argument',
@@ -666,8 +785,9 @@ export const createWalkInRegistration = onCall(callableOpts, async (request) => 
     );
   }
 
-  if (booth.accessCodeConfigured && booth.accessCode) {
-    if (!data.accessCode || data.accessCode.trim() !== booth.accessCode) {
+  if (booth.accessCodeConfigured) {
+    const expected = await loadBoothAccessCode(booth.id, booth.accessCode);
+    if (!accessCodeMatches(expected, data.accessCode)) {
       throw new HttpsError('permission-denied', '현장코드가 올바르지 않습니다.');
     }
   }
@@ -762,12 +882,16 @@ export const getWalkInRegistration = onCall(callableOpts, async (request) => {
   if (!snap.exists) {
     throw new HttpsError('not-found', '등록 정보를 찾을 수 없습니다.');
   }
-  return {
-    registration: asWalkInRegistration(
-      snap.id,
-      snap.data() as Record<string, unknown>,
-    ),
-  };
+  const registration = asWalkInRegistration(
+    snap.id,
+    snap.data() as Record<string, unknown>,
+  );
+  // 등록 ID만 아는 사람(URL 공유 등)에게 전체 전화번호를 노출하지 않는다.
+  // 확인 화면은 maskedPhone 만 쓴다. 운영자 화면은 Firestore 구독을 따로 쓴다.
+  if (!request.auth?.uid) {
+    registration.phone = '';
+  }
+  return { registration };
 });
 
 export const setWalkInBoothStatus = onCall(callableOpts, async (request) => {
@@ -851,10 +975,23 @@ export const cancelWalkInRegistration = onCall(callableOpts, async (request) => 
  * 상태(status)·잔여 좌석(seatsLeft)은 전적으로 서버가 계산한다 —
  * 클라이언트는 이 값을 렌더링만 하고 시간 판정을 하지 않는다.
  */
-export const getBoothSessions = onCall(callableOpts, async (request) => {
+/**
+ * 회차 현황 응답 캐시 (인스턴스 내부, 부스별 5초).
+ * 참가자 화면이 30초마다 폴링하므로 1,000명이 붙으면 초당 수십 회가 같은 부스를 읽는다.
+ * 5초 안의 요청은 같은 결과를 돌려주고, 예약 생성은 createReservation 이 실시간으로 판정한다.
+ */
+const SESSIONS_CACHE_MS = 5_000;
+const sessionsCache = new Map<string, { expiresAt: number; value: unknown }>();
+
+export const getBoothSessions = onCall(hotCallableOpts, async (request) => {
   const boothId = String(request.data?.boothId ?? '');
   if (!boothId) {
     throw new HttpsError('invalid-argument', '부스 ID가 필요합니다.');
+  }
+
+  const cached = sessionsCache.get(boothId);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.value;
   }
 
   const boothSnap = await db.collection('booths').doc(boothId).get();
@@ -930,7 +1067,7 @@ export const getBoothSessions = onCall(callableOpts, async (request) => {
     };
   });
 
-  return {
+  const result = {
     serverTime: new Date().toISOString(),
     openTimes: BOOKING_OPEN_LABELS,
     testMode,
@@ -938,6 +1075,11 @@ export const getBoothSessions = onCall(callableOpts, async (request) => {
     phase,
     sessions,
   };
+  sessionsCache.set(boothId, {
+    expiresAt: Date.now() + SESSIONS_CACHE_MS,
+    value: result,
+  });
+  return result;
 });
 
 function phaseBlockedMessage(phase: EventPhase): string {
@@ -948,7 +1090,7 @@ function phaseBlockedMessage(phase: EventPhase): string {
 }
 
 /** 참여자 사이트 잠금 판정 — 서버 시각 기준 행사 단계. 점검 모드면 EVENT_DAY */
-export const getSiteStatus = onCall(callableOpts, async () => {
+export const getSiteStatus = onCall(hotCallableOpts, async () => {
   const { phase, testMode, simulatedTime } = await resolveClock();
   return {
     serverTime: new Date().toISOString(),
@@ -958,4 +1100,29 @@ export const getSiteStatus = onCall(callableOpts, async () => {
     testMode,
     simulatedTime,
   };
+});
+
+/**
+ * 현장코드 사전 확인 — 참가자가 코드 화면에서 바로 피드백을 받기 위한 용도.
+ * 최종 판정은 createReservation / createWalkInRegistration 이 다시 한다.
+ */
+export const verifyBoothAccessCode = onCall(callableOpts, async (request) => {
+  const boothId = String(request.data?.boothId ?? '');
+  const input = normalizeAccessCode(request.data?.accessCode);
+  if (!boothId) {
+    throw new HttpsError('invalid-argument', '부스 ID가 필요합니다.');
+  }
+  if (!input) {
+    throw new HttpsError('invalid-argument', '현장코드를 입력해 주세요.');
+  }
+  const boothSnap = await db.collection('booths').doc(boothId).get();
+  if (!boothSnap.exists) {
+    throw new HttpsError('not-found', '부스를 찾을 수 없습니다.');
+  }
+  const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+  if (!booth.accessCodeConfigured) {
+    return { ok: true };
+  }
+  const expected = await loadBoothAccessCode(booth.id, booth.accessCode);
+  return { ok: accessCodeMatches(expected, input) };
 });

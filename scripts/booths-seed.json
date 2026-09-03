@@ -24,7 +24,7 @@
     ],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
-    "accessCode": "381462",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-01-slot-01",
@@ -144,7 +144,7 @@
     ],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
-    "accessCode": "572913",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-02-slot-01",
@@ -263,7 +263,7 @@
     "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
-    "accessCode": "649028",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-03-slot-01",
@@ -383,7 +383,7 @@
     ],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
-    "accessCode": "715834",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-04-slot-01",
@@ -503,7 +503,7 @@
     "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
-    "accessCode": "148273",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-05-slot-01",
@@ -623,7 +623,7 @@
     ],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
-    "accessCode": "826491",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-06-slot-01",
@@ -742,7 +742,7 @@
     "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
-    "accessCode": "903517",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-07-slot-01",
@@ -858,7 +858,7 @@
     "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
-    "accessCode": "367514",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-08-slot-01",
@@ -974,7 +974,7 @@
     "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
-    "accessCode": "256839",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-09-slot-01",
@@ -1090,7 +1090,7 @@
     "reserveGames": [],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
-    "accessCode": "691850",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-10-slot-01",
@@ -1206,7 +1206,7 @@
     "reserveGames": [],
     "operationMode": "TIME_RESERVATION",
     "accessCodeConfigured": true,
-    "accessCode": "713946",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-11-slot-01",
@@ -1322,7 +1322,7 @@
     "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
-    "accessCode": "479026",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-12-slot-01",
@@ -1438,7 +1438,7 @@
     "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
-    "accessCode": "584173",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-13-slot-01",
@@ -1554,7 +1554,7 @@
     "reserveGames": [],
     "operationMode": "WALK_IN_CHECKIN",
     "accessCodeConfigured": true,
-    "accessCode": "825307",
+    "accessCode": null,
     "slots": [
       {
         "id": "booth-14-slot-01",
