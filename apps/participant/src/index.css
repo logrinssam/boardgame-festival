@@ -1545,7 +1545,7 @@ input {
 }
 
 .site-gate-hl {
-  padding: 0 3px;
+  padding: 0 1px;
   border-radius: 4px;
   background: rgba(255, 220, 60, 0.85);
   color: inherit;
