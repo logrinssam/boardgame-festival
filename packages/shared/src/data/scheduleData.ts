@@ -25,6 +25,9 @@ function createSlot(
 /** 행사 전체 운영 시간 메타 */
 export const EVENT_SCHEDULE = {
   title: '제4회 창의융합 보드게임 대축제',
+  /** 행사일 (KST) */
+  date: '2026-09-19',
+  dateLabel: '9월 19일(토)',
   openTime: '09:00',
   closeTime: '16:25',
   morningStart: '09:00',

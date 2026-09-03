@@ -55,11 +55,15 @@ export function HomePage() {
           </div>
           <div className="info-chip">
             <span className="info-label">오전 예약</span>
-            <strong>{BOOKING_OPEN_TIMES.MORNING}부터</strong>
+            <strong>
+              {EVENT_SCHEDULE.dateLabel} {BOOKING_OPEN_TIMES.MORNING}부터
+            </strong>
           </div>
           <div className="info-chip">
             <span className="info-label">오후 예약</span>
-            <strong>{BOOKING_OPEN_TIMES.AFTERNOON}부터</strong>
+            <strong>
+              {EVENT_SCHEDULE.dateLabel} {BOOKING_OPEN_TIMES.AFTERNOON}부터
+            </strong>
           </div>
         </div>
       </section>
