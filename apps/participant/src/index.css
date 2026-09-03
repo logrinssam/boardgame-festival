@@ -1552,10 +1552,8 @@ input {
   font-weight: 700;
 }
 
-/* .notice strong 의 display:block 을 되돌린다 — 문장 중간 강조라 줄바꿈되면 안 된다 */
-.notice strong.site-gate-strong {
-  display: inline;
-  margin: 0;
+/* 문장 중간 강조 — .notice strong 의 display:block 에 걸리지 않도록 span 을 쓴다 */
+.site-gate-strong {
   font-weight: 700;
   color: var(--text-primary);
 }
