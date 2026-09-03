@@ -82,10 +82,15 @@ export function SiteGate({ children }: { children: ReactNode }) {
             </p>
           </li>
         </ol>
-        <div className="notice">
-          <strong>🔑 예약은 축제 현장에서만 가능해요!</strong>
+        <div className="notice warning site-gate-notice">
+          <strong>
+            🔑 예약은 <mark className="site-gate-hl">축제 현장</mark>에서만
+            가능해요!
+          </strong>
           <p>
-            부스 안내판에 있는 현장코드를 입력하면 예약을 진행할 수 있어요.
+            부스 안내판에 있는{' '}
+            <mark className="site-gate-hl">현장코드를 입력</mark>하면 예약을
+            진행할 수 있어요.
           </p>
         </div>
       </section>

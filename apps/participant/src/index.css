@@ -1533,3 +1533,21 @@ input {
   font-weight: 600;
   color: #b02525;
 }
+
+/* 잠금 화면 현장코드 안내 — 강조 */
+.site-gate-notice strong {
+  font-size: 15px;
+}
+
+.site-gate-notice p {
+  font-size: 14px;
+  word-break: keep-all;
+}
+
+.site-gate-hl {
+  padding: 0 3px;
+  border-radius: 4px;
+  background: rgba(255, 220, 60, 0.85);
+  color: inherit;
+  font-weight: 700;
+}
