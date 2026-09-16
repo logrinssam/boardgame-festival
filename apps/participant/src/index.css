@@ -1566,9 +1566,19 @@ input {
   overflow-y: auto;
   border-radius: 12px;
   background: var(--surface-1);
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: 11px;
+  line-height: 1.55;
   color: var(--text-secondary);
+  word-break: keep-all;
+}
+
+/* 동의 화면 상단 부스 이름 — 약관보다 훨씬 크게 */
+.consent-booth {
+  margin: 8px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text-primary);
   word-break: keep-all;
 }
 

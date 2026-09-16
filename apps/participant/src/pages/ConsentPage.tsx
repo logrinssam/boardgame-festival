@@ -52,8 +52,9 @@ export function ConsentPage() {
   return (
     <section className="glass-card">
       <h2 className="section-title">개인정보 및 초상권 제공 동의</h2>
+      <p className="consent-booth">{booth.name}</p>
       <p className="hint-text">
-        {booth.name} · {formatTimeRange(slot.startTime, slot.endTime)}
+        {formatTimeRange(slot.startTime, slot.endTime)}
       </p>
 
       <div className="consent-terms">
