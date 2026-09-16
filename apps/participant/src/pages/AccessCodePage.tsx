@@ -119,7 +119,11 @@ export function AccessCodePage() {
         </p>
       ) : null}
       {error ? <p className="error-text">{error}</p> : null}
-      <button type="submit" className="btn btn-primary" disabled={checking}>
+      <button
+        type="submit"
+        className="btn btn-primary btn-block"
+        disabled={checking}
+      >
         {checking ? '확인 중…' : '확인'}
       </button>
     </form>

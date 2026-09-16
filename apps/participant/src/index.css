@@ -1607,3 +1607,19 @@ input {
   margin-top: 0;
   flex-shrink: 0;
 }
+
+/* 예약 흐름 주 버튼 — 폰에서는 전체 폭이 누르기 쉽다 */
+.btn-block {
+  width: 100%;
+  margin-top: 14px;
+  min-height: 52px;
+  font-size: 16px;
+}
+
+/* 동의 화면 회차 시간 */
+.consent-time {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--creative-accent);
+}

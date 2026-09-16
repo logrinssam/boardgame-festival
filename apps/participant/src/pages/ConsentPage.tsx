@@ -53,7 +53,7 @@ export function ConsentPage() {
     <section className="glass-card">
       <h2 className="section-title">개인정보 및 초상권 제공 동의</h2>
       <p className="consent-booth">{booth.name}</p>
-      <p className="hint-text">
+      <p className="consent-time">
         {formatTimeRange(slot.startTime, slot.endTime)}
       </p>
 
@@ -101,7 +101,7 @@ export function ConsentPage() {
 
       <button
         type="button"
-        className="btn btn-primary"
+        className="btn btn-primary btn-block"
         disabled={!agreed}
         onClick={() =>
           navigate('/booking/participant', {

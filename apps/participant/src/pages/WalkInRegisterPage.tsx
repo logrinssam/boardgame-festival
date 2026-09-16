@@ -263,7 +263,11 @@ export function WalkInRegisterPage() {
       ) : null}
 
       {error ? <p className="error-text">{error}</p> : null}
-      <button type="submit" className="btn btn-primary" disabled={pending}>
+      <button
+        type="submit"
+        className="btn btn-primary btn-block"
+        disabled={pending}
+      >
         {pending ? '처리 중…' : '현장 참여 등록하기'}
       </button>
     </form>

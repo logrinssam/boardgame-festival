@@ -259,7 +259,7 @@ export function ParticipantFormPage() {
       {error ? <p className="error-text">{error}</p> : null}
       <button
         type="submit"
-        className="btn btn-primary"
+        className="btn btn-primary btn-block"
         disabled={!bookable.allowed || pending}
       >
         {pending
