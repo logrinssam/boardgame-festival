@@ -169,6 +169,7 @@ export function createReservationRecord(input: {
     gender: input.gender,
     status,
     waitlistOrder: input.isWaitlist ? input.existingWaitlistCount + 1 : null,
+    portraitConsent: false,
     createdAt: now,
     updatedAt: now,
     updatedBy: null,

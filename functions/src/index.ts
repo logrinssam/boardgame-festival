@@ -268,6 +268,7 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
     gradeOrAge?: string;
     gender?: string;
     accessCode?: string;
+    portraitConsent?: boolean;
   };
 
   if (
@@ -387,6 +388,7 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
       gender: data.gender as 'MALE' | 'FEMALE',
       status,
       waitlistOrder: bookable.isWaitlist ? usage.waitlist + 1 : null,
+      portraitConsent: data.portraitConsent === true,
       createdAt: now,
       updatedAt: now,
       updatedBy: null,
@@ -738,6 +740,7 @@ export const createWalkInRegistration = onCall(callableOpts, async (request) => 
     gradeOrAge?: string;
     gender?: string;
     accessCode?: string;
+    portraitConsent?: boolean;
   };
 
   if (!data.boothId || !data.participantName || !data.phone || !data.phoneConfirm) {
@@ -839,6 +842,7 @@ export const createWalkInRegistration = onCall(callableOpts, async (request) => 
     gender: data.gender,
     confirmationNumber: generateWalkInConfirmationNumber(new Set()),
     status: 'REGISTERED',
+    portraitConsent: data.portraitConsent === true,
     createdAt: now,
     cancelledAt: null,
   };

@@ -13,6 +13,8 @@ interface BookingState {
   boothId?: string;
   slotId?: string;
   accessCode?: string;
+  /** 동의 화면에서 선택한 초상권 활용 동의 */
+  portraitConsent?: boolean;
 }
 
 type SchoolTrack = 'KINDERGARTEN' | 'ELEMENTARY' | '';
@@ -120,6 +122,7 @@ export function ParticipantFormPage() {
       gradeOrAge,
       gender,
       accessCode,
+      portraitConsent: state.portraitConsent === true,
     });
     setPending(false);
 

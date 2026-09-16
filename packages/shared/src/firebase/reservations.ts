@@ -80,6 +80,7 @@ function asReservation(id: string, data: Record<string, unknown>): Reservation {
       data.gender === 'MALE' || data.gender === 'FEMALE' ? data.gender : null,
     status: data.status as Reservation['status'],
     waitlistOrder: (data.waitlistOrder as number | null) ?? null,
+    portraitConsent: data.portraitConsent === true,
     createdAt: String(data.createdAt),
     updatedAt: String(data.updatedAt),
     updatedBy: (data.updatedBy as string | null) ?? null,

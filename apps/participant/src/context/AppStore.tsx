@@ -30,6 +30,7 @@ interface AppStoreValue {
     gradeOrAge: string;
     gender: 'MALE' | 'FEMALE';
     accessCode?: string;
+    portraitConsent?: boolean;
   }) => Promise<
     | { ok: true; reservation: Reservation }
     | { ok: false; message: string }
@@ -81,6 +82,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       gradeOrAge: string;
       gender: 'MALE' | 'FEMALE';
       accessCode?: string;
+      portraitConsent?: boolean;
     }) => createReservationRemote(input),
     [],
   );

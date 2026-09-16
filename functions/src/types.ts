@@ -83,6 +83,7 @@ export interface WalkInRegistration {
   gender: 'MALE' | 'FEMALE' | null;
   confirmationNumber: string;
   status: WalkInRegistrationStatus;
+  portraitConsent: boolean;
   createdAt: string;
   cancelledAt: string | null;
 }
@@ -100,6 +101,7 @@ export interface Reservation {
   gender: 'MALE' | 'FEMALE' | null;
   status: ReservationStatus;
   waitlistOrder: number | null;
+  portraitConsent: boolean;
   createdAt: string;
   updatedAt: string;
   updatedBy: string | null;

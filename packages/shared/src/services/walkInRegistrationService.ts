@@ -73,6 +73,7 @@ export async function createWalkInRegistration(input: {
   phoneConfirm: string;
   gradeOrAge?: string;
   gender: ParticipantGender;
+  portraitConsent?: boolean;
 }): Promise<
   | { ok: true; registration: WalkInRegistration; duplicate: boolean }
   | { ok: false; message: string }

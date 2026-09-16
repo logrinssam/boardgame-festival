@@ -39,6 +39,7 @@ export function asWalkInRegistration(
       data.gender === 'MALE' || data.gender === 'FEMALE' ? data.gender : null,
     confirmationNumber: String(data.confirmationNumber),
     status: data.status === 'CANCELLED' ? 'CANCELLED' : 'REGISTERED',
+    portraitConsent: data.portraitConsent === true,
     createdAt: String(data.createdAt),
     cancelledAt:
       data.cancelledAt == null || data.cancelledAt === ''

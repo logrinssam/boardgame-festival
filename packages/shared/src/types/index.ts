@@ -180,6 +180,8 @@ export interface Reservation {
   gender: ParticipantGender | null;
   status: ReservationStatus;
   waitlistOrder: number | null;
+  /** 초상권 활용 동의(선택). 구 예약은 false */
+  portraitConsent: boolean;
   createdAt: string;
   updatedAt: string;
   updatedBy: string | null;
@@ -197,6 +199,8 @@ export interface WalkInRegistration {
   gender: ParticipantGender | null;
   confirmationNumber: string;
   status: WalkInRegistrationStatus;
+  /** 초상권 활용 동의(선택). 구 등록은 false */
+  portraitConsent: boolean;
   createdAt: string;
   cancelledAt: string | null;
 }

@@ -22,6 +22,7 @@ export function WalkInRegisterPage() {
   const booth = getBooth(boothId);
 
   const [agreed, setAgreed] = useState(false);
+  const [portraitAgreed, setPortraitAgreed] = useState(false);
   const [participantName, setParticipantName] = useState('');
   const [phone, setPhone] = useState('');
   const [phoneConfirm, setPhoneConfirm] = useState('');
@@ -99,6 +100,7 @@ export function WalkInRegisterPage() {
       phoneConfirm,
       gradeOrAge: gradeOrAge || undefined,
       gender,
+      portraitConsent: portraitAgreed,
     });
     setPending(false);
 
@@ -147,6 +149,23 @@ export function WalkInRegisterPage() {
           onChange={(event) => setAgreed(event.target.checked)}
         />
         <span>개인정보 수집·이용에 동의합니다. (필수)</span>
+      </label>
+
+      <div className="notice">
+        <strong>초상권 활용 안내 (선택)</strong>
+        <p>
+          행사 홍보·교육·기록 자료(공식 SNS, 유튜브, 홍보물)에 참가자의
+          사진·영상, 성명(필요 시), 인터뷰 내용이 쓰일 수 있습니다. 게시 전까지
+          철회할 수 있으나 이미 게시·배포된 자료는 철회가 어렵습니다.
+        </p>
+      </div>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={portraitAgreed}
+          onChange={(event) => setPortraitAgreed(event.target.checked)}
+        />
+        <span>초상권 활용에 동의합니다. (선택)</span>
       </label>
 
       <label className="field-label" htmlFor="walkin-name">

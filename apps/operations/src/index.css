@@ -1369,3 +1369,10 @@ input {
   background: rgba(230, 126, 34, 0.16);
   color: #c45f0c;
 }
+
+/* 초상권 활용 동의 표시 */
+.consent-badge {
+  margin-left: 6px;
+  font-size: 13px;
+  vertical-align: middle;
+}

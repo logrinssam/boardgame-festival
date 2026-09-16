@@ -20,6 +20,7 @@ export async function createReservationCallable(input: {
   gradeOrAge: string;
   gender: 'MALE' | 'FEMALE';
   accessCode?: string;
+  portraitConsent?: boolean;
 }): Promise<{ ok: true; reservation: Reservation } | { ok: false; message: string }> {
   try {
     const result = await fn<typeof input, { reservation: Reservation }>(
@@ -105,6 +106,7 @@ export async function createWalkInRegistrationCallable(input: {
   gradeOrAge?: string;
   gender: 'MALE' | 'FEMALE';
   accessCode?: string;
+  portraitConsent?: boolean;
 }): Promise<
   | { ok: true; registration: WalkInRegistration; duplicate: boolean }
   | { ok: false; message: string }
