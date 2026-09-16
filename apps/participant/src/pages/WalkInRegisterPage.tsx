@@ -22,7 +22,6 @@ export function WalkInRegisterPage() {
   const booth = getBooth(boothId);
 
   const [agreed, setAgreed] = useState(false);
-  const [portraitAgreed, setPortraitAgreed] = useState(false);
   const [participantName, setParticipantName] = useState('');
   const [phone, setPhone] = useState('');
   const [phoneConfirm, setPhoneConfirm] = useState('');
@@ -68,7 +67,7 @@ export function WalkInRegisterPage() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!agreed) {
-      setError('개인정보 수집·이용에 동의해 주세요.');
+      setError('개인정보 수집·이용 및 초상권 활용에 동의해 주세요.');
       return;
     }
     if (!participantName.trim() || !phone.trim() || !phoneConfirm.trim()) {
@@ -100,7 +99,8 @@ export function WalkInRegisterPage() {
       phoneConfirm,
       gradeOrAge: gradeOrAge || undefined,
       gender,
-      portraitConsent: portraitAgreed,
+      // 초상권 동의가 필수라 체크 = 동의
+      portraitConsent: true,
     });
     setPending(false);
 
@@ -135,11 +135,16 @@ export function WalkInRegisterPage() {
         참가자 정보를 등록한 뒤 완료 화면을 운영자에게 보여 주세요.
       </p>
 
-      <div className="notice">
-        <strong>개인정보 수집·이용 안내</strong>
+      <div className="consent-terms">
         <p>
-          현장 참여 확인을 위해 참가자 이름과 보호자 연락처를 수집합니다. 행사
-          종료 후 관련 규정에 따라 파기합니다.
+          <b>개인정보 수집·이용</b> — 현장 참여 확인을 위해 참가자 이름, 보호자
+          연락처, 성별, 학년/연령을 수집하며 행사 종료 후 즉시 파기합니다.
+        </p>
+        <p>
+          <b>초상권 활용</b> — 행사 홍보·교육·기록 자료(공식 SNS, 유튜브,
+          홍보자료)에 초상(사진·영상), 성명(필요 시), 인터뷰 내용이 게시물 유지
+          기간 동안 활용될 수 있습니다. 게시 전까지는 철회 가능하나 이미
+          게시·배포된 자료는 철회가 불가합니다.
         </p>
       </div>
       <label className="checkbox-row">
@@ -148,24 +153,7 @@ export function WalkInRegisterPage() {
           checked={agreed}
           onChange={(event) => setAgreed(event.target.checked)}
         />
-        <span>개인정보 수집·이용에 동의합니다. (필수)</span>
-      </label>
-
-      <div className="notice">
-        <strong>초상권 활용 안내 (선택)</strong>
-        <p>
-          행사 홍보·교육·기록 자료(공식 SNS, 유튜브, 홍보물)에 참가자의
-          사진·영상, 성명(필요 시), 인터뷰 내용이 쓰일 수 있습니다. 게시 전까지
-          철회할 수 있으나 이미 게시·배포된 자료는 철회가 어렵습니다.
-        </p>
-      </div>
-      <label className="checkbox-row">
-        <input
-          type="checkbox"
-          checked={portraitAgreed}
-          onChange={(event) => setPortraitAgreed(event.target.checked)}
-        />
-        <span>초상권 활용에 동의합니다. (선택)</span>
+        <span>개인정보 수집·이용 및 초상권 활용에 동의합니다. (필수)</span>
       </label>
 
       <label className="field-label" htmlFor="walkin-name">

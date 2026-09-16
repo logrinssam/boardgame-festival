@@ -117,13 +117,7 @@ export function StaffWalkInOpsPanel({ booth }: StaffWalkInOpsPanelProps) {
           <ul className="plain-list">
             {todayRows.slice(0, 40).map((item) => (
               <li key={item.id}>
-                <strong>{item.participantName}</strong>
-                {item.portraitConsent ? (
-                  <span className="consent-badge" title="초상권 활용 동의">
-                    📷
-                  </span>
-                ) : null}{' '}
-                · 뒤 {item.phoneLastFour}{' '}
+                <strong>{item.participantName}</strong> · 뒤 {item.phoneLastFour}{' '}
                 · {item.maskedPhone}
                 {item.gender
                   ? ` · ${item.gender === 'MALE' ? '남' : '여'}`

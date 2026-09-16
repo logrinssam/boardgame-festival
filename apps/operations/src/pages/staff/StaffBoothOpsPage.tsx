@@ -392,11 +392,6 @@ export function StaffBoothOpsPage() {
           <article key={reservation.id} className="glass-card guest-card">
             <div className="detail-row">
               <strong>{reservation.participantName}</strong>
-              {reservation.portraitConsent ? (
-                <span className="consent-badge" title="초상권 활용 동의">
-                  📷
-                </span>
-              ) : null}
               <StatusBadge
                 status={reservation.status}
                 label={RESERVATION_STATUS_LABELS[reservation.status]}

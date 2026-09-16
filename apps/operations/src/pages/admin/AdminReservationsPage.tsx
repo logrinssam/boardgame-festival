@@ -44,11 +44,6 @@ export function AdminReservationsPage() {
           <article key={reservation.id} className="glass-card">
             <div className="detail-row">
               <strong>{reservation.participantName}</strong>
-              {reservation.portraitConsent ? (
-                <span className="consent-badge" title="초상권 활용 동의">
-                  📷
-                </span>
-              ) : null}
               <span>{RESERVATION_STATUS_LABELS[reservation.status]}</span>
             </div>
             <p className="admin-meta">
