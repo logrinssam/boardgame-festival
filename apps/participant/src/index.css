@@ -1594,3 +1594,16 @@ input {
   font-weight: 600;
   color: var(--text-primary);
 }
+
+/* 동의 체크 문구 — 폰 폭에서 한 줄에 들어가게, 단어 중간에서 안 끊기게 */
+.consent-check {
+  align-items: center;
+  font-size: clamp(11px, 3.3vw, 13px);
+  word-break: keep-all;
+  line-height: 1.4;
+}
+
+.consent-check input {
+  margin-top: 0;
+  flex-shrink: 0;
+}

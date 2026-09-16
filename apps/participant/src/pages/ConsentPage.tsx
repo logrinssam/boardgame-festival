@@ -90,13 +90,13 @@ export function ConsentPage() {
         </p>
       </div>
 
-      <label className="checkbox-row">
+      <label className="checkbox-row consent-check">
         <input
           type="checkbox"
           checked={agreed}
           onChange={(event) => setAgreed(event.target.checked)}
         />
-        <span>개인정보 수집·이용 및 초상권 활용에 동의합니다. (필수)</span>
+        <span>개인정보·초상권 활용에 동의합니다. (필수)</span>
       </label>
 
       <button

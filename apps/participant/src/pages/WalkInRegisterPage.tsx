@@ -147,13 +147,13 @@ export function WalkInRegisterPage() {
           게시·배포된 자료는 철회가 불가합니다.
         </p>
       </div>
-      <label className="checkbox-row">
+      <label className="checkbox-row consent-check">
         <input
           type="checkbox"
           checked={agreed}
           onChange={(event) => setAgreed(event.target.checked)}
         />
-        <span>개인정보 수집·이용 및 초상권 활용에 동의합니다. (필수)</span>
+        <span>개인정보·초상권 활용에 동의합니다. (필수)</span>
       </label>
 
       <label className="field-label" htmlFor="walkin-name">
