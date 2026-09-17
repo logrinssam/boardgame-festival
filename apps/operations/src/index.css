@@ -1315,18 +1315,6 @@ input {
   color: #fff;
 }
 
-.btn-ghost {
-  background: rgba(255, 255, 255, 0.55);
-  color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-}
-
-.btn-cancel {
-  background: var(--surface-1);
-  color: var(--badge-full-text);
-  border: 1px solid color-mix(in srgb, var(--badge-full-text) 28%, transparent);
-}
-
 .admin-nav {
   grid-template-columns: repeat(5, 1fr);
   gap: 4px;
