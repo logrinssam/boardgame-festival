@@ -641,14 +641,15 @@ input {
 /* 회차 선택 — 칩 그리드 */
 .session-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* minmax(0, 1fr): 칩 내용이 길어도 칸이 늘어나 카드 밖으로 넘치지 않게 */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-top: 10px;
 }
 
 @media (min-width: 640px) {
   .session-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -659,7 +660,8 @@ input {
   justify-content: center;
   gap: 2px;
   min-height: 48px;
-  padding: 6px 4px;
+  min-width: 0;
+  padding: 6px 2px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 12px;
   background: var(--surface-1, #fff);
@@ -673,9 +675,14 @@ input {
 }
 
 .session-sub {
-  font-size: 11px;
+  /* 10px: 375px 폭 3열에서 "🔒 9/19 08:30 오픈"이 한 줄에 들어가는 크기 */
+  font-size: 10px;
+  line-height: 1.3;
   color: var(--text-secondary);
-  white-space: nowrap;
+  text-align: center;
+  /* 칸이 좁으면 공백에서만 줄바꿈 (단어 중간 절단·넘침 방지) */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .session-available {
