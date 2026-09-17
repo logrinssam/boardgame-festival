@@ -12,9 +12,6 @@ export function StaffBoothCapacityForm({ booth }: StaffBoothCapacityFormProps) {
   const [capacityInput, setCapacityInput] = useState(
     effective.capacity == null ? '' : String(effective.capacity),
   );
-  const [waitlistInput, setWaitlistInput] = useState(
-    effective.waitlistCapacity == null ? '' : String(effective.waitlistCapacity),
-  );
   const [message, setMessage] = useState('');
   const [pending, setPending] = useState(false);
 
@@ -22,28 +19,20 @@ export function StaffBoothCapacityForm({ booth }: StaffBoothCapacityFormProps) {
     setCapacityInput(
       booth.capacity == null ? '' : String(booth.capacity),
     );
-    setWaitlistInput(
-      booth.waitlistCapacity == null ? '' : String(booth.waitlistCapacity),
-    );
-  }, [booth.id, booth.capacity, booth.waitlistCapacity]);
+  }, [booth.id, booth.capacity]);
 
   async function saveCapacity(event: FormEvent) {
     event.preventDefault();
     const capacity =
       capacityInput.trim() === '' ? null : Number(capacityInput);
-    const waitlist =
-      waitlistInput.trim() === '' ? null : Number(waitlistInput);
-    if (
-      (capacity !== null && (!Number.isFinite(capacity) || capacity < 0)) ||
-      (waitlist !== null && (!Number.isFinite(waitlist) || waitlist < 0))
-    ) {
+    if (capacity !== null && (!Number.isFinite(capacity) || capacity < 0)) {
       setMessage('정원은 0 이상이어야 합니다.');
       return;
     }
     setPending(true);
     setMessage('');
     try {
-      await setCapacity(booth.id, capacity, waitlist);
+      await setCapacity(booth.id, capacity);
       setMessage('정원이 저장되었습니다.');
     } catch {
       setMessage('정원 저장에 실패했습니다.');
@@ -57,9 +46,7 @@ export function StaffBoothCapacityForm({ booth }: StaffBoothCapacityFormProps) {
       <h3 className="section-title">정원 설정</h3>
       <p className="admin-meta">
         현재 정원:{' '}
-        {effective.capacity === null
-          ? '미설정'
-          : `${effective.capacity} · 예비 ${effective.waitlistCapacity ?? 0}`}
+        {effective.capacity === null ? '미설정' : `${effective.capacity}명`}
       </p>
       <form
         className="form-card"
@@ -73,16 +60,6 @@ export function StaffBoothCapacityForm({ booth }: StaffBoothCapacityFormProps) {
           className="field-input"
           value={capacityInput}
           onChange={(event) => setCapacityInput(event.target.value)}
-          inputMode="numeric"
-        />
-        <label className="field-label" htmlFor={`staff-wait-${booth.id}`}>
-          예비 정원
-        </label>
-        <input
-          id={`staff-wait-${booth.id}`}
-          className="field-input"
-          value={waitlistInput}
-          onChange={(event) => setWaitlistInput(event.target.value)}
           inputMode="numeric"
         />
         <p className="hint-text">담당 부스 정원만 변경할 수 있습니다.</p>

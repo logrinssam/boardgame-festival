@@ -95,7 +95,6 @@ async function recountAndUpdateBooth(boothId: string, slotId: string) {
         ? {
             ...slot,
             confirmedCount: usage.confirmed,
-            waitlistCount: usage.waitlist,
           }
         : slot,
     ),
@@ -349,7 +348,6 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
     const slotWithLiveCounts = {
       ...slot,
       confirmedCount: usage.confirmed,
-      waitlistCount: usage.waitlist,
     };
 
     const bookable = canBookSlot(booth, slotWithLiveCounts, nowMinutes);
@@ -358,20 +356,9 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
         `FAILED_PRECONDITION:${bookable.reason ?? '예약할 수 없습니다.'}`,
       );
     }
-    if (
-      bookable.isWaitlist &&
-      existingForPhone.some(
-        (item) =>
-          item.status === 'WAITLIST' || item.status === 'WAITLIST_CALLED',
-      )
-    ) {
-      throw new Error('FAILED_PRECONDITION:예비 예약은 1개까지만 가능합니다.');
-    }
 
     const now = new Date().toISOString();
-    const status: ReservationStatus = bookable.isWaitlist
-      ? 'WAITLIST'
-      : 'CONFIRMED';
+    const status: ReservationStatus = 'CONFIRMED';
     const reservationId = `rsv-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 7)}`;
@@ -387,7 +374,6 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
       gradeOrAge: data.gradeOrAge!.trim(),
       gender: data.gender as 'MALE' | 'FEMALE',
       status,
-      waitlistOrder: bookable.isWaitlist ? usage.waitlist + 1 : null,
       portraitConsent: data.portraitConsent === true,
       createdAt: now,
       updatedAt: now,
@@ -395,17 +381,9 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
       previousStatus: null,
     };
 
-    const nextConfirmed =
-      usage.confirmed + (status === 'CONFIRMED' ? 1 : 0);
-    const nextWaitlist = usage.waitlist + (status === 'WAITLIST' ? 1 : 0);
+    const nextConfirmed = usage.confirmed + 1;
     const nextSlots = booth.slots.map((item) =>
-      item.id === slot.id
-        ? {
-            ...item,
-            confirmedCount: nextConfirmed,
-            waitlistCount: nextWaitlist,
-          }
-        : item,
+      item.id === slot.id ? { ...item, confirmedCount: nextConfirmed } : item,
     );
 
     tx.set(db.collection('reservations').doc(reservationId), record);
@@ -568,60 +546,6 @@ export const changeReservationStatus = onCall(callableOpts, async (request) => {
   return { reservation: updated };
 });
 
-export const callNextWaitlist = onCall(callableOpts, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
-  }
-  const staff = await getStaff(request.auth.uid);
-  const boothId = String(request.data?.boothId ?? '');
-  const slotId = String(request.data?.slotId ?? '');
-  if (!boothId || !slotId) {
-    throw new HttpsError('invalid-argument', '부스/회차 정보가 필요합니다.');
-  }
-  if (!canAccessBooth(staff, boothId)) {
-    throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
-  }
-
-  const snap = await db
-    .collection('reservations')
-    .where('boothId', '==', boothId)
-    .where('slotId', '==', slotId)
-    .where('status', '==', 'WAITLIST')
-    .get();
-  const candidates = snap.docs
-    .map((docSnap) => asReservation(docSnap.id, docSnap.data() as Record<string, unknown>))
-    .sort((a, b) => (a.waitlistOrder ?? 0) - (b.waitlistOrder ?? 0));
-  const target = candidates[0];
-  if (!target) {
-    throw new HttpsError('not-found', '호출할 예비 참가자가 없습니다.');
-  }
-
-  const now = new Date().toISOString();
-  const updated: Reservation = {
-    ...target,
-    previousStatus: target.status,
-    status: 'WAITLIST_CALLED',
-    updatedAt: now,
-    updatedBy: staff.uid,
-  };
-  await db.collection('reservations').doc(target.id).set(updated);
-  await recountAndUpdateBooth(target.boothId, target.slotId);
-  await db.collection('operationLogs').add({
-    reservationId: target.id,
-    boothId: target.boothId,
-    slotId: target.slotId,
-    action: `예비 ${target.waitlistOrder ?? 1}번 호출`,
-    previousStatus: target.status,
-    newStatus: 'WAITLIST_CALLED',
-    operatorId: staff.uid,
-    operatorName: staff.name,
-    participantName: target.participantName,
-    createdAt: now,
-  });
-
-  return { reservation: updated };
-});
-
 export const updateBoothSettings = onCall(callableOpts, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
@@ -663,14 +587,7 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
         ? null
         : Number(raw);
   }
-  if ('waitlistCapacity' in (request.data ?? {})) {
-    const raw = request.data.waitlistCapacity;
-    patch.waitlistCapacity =
-      raw === null || raw === undefined || raw === ''
-        ? null
-        : Number(raw);
-  }
-  for (const key of ['capacity', 'waitlistCapacity'] as const) {
+  for (const key of ['capacity'] as const) {
     if (!(key in patch) || patch[key] === null) continue;
     const value = patch[key];
     if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > MAX_CAPACITY) {
@@ -680,19 +597,9 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
       );
     }
   }
-  if ('capacity' in patch || 'waitlistCapacity' in patch) {
-    const boothSnap = await db.collection('booths').doc(boothId).get();
-    const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
-    const capacity =
-      'capacity' in patch ? (patch.capacity as number | null) : booth.capacity;
-    const waitlistCapacity =
-      'waitlistCapacity' in patch
-        ? (patch.waitlistCapacity as number | null)
-        : booth.waitlistCapacity;
-    patch.status =
-      capacity === null || waitlistCapacity === null
-        ? 'CAPACITY_PENDING'
-        : 'BOOKING_OPEN';
+  if ('capacity' in patch) {
+    const capacity = patch.capacity as number | null;
+    patch.status = capacity === null ? 'CAPACITY_PENDING' : 'BOOKING_OPEN';
   }
   if ('slotId' in (request.data ?? {}) && 'bookingOpen' in (request.data ?? {})) {
     const boothSnap = await db.collection('booths').doc(boothId).get();
@@ -710,7 +617,7 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
   await db.collection('booths').doc(boothId).update(patch);
 
   // 정원 변경 후 슬롯 카운터를 실제 예약 기준으로 재동기화
-  if ('capacity' in patch || 'waitlistCapacity' in patch) {
+  if ('capacity' in patch) {
     const boothSnap = await db.collection('booths').doc(boothId).get();
     if (boothSnap.exists) {
       const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
@@ -1026,12 +933,7 @@ export const getBoothSessions = onCall(hotCallableOpts, async (request) => {
       effective.isConfigured && effective.capacity !== null
         ? Math.max(0, Number(effective.capacity) - usage.confirmed)
         : null;
-    const waitlistLeft =
-      effective.isConfigured && effective.waitlistCapacity !== null
-        ? Math.max(0, Number(effective.waitlistCapacity) - usage.waitlist)
-        : null;
-
-    let status: 'AVAILABLE' | 'WAITLIST' | 'FULL' | 'LOCKED' | 'PAST';
+    let status: 'AVAILABLE' | 'FULL' | 'LOCKED' | 'PAST';
     if (phase === 'AFTER_EVENT') {
       status = 'PAST';
     } else if (phase !== 'EVENT_DAY') {
@@ -1054,8 +956,6 @@ export const getBoothSessions = onCall(hotCallableOpts, async (request) => {
       status = 'AVAILABLE';
     } else if (seatsLeft > 0) {
       status = 'AVAILABLE';
-    } else if (waitlistLeft !== null && waitlistLeft > 0) {
-      status = 'WAITLIST';
     } else {
       status = 'FULL';
     }
@@ -1067,7 +967,6 @@ export const getBoothSessions = onCall(hotCallableOpts, async (request) => {
       period: slot.period,
       status,
       seatsLeft,
-      waitlistLeft,
     };
   });
 

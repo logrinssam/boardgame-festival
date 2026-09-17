@@ -1,8 +1,4 @@
-import {
-  DEMO_CAPACITY,
-  DEMO_MODE,
-  DEMO_WAITLIST_CAPACITY,
-} from '../config/demoConfig';
+import { DEMO_CAPACITY, DEMO_MODE } from '../config/demoConfig';
 import type { Booth, BoothSlot, EffectiveCapacity, SlotAvailabilityStatus } from '../types';
 
 export function getEffectiveCapacity(booth: Booth): EffectiveCapacity {
@@ -10,35 +6,16 @@ export function getEffectiveCapacity(booth: Booth): EffectiveCapacity {
     booth.capacity === null || booth.capacity === undefined
       ? null
       : Number(booth.capacity);
-  const waitlistCapacity =
-    booth.waitlistCapacity === null || booth.waitlistCapacity === undefined
-      ? null
-      : Number(booth.waitlistCapacity);
 
-  if (capacity !== null && waitlistCapacity !== null && !Number.isNaN(capacity)) {
-    return {
-      capacity,
-      waitlistCapacity: Number.isNaN(waitlistCapacity) ? null : waitlistCapacity,
-      isDemo: false,
-      isConfigured: true,
-    };
+  if (capacity !== null && !Number.isNaN(capacity)) {
+    return { capacity, isDemo: false, isConfigured: true };
   }
 
   if (DEMO_MODE) {
-    return {
-      capacity: DEMO_CAPACITY,
-      waitlistCapacity: DEMO_WAITLIST_CAPACITY,
-      isDemo: true,
-      isConfigured: true,
-    };
+    return { capacity: DEMO_CAPACITY, isDemo: true, isConfigured: true };
   }
 
-  return {
-    capacity: null,
-    waitlistCapacity: null,
-    isDemo: false,
-    isConfigured: false,
-  };
+  return { capacity: null, isDemo: false, isConfigured: false };
 }
 
 export function getSlotAvailabilityStatus(
@@ -65,13 +42,6 @@ export function getSlotAvailabilityStatus(
     return 'AVAILABLE';
   }
 
-  if (
-    effective.waitlistCapacity !== null &&
-    Number(slot.waitlistCount) < Number(effective.waitlistCapacity)
-  ) {
-    return 'WAITLIST';
-  }
-
   return 'FULL';
 }
 
@@ -90,9 +60,6 @@ export function getBoothAvailabilityStatus(
   if (statuses.some((status) => status === 'AVAILABLE')) {
     return 'AVAILABLE';
   }
-  if (statuses.some((status) => status === 'WAITLIST')) {
-    return 'WAITLIST';
-  }
   if (statuses.length > 0 && statuses.every((status) => status === 'CLOSED')) {
     return 'CLOSED';
   }
@@ -108,8 +75,6 @@ export function getSlotStatusLabel(status: SlotAvailabilityStatus): string {
   switch (status) {
     case 'AVAILABLE':
       return '예약 가능';
-    case 'WAITLIST':
-      return '예비 가능';
     case 'FULL':
       return '마감';
     case 'BEFORE_OPEN':
@@ -129,30 +94,25 @@ export function getSlotStatusLabel(status: SlotAvailabilityStatus): string {
 export function canBookSlot(
   booth: Booth,
   slot: BoothSlot,
-): { allowed: boolean; isWaitlist: boolean; reason?: string } {
+): { allowed: boolean; reason?: string } {
   const status = getSlotAvailabilityStatus(booth, slot);
 
   if (status === 'CAPACITY_PENDING') {
     return {
       allowed: false,
-      isWaitlist: false,
       reason: '관리자가 정원을 설정해야 예약할 수 있습니다.',
     };
   }
 
   if (status === 'CLOSED') {
-    return { allowed: false, isWaitlist: false, reason: '이 회차 예약이 중지되었습니다.' };
+    return { allowed: false, reason: '이 회차 예약이 중지되었습니다.' };
   }
 
   if (status === 'FULL') {
-    return { allowed: false, isWaitlist: false, reason: '예약과 예비가 모두 마감되었습니다.' };
+    return { allowed: false, reason: '이 회차는 정원이 마감되었습니다.' };
   }
 
-  if (status === 'WAITLIST') {
-    return { allowed: true, isWaitlist: true };
-  }
-
-  return { allowed: true, isWaitlist: false };
+  return { allowed: true };
 }
 
 export function getRemainingSeats(

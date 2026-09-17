@@ -396,12 +396,6 @@ input {
   color: var(--badge-available-text);
 }
 
-.status-waitlist,
-.badge.waitlist {
-  background: var(--badge-waitlist-bg);
-  color: var(--badge-waitlist-text);
-}
-
 .status-full,
 .status-closed,
 .badge.full {
@@ -687,11 +681,6 @@ input {
 .session-available {
   border-color: rgba(79, 140, 255, 0.5);
   background: rgba(79, 140, 255, 0.08);
-}
-
-.session-waitlist {
-  border-color: rgba(240, 165, 60, 0.5);
-  background: rgba(240, 165, 60, 0.12);
 }
 
 .session-full,
@@ -1381,12 +1370,6 @@ input {
   font-weight: 700;
 }
 
-.status-chip.waitlist.active {
-  background: #faeeda;
-  color: #633806;
-  font-weight: 700;
-}
-
 .slot-chip-row {
   display: flex;
   gap: 6px;
@@ -1519,12 +1502,6 @@ input {
 .status-cancelled {
   background: rgba(214, 69, 69, 0.14);
   color: var(--danger);
-}
-
-.status-waitlist,
-.status-waitlist_called {
-  background: rgba(230, 126, 34, 0.16);
-  color: #c45f0c;
 }
 
 /* 안내 팝업 (현장 등록 완료 등) */

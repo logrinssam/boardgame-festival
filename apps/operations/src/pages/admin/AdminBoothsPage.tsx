@@ -14,7 +14,6 @@ export function AdminBoothsPage() {
     [booths, selectedId],
   );
   const [capacityInput, setCapacityInput] = useState('');
-  const [waitlistInput, setWaitlistInput] = useState('');
   const [codeInput, setCodeInput] = useState('');
   const [message, setMessage] = useState('');
   const [codeVersion, setCodeVersion] = useState(0);
@@ -30,16 +29,11 @@ export function AdminBoothsPage() {
     event.preventDefault();
     const capacity =
       capacityInput.trim() === '' ? null : Number(capacityInput);
-    const waitlist =
-      waitlistInput.trim() === '' ? null : Number(waitlistInput);
-    if (
-      (capacity !== null && (!Number.isFinite(capacity) || capacity < 0)) ||
-      (waitlist !== null && (!Number.isFinite(waitlist) || waitlist < 0))
-    ) {
+    if (capacity !== null && (!Number.isFinite(capacity) || capacity < 0)) {
       setMessage('정원은 0 이상이어야 합니다.');
       return;
     }
-    await setCapacity(currentBooth.id, capacity, waitlist);
+    await setCapacity(currentBooth.id, capacity);
     setMessage('정원이 저장되었습니다.');
   }
 
@@ -97,15 +91,6 @@ export function AdminBoothsPage() {
             className="field-input"
             value={capacityInput}
             onChange={(event) => setCapacityInput(event.target.value)}
-          />
-          <label className="field-label" htmlFor="wait">
-            예비 정원
-          </label>
-          <input
-            id="wait"
-            className="field-input"
-            value={waitlistInput}
-            onChange={(event) => setWaitlistInput(event.target.value)}
           />
           <p className="hint-text">
             {DEMO_MODE
@@ -170,7 +155,7 @@ export function AdminBoothsPage() {
                   >
                     <strong>{slot.startTime}</strong>
                     <span className="admin-slot-counts">
-                      확정 {slot.confirmedCount} · 예비 {slot.waitlistCount}
+                      확정 {slot.confirmedCount}
                     </span>
                     {!slot.bookingOpen ? (
                       <span className="admin-slot-closed-tag">중지됨</span>

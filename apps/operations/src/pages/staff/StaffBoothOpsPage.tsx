@@ -37,8 +37,6 @@ export function StaffBoothOpsPage() {
     getReservationsForSlot,
     logs,
     changeReservationStatus,
-    callNextWaitlist,
-    getOpenSeatCount,
   } = useAppStore();
 
   const booth = getBooth(boothId);
@@ -97,18 +95,8 @@ export function StaffBoothOpsPage() {
       inProgress: pick(['IN_PROGRESS']),
       completed: pick(['COMPLETED']),
       noShow: pick(['NO_SHOW']),
-      waitlist: pick(['WAITLIST', 'WAITLIST_CALLED']),
     };
   }, [slotReservations]);
-
-  const openSeats =
-    booth && operatingBoothSlot
-      ? getOpenSeatCount(booth.id, operatingBoothSlot.id)
-      : null;
-
-  const nextWaitlist = slotReservations
-    .filter((item) => item.status === 'WAITLIST')
-    .sort((a, b) => (a.waitlistOrder ?? 0) - (b.waitlistOrder ?? 0))[0];
 
   const recentLogs = logs
     .filter((item) => item.boothId === boothId)
@@ -150,45 +138,18 @@ export function StaffBoothOpsPage() {
     if (needsConfirm && !window.confirm(`${label}을(를) 진행할까요?`)) {
       return;
     }
-    const freesConfirmedSeat =
-      nextStatus === 'NO_SHOW' ||
-      (nextStatus === 'CANCELLED' &&
-        (reservation.status === 'CONFIRMED' ||
-          reservation.status === 'CHECKED_IN' ||
-          reservation.status === 'WAITLIST_CALLED'));
-    const waitlistToCall = nextWaitlist;
-
     void changeReservationStatus({
       reservationId: reservation.id,
       nextStatus,
       operatorId: currentSession.uid,
       operatorName: currentSession.name,
       actionLabel: label,
-    }).then(async (result) => {
+    }).then((result) => {
       if (!result.ok) {
         setMessage(result.message);
         return;
       }
-
-      let notice = `${reservation.participantName} · ${label}`;
-      if (
-        freesConfirmedSeat &&
-        waitlistToCall &&
-        window.confirm(
-          `자리가 비었습니다. 예비 ${waitlistToCall.waitlistOrder ?? 1}번을 호출할까요?`,
-        )
-      ) {
-        const called = await callNextWaitlist({
-          boothId: currentBooth.id,
-          slotId: currentBoothSlot.id,
-          operatorId: currentSession.uid,
-          operatorName: currentSession.name,
-        });
-        notice = called.ok
-          ? `${notice} → 예비 ${called.reservation.waitlistOrder ?? 1}번 호출`
-          : `${notice} · ${called.message}`;
-      }
-      setMessage(notice);
+      setMessage(`${reservation.participantName} · ${label}`);
     });
   }
 
@@ -280,11 +241,6 @@ export function StaffBoothOpsPage() {
           >
             미도착 {counts.noShow}
           </span>
-          <span
-            className={`status-chip waitlist${counts.waitlist > 0 ? ' active' : ''}`}
-          >
-            예비 {counts.waitlist}
-          </span>
         </div>
         <p className="admin-meta">
           현재 {current ? formatTimeRange(current.startTime, current.endTime) : '없음'} ·
@@ -344,35 +300,6 @@ export function StaffBoothOpsPage() {
           </div>
         ))}
       </div>
-
-      {openSeats !== null && openSeats > 0 && nextWaitlist ? (
-        <div className="glass-card notice">
-          <p>
-            현재 {openSeats}자리가 비어 있습니다. 예비{' '}
-            {nextWaitlist.waitlistOrder ?? 1}번을 호출할 수 있습니다.
-          </p>
-          <button
-            type="button"
-            className="btn btn-orange"
-            onClick={() => {
-              void callNextWaitlist({
-                boothId: currentBooth.id,
-                slotId: currentBoothSlot.id,
-                operatorId: currentSession.uid,
-                operatorName: currentSession.name,
-              }).then((result) => {
-                setMessage(
-                  result.ok
-                    ? `예비 ${result.reservation.waitlistOrder ?? 1}번 호출`
-                    : result.message,
-                );
-              });
-            }}
-          >
-            예비 {nextWaitlist.waitlistOrder ?? 1}번 호출
-          </button>
-        </div>
-      ) : null}
 
       <div className="sticky-search glass-card">
         <label className="field-label" htmlFor="search">

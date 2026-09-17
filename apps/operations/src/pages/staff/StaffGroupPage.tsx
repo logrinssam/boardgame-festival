@@ -92,9 +92,6 @@ export function StaffGroupPage({ group }: { group: ExperienceGroup }) {
           ).length,
           checkedIn: list.filter((item) => item.status === 'CHECKED_IN').length,
           noShow: list.filter((item) => item.status === 'NO_SHOW').length,
-          waitlist: list.filter((item) =>
-            ['WAITLIST', 'WAITLIST_CALLED'].includes(item.status),
-          ).length,
         };
         return (
           <Link
@@ -110,7 +107,7 @@ export function StaffGroupPage({ group }: { group: ExperienceGroup }) {
             </span>
             <p className="admin-meta">
               예약 확정 인원 {counts.confirmed} · 도착 {counts.checkedIn} · 미도착{' '}
-              {counts.noShow} · 예비 {counts.waitlist}
+              {counts.noShow}
             </p>
             <p className="admin-meta">
               최근 상태 예시:{' '}

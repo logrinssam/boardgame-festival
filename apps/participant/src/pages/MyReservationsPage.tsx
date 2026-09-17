@@ -19,8 +19,7 @@ function formatClock(iso: string): string {
 }
 
 export function MyReservationsPage() {
-  const { getMyReservations, getBooth, getSlot, cancelReservation } =
-    useAppStore();
+  const { getMyReservations, getBooth, getSlot } = useAppStore();
   const [phone, setPhone] = useState('');
   const [list, setList] = useState<Reservation[]>([]);
   const [walkIns, setWalkIns] = useState<WalkInRegistration[]>([]);
@@ -82,11 +81,6 @@ export function MyReservationsPage() {
         const booth = getBooth(reservation.boothId);
         const slot = getSlot(reservation.boothId, reservation.slotId);
         if (!booth || !slot) return null;
-        const canCancel =
-          reservation.status === 'CONFIRMED' ||
-          reservation.status === 'WAITLIST' ||
-          reservation.status === 'WAITLIST_CALLED';
-
         return (
           <article key={reservation.id} className="glass-card">
             <div className="detail-row">
@@ -105,30 +99,6 @@ export function MyReservationsPage() {
               예약번호 {reservation.reservationCode} ·{' '}
               {maskPhone(reservation.phone)}
             </p>
-            {canCancel ? (
-              <button
-                type="button"
-                className="btn btn-cancel"
-                onClick={() => {
-                  void (async () => {
-                    if (!window.confirm('예약을 취소할까요?')) return;
-                    const result = await cancelReservation(
-                      reservation.id,
-                      phone.trim(),
-                    );
-                    setMessage(
-                      result.ok ? '예약이 취소되었습니다.' : result.message,
-                    );
-                    if (result.ok) {
-                      const rows = await getMyReservations(phone.trim());
-                      setList(rows);
-                    }
-                  })();
-                }}
-              >
-                예약 취소
-              </button>
-            ) : null}
           </article>
         );
       })}

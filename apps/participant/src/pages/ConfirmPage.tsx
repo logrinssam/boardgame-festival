@@ -33,16 +33,10 @@ export function ConfirmPage() {
     );
   }
 
-  const isWaitlist =
-    reservation.status === 'WAITLIST' ||
-    reservation.status === 'WAITLIST_CALLED';
-
   return (
     <section className="glass-card success-card">
-      <p className="success-emoji">{isWaitlist ? '예비' : '완료'}</p>
-      <h2 className="success-title">
-        {isWaitlist ? '예비 예약 접수' : '예약이 확정되었습니다'}
-      </h2>
+      <p className="success-emoji">완료</p>
+      <h2 className="success-title">예약이 확정되었습니다</h2>
       <div className="success-summary">
         <p className="success-booth">
           부스 {booth.number}. {booth.name}
@@ -56,9 +50,6 @@ export function ConfirmPage() {
           {RESERVATION_STATUS_LABELS[reservation.status]}
           {reservation.gender
             ? ` · ${reservation.gender === 'MALE' ? '남' : '여'}`
-            : ''}
-          {reservation.waitlistOrder
-            ? ` · 예비 ${reservation.waitlistOrder}번`
             : ''}
         </p>
       </div>

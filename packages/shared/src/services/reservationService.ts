@@ -37,7 +37,6 @@ export function generateReservationCode(existing: Set<string>): string {
 
 export function countSeatUsage(reservations: Reservation[]): {
   confirmed: number;
-  waitlist: number;
 } {
   const occupying: ReservationStatus[] = [
     'CONFIRMED',
@@ -45,12 +44,9 @@ export function countSeatUsage(reservations: Reservation[]): {
     'IN_PROGRESS',
     'COMPLETED',
   ];
-  const waitlist: ReservationStatus[] = ['WAITLIST', 'WAITLIST_CALLED'];
 
   return {
     confirmed: reservations.filter((item) => occupying.includes(item.status))
-      .length,
-    waitlist: reservations.filter((item) => waitlist.includes(item.status))
       .length,
   };
 }
@@ -69,7 +65,6 @@ export function syncBoothSlotCounts(
       return {
         ...slot,
         confirmedCount: usage.confirmed,
-        waitlistCount: usage.waitlist,
       };
     }),
   };
@@ -80,7 +75,7 @@ export function validateParticipantBooking(
   slotId: string,
   phone: string,
   allReservations: Reservation[],
-): { ok: true; isWaitlist: boolean } | { ok: false; message: string } {
+): { ok: true } | { ok: false; message: string } {
   const slot = booth.slots.find((item) => item.id === slotId);
   if (!slot) {
     return { ok: false, message: '회차 정보를 찾을 수 없습니다.' };
@@ -122,19 +117,7 @@ export function validateParticipantBooking(
     };
   }
 
-  const activeWaitlist = allReservations.find(
-    (item) =>
-      digitsOnly(item.phone) === phoneDigits &&
-      (item.status === 'WAITLIST' || item.status === 'WAITLIST_CALLED'),
-  );
-  if (bookable.isWaitlist && activeWaitlist) {
-    return {
-      ok: false,
-      message: '예비 예약은 1개까지만 가능합니다.',
-    };
-  }
-
-  return { ok: true, isWaitlist: bookable.isWaitlist };
+  return { ok: true };
 }
 
 export function createReservationRecord(input: {
@@ -144,9 +127,7 @@ export function createReservationRecord(input: {
   phone: string;
   gradeOrAge: string;
   gender: ParticipantGender;
-  isWaitlist: boolean;
   existingCodes: Set<string>;
-  existingWaitlistCount: number;
 }): Reservation {
   const slot = input.booth.slots.find((item) => item.id === input.slotId);
   if (!slot) {
@@ -154,7 +135,7 @@ export function createReservationRecord(input: {
   }
 
   const now = new Date().toISOString();
-  const status: ReservationStatus = input.isWaitlist ? 'WAITLIST' : 'CONFIRMED';
+  const status: ReservationStatus = 'CONFIRMED';
 
   return {
     id: `rsv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -168,7 +149,6 @@ export function createReservationRecord(input: {
     gradeOrAge: input.gradeOrAge.trim(),
     gender: input.gender,
     status,
-    waitlistOrder: input.isWaitlist ? input.existingWaitlistCount + 1 : null,
     portraitConsent: false,
     createdAt: now,
     updatedAt: now,

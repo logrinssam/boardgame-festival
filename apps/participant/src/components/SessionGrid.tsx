@@ -8,7 +8,6 @@ import type {
 } from '@bgf/shared';
 import {
   getBoothSessionsCallable,
-  getEffectiveCapacity,
   getRemainingSeats,
 } from '@bgf/shared';
 
@@ -20,18 +19,13 @@ const POLL_INTERVAL_MS = 30_000;
  * 잘못 열려 있어도 createReservation(서버)이 최종적으로 막는다.
  */
 function sessionsFromBooth(booth: Booth): BoothSession[] {
-  const effective = getEffectiveCapacity(booth);
   return booth.slots.map((slot) => {
     const remaining = getRemainingSeats(booth, slot);
     let status: BoothSessionStatus = 'AVAILABLE';
     if (!slot.bookingOpen) {
       status = 'FULL';
     } else if (remaining !== null && remaining <= 0) {
-      const waitlistLeft =
-        effective.waitlistCapacity === null
-          ? null
-          : Math.max(0, effective.waitlistCapacity - slot.waitlistCount);
-      status = waitlistLeft !== null && waitlistLeft > 0 ? 'WAITLIST' : 'FULL';
+      status = 'FULL';
     }
     return {
       id: slot.id,
@@ -40,7 +34,6 @@ function sessionsFromBooth(booth: Booth): BoothSession[] {
       period: slot.period,
       status,
       seatsLeft: remaining,
-      waitlistLeft: null,
     };
   });
 }
@@ -147,11 +140,6 @@ function chipLabel(
         sub: session.seatsLeft === null ? null : `${session.seatsLeft}자리`,
         ariaLabel: `${session.startTime} 회차, 예약 가능`,
       };
-    case 'WAITLIST':
-      return {
-        sub: '예비',
-        ariaLabel: `${session.startTime} 회차, 예비 예약 가능`,
-      };
     case 'FULL':
       return { sub: '마감', ariaLabel: `${session.startTime} 회차, 마감` };
     case 'LOCKED':
@@ -185,8 +173,7 @@ export function SessionGrid({
       {sessions
         .filter((session) => session.period === period)
         .map((session) => {
-          const selectable =
-            session.status === 'AVAILABLE' || session.status === 'WAITLIST';
+          const selectable = session.status === 'AVAILABLE';
           const clickable = Boolean(onSelect) && selectable;
           const { sub, ariaLabel } = chipLabel(session, openTime, lockedDateLabel);
           return (

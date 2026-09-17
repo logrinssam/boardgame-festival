@@ -51,7 +51,6 @@ export type WalkInRegistrationStatus = 'REGISTERED' | 'CANCELLED';
 
 export type SlotAvailabilityStatus =
   | 'AVAILABLE'
-  | 'WAITLIST'
   | 'FULL'
   | 'BEFORE_OPEN'
   | 'CAPACITY_PENDING'
@@ -63,9 +62,7 @@ export type ReservationStatus =
   | 'IN_PROGRESS'
   | 'COMPLETED'
   | 'NO_SHOW'
-  | 'CANCELLED'
-  | 'WAITLIST'
-  | 'WAITLIST_CALLED';
+  | 'CANCELLED';
 
 export type UserRole =
   | 'PARTICIPANT'
@@ -92,7 +89,6 @@ export interface BoothSlot {
   endTime: string;
   period: Period;
   confirmedCount: number;
-  waitlistCount: number;
   bookingOpen: boolean;
 }
 
@@ -113,7 +109,6 @@ export interface Booth {
   accessCode: string | null;
   operatorPinConfigured: boolean;
   capacity: number | null;
-  waitlistCapacity: number | null;
   status: BoothOperationalStatus;
   slots: BoothSlot[];
   staffingType: StaffingType;
@@ -179,7 +174,6 @@ export interface Reservation {
   /** 구 예약은 null일 수 있음 */
   gender: ParticipantGender | null;
   status: ReservationStatus;
-  waitlistOrder: number | null;
   /** 초상권 활용 동의(선택). 구 예약은 false */
   portraitConsent: boolean;
   createdAt: string;
@@ -239,7 +233,6 @@ export interface OperationLog {
 
 export interface EffectiveCapacity {
   capacity: number | null;
-  waitlistCapacity: number | null;
   isDemo: boolean;
   isConfigured: boolean;
 }
@@ -259,8 +252,6 @@ export const RESERVATION_STATUS_LABELS: Record<ReservationStatus, string> = {
   COMPLETED: '체험 완료',
   NO_SHOW: '미도착',
   CANCELLED: '예약 취소',
-  WAITLIST: '예비 대기',
-  WAITLIST_CALLED: '예비 호출',
 };
 
 export const EXPERIENCE_GROUP_LABELS: Record<ExperienceGroup, string> = {
@@ -306,6 +297,4 @@ export const ALLOWED_STATUS_TRANSITIONS: Record<
   COMPLETED: [],
   NO_SHOW: [],
   CANCELLED: [],
-  WAITLIST: ['WAITLIST_CALLED', 'CANCELLED'],
-  WAITLIST_CALLED: ['CHECKED_IN', 'CANCELLED'],
 };

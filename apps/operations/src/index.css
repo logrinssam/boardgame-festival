@@ -396,12 +396,6 @@ input {
   color: var(--badge-available-text);
 }
 
-.status-waitlist,
-.badge.waitlist {
-  background: var(--badge-waitlist-bg);
-  color: var(--badge-waitlist-text);
-}
-
 .status-full,
 .status-closed,
 .badge.full {
@@ -1104,12 +1098,6 @@ input {
   font-weight: 700;
 }
 
-.status-chip.waitlist.active {
-  background: #faeeda;
-  color: #633806;
-  font-weight: 700;
-}
-
 .slot-chip-row {
   display: flex;
   gap: 6px;
@@ -1350,11 +1338,5 @@ input {
 .status-cancelled {
   background: rgba(214, 69, 69, 0.14);
   color: var(--danger);
-}
-
-.status-waitlist,
-.status-waitlist_called {
-  background: rgba(230, 126, 34, 0.16);
-  color: #c45f0c;
 }
 

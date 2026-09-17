@@ -8,7 +8,7 @@
  * 하는 일:
  *   1. reservations 컬렉션 전체 삭제
  *   2. walkInRegistrations 컬렉션 전체 삭제
- *   3. 모든 부스 문서의 slots[].confirmedCount / waitlistCount 를 0으로 되돌림
+ *   3. 모든 부스 문서의 slots[].confirmedCount 를 0으로 되돌림
  *      (부스 문서에 캐시된 값이라 예약만 지우면 좌석 수가 어긋난 채 남는다)
  *
  * 부스 이름·회차·현장코드 등 설정값은 건드리지 않는다.
@@ -145,7 +145,7 @@ for (const doc of walkIns) {
 let dirtyBooths = 0;
 for (const doc of booths) {
   const slots = fromValue(doc.fields?.slots) ?? [];
-  if (slots.some((s) => Number(s.confirmedCount) || Number(s.waitlistCount))) {
+  if (slots.some((s) => Number(s.confirmedCount))) {
     dirtyBooths += 1;
   }
 }
@@ -168,13 +168,12 @@ console.log(`  현장등록 ${walkIns.length}건 삭제`);
 
 for (const doc of booths) {
   const slots = fromValue(doc.fields?.slots) ?? [];
-  if (!slots.some((s) => Number(s.confirmedCount) || Number(s.waitlistCount))) {
+  if (!slots.some((s) => Number(s.confirmedCount))) {
     continue;
   }
   const reset = slots.map((slot) => ({
     ...slot,
     confirmedCount: 0,
-    waitlistCount: 0,
   }));
   const res = await fetch(`https://firestore.googleapis.com/v1/${doc.name}?updateMask.fieldPaths=slots`, {
     method: 'PATCH',

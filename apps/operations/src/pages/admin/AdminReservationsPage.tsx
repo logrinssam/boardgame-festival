@@ -54,9 +54,7 @@ export function AdminReservationsPage() {
               #{reservation.reservationCode} · {maskPhone(reservation.phone)}
             </p>
             {(reservation.status === 'CONFIRMED' ||
-              reservation.status === 'CHECKED_IN' ||
-              reservation.status === 'WAITLIST' ||
-              reservation.status === 'WAITLIST_CALLED') &&
+              reservation.status === 'CHECKED_IN') &&
             session ? (
               <button
                 type="button"

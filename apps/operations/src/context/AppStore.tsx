@@ -17,7 +17,6 @@ import type {
   WalkInRegistration,
 } from '@bgf/shared';
 import {
-  callNextWaitlistRemote,
   cancelReservationRemote,
   changeReservationStatusRemote,
   getOpenSeatCountFromBooth,
@@ -50,11 +49,7 @@ interface AppStoreValue {
   >;
   logout: () => Promise<void>;
   setAccessCode: (boothId: string, code: string) => Promise<void>;
-  setCapacity: (
-    boothId: string,
-    capacity: number | null,
-    waitlistCapacity: number | null,
-  ) => Promise<void>;
+  setCapacity: (boothId: string, capacity: number | null) => Promise<void>;
   setSlotBookingOpen: (
     boothId: string,
     slotId: string,
@@ -70,14 +65,6 @@ interface AppStoreValue {
     operatorId: string;
     operatorName: string;
     actionLabel: string;
-  }) => Promise<
-    { ok: true; reservation: Reservation } | { ok: false; message: string }
-  >;
-  callNextWaitlist: (input: {
-    boothId: string;
-    slotId: string;
-    operatorId: string;
-    operatorName: string;
   }) => Promise<
     { ok: true; reservation: Reservation } | { ok: false; message: string }
   >;
@@ -169,12 +156,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setCapacity = useCallback(
-    async (
-      boothId: string,
-      capacity: number | null,
-      waitlistCapacity: number | null,
-    ) => {
-      await updateBoothSettingsRemote({ boothId, capacity, waitlistCapacity });
+    async (boothId: string, capacity: number | null) => {
+      await updateBoothSettingsRemote({ boothId, capacity });
     },
     [],
   );
@@ -210,20 +193,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     return cancelReservationRemote({ reservationId });
   }, []);
 
-  const callNextWaitlist = useCallback(
-    async (input: {
-      boothId: string;
-      slotId: string;
-      operatorId: string;
-      operatorName: string;
-    }) =>
-      callNextWaitlistRemote({
-        boothId: input.boothId,
-        slotId: input.slotId,
-      }),
-    [],
-  );
-
   const getOpenSeatCount = useCallback(
     (boothId: string, slotId: string) => {
       const booth = getBooth(boothId);
@@ -253,7 +222,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       setSlotBookingOpen,
       cancelReservation,
       changeReservationStatus,
-      callNextWaitlist,
       getOpenSeatCount,
     }),
     [
@@ -275,7 +243,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       setSlotBookingOpen,
       cancelReservation,
       changeReservationStatus,
-      callNextWaitlist,
       getOpenSeatCount,
     ],
   );

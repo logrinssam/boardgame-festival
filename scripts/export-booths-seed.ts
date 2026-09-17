@@ -16,7 +16,6 @@ const out = BOOTHS.map((booth) => ({
   durationMinutes: booth.durationMinutes,
   accentColor: booth.accentColor,
   capacity: booth.capacity,
-  waitlistCapacity: booth.waitlistCapacity,
   status: booth.status,
   staffingType: booth.staffingType,
   activities: booth.activities ?? [],

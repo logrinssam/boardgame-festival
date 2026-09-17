@@ -23,13 +23,10 @@ export const ALLOWED_STATUS_TRANSITIONS: Record<
   COMPLETED: [],
   NO_SHOW: [],
   CANCELLED: [],
-  WAITLIST: ['WAITLIST_CALLED', 'CANCELLED'],
-  WAITLIST_CALLED: ['CHECKED_IN', 'CANCELLED'],
 };
 
 export const DEMO_MODE = false;
 export const DEMO_CAPACITY = 6;
-export const DEMO_WAITLIST_CAPACITY = 2;
 
 export function digitsOnly(value: string): string {
   return value.replace(/\D/g, '');
@@ -68,29 +65,19 @@ export function generateReservationCode(existing: Set<string>): string {
 
 export function getEffectiveCapacity(booth: Booth): {
   capacity: number | null;
-  waitlistCapacity: number | null;
   isConfigured: boolean;
 } {
-  if (booth.capacity !== null && booth.waitlistCapacity !== null) {
-    return {
-      capacity: booth.capacity,
-      waitlistCapacity: booth.waitlistCapacity,
-      isConfigured: true,
-    };
+  if (booth.capacity !== null) {
+    return { capacity: booth.capacity, isConfigured: true };
   }
   if (DEMO_MODE) {
-    return {
-      capacity: DEMO_CAPACITY,
-      waitlistCapacity: DEMO_WAITLIST_CAPACITY,
-      isConfigured: true,
-    };
+    return { capacity: DEMO_CAPACITY, isConfigured: true };
   }
-  return { capacity: null, waitlistCapacity: null, isConfigured: false };
+  return { capacity: null, isConfigured: false };
 }
 
 export function countSeatUsage(reservations: Reservation[]): {
   confirmed: number;
-  waitlist: number;
 } {
   const occupying: ReservationStatus[] = [
     'CONFIRMED',
@@ -98,11 +85,8 @@ export function countSeatUsage(reservations: Reservation[]): {
     'IN_PROGRESS',
     'COMPLETED',
   ];
-  const waitlist: ReservationStatus[] = ['WAITLIST', 'WAITLIST_CALLED'];
   return {
     confirmed: reservations.filter((item) => occupying.includes(item.status))
-      .length,
-    waitlist: reservations.filter((item) => waitlist.includes(item.status))
       .length,
   };
 }
@@ -161,17 +145,16 @@ export function canBookSlot(
   booth: Booth,
   slot: BoothSlot,
   nowMinutes: number | null = getKstNowMinutes(),
-): { allowed: boolean; isWaitlist: boolean; reason?: string } {
+): { allowed: boolean; reason?: string } {
   if (nowMinutes !== null) {
     if (nowMinutes < BOOKING_OPEN_MINUTES[slot.period]) {
       const label =
         slot.period === 'MORNING' ? '오전 회차 예약은 08:30' : '오후 회차 예약은 12:45';
-      return { allowed: false, isWaitlist: false, reason: `${label}부터 가능합니다.` };
+      return { allowed: false, reason: `${label}부터 가능합니다.` };
     }
     if (nowMinutes >= minutesFromTime(slot.startTime)) {
       return {
         allowed: false,
-        isWaitlist: false,
         reason: '이미 시작된 회차는 예약할 수 없습니다.',
       };
     }
@@ -181,26 +164,19 @@ export function canBookSlot(
   if (!effective.isConfigured || effective.capacity === null) {
     return {
       allowed: false,
-      isWaitlist: false,
       reason: '정원이 설정되지 않았습니다.',
     };
   }
   if (!slot.bookingOpen) {
-    return { allowed: false, isWaitlist: false, reason: '예약이 마감되었습니다.' };
+    return { allowed: false, reason: '예약이 마감되었습니다.' };
   }
   const capacity = Number(effective.capacity);
-  const waitlistCapacity =
-    effective.waitlistCapacity == null ? null : Number(effective.waitlistCapacity);
   const confirmedCount = Number(slot.confirmedCount ?? 0);
-  const waitlistCount = Number(slot.waitlistCount ?? 0);
 
   if (confirmedCount < capacity) {
-    return { allowed: true, isWaitlist: false };
+    return { allowed: true };
   }
-  if (waitlistCapacity !== null && waitlistCount < waitlistCapacity) {
-    return { allowed: true, isWaitlist: true };
-  }
-  return { allowed: false, isWaitlist: false, reason: '정원이 마감되었습니다.' };
+  return { allowed: false, reason: '정원이 마감되었습니다.' };
 }
 
 export function asBooth(id: string, data: Record<string, unknown>): Booth {
@@ -227,10 +203,6 @@ export function asBooth(id: string, data: Record<string, unknown>): Booth {
       data.capacity === null || data.capacity === undefined
         ? null
         : Number(data.capacity),
-    waitlistCapacity:
-      data.waitlistCapacity === null || data.waitlistCapacity === undefined
-        ? null
-        : Number(data.waitlistCapacity),
     status: data.status as Booth['status'],
     staffingType: data.staffingType as Booth['staffingType'],
     activities: data.activities as string[] | undefined,
@@ -251,7 +223,6 @@ export function asBooth(id: string, data: Record<string, unknown>): Booth {
     slots: ((data.slots as BoothSlot[]) ?? []).map((slot) => ({
       ...slot,
       confirmedCount: Number(slot.confirmedCount ?? 0),
-      waitlistCount: Number(slot.waitlistCount ?? 0),
       bookingOpen: slot.bookingOpen !== false,
     })),
     walkInPublicStatus: normalizeWalkInPublicStatus(data.walkInPublicStatus),
@@ -320,7 +291,6 @@ export function asReservation(
     gender:
       data.gender === 'MALE' || data.gender === 'FEMALE' ? data.gender : null,
     status: data.status as ReservationStatus,
-    waitlistOrder: (data.waitlistOrder as number | null) ?? null,
     portraitConsent: data.portraitConsent === true,
     createdAt: String(data.createdAt),
     updatedAt: String(data.updatedAt),

@@ -38,16 +38,6 @@ export function getActionsForStatus(
       ];
     case 'IN_PROGRESS':
       return [{ to: 'COMPLETED', label: '체험 완료', tone: 'green-deep' }];
-    case 'WAITLIST':
-      return [
-        { to: 'WAITLIST_CALLED', label: '예비 호출', tone: 'orange' },
-        { to: 'CANCELLED', label: '예비 취소', tone: 'cancel', confirm: true },
-      ];
-    case 'WAITLIST_CALLED':
-      return [
-        { to: 'CHECKED_IN', label: '도착 확인', tone: 'green' },
-        { to: 'CANCELLED', label: '호출 취소', tone: 'cancel', confirm: true },
-      ];
     default:
       return [];
   }

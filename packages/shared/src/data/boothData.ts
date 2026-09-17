@@ -35,7 +35,6 @@ function createBoothSlots(boothId: string): BoothSlot[] {
     endTime: slot.endTime,
     period: slot.period,
     confirmedCount: 0,
-    waitlistCount: 0,
     bookingOpen: true,
   }));
 }
@@ -77,7 +76,6 @@ function createBooth(seed: BoothSeed): Booth {
     accessCode,
     operatorPinConfigured: true,
     capacity: 4,
-    waitlistCapacity: 2,
     status: 'BOOKING_OPEN',
     slots: createBoothSlots(seed.id),
     staffingType: seed.staffingType,

@@ -149,9 +149,6 @@ export function ParticipantFormPage() {
         {currentBooth.name} ·{' '}
         {formatTimeRange(currentSlot.startTime, currentSlot.endTime)}
       </p>
-      {bookable.isWaitlist ? (
-        <div className="notice">예비 예약으로 진행됩니다.</div>
-      ) : null}
       <div className="notice warning">
         <p>예약 확정 후에는 취소할 수 없습니다. 부스와 시간을 다시 확인해 주세요.</p>
       </div>
@@ -265,11 +262,7 @@ export function ParticipantFormPage() {
         className="btn btn-primary btn-block"
         disabled={!bookable.allowed || pending}
       >
-        {pending
-          ? '처리 중…'
-          : bookable.isWaitlist
-            ? '예비 예약하기'
-            : '예약 확정하기'}
+        {pending ? '처리 중…' : '예약 확정하기'}
       </button>
     </form>
   );

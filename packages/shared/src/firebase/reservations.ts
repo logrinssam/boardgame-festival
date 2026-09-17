@@ -15,7 +15,6 @@ export {
   getMyReservationsCallable as fetchMyReservations,
   cancelReservationCallable as cancelReservationRemote,
   changeReservationStatusCallable as changeReservationStatusRemote,
-  callNextWaitlistCallable as callNextWaitlistRemote,
   updateBoothSettingsCallable as updateBoothSettingsRemote,
 } from './callables';
 
@@ -41,10 +40,6 @@ function asBooth(id: string, data: Record<string, unknown>): Booth {
       data.capacity === null || data.capacity === undefined
         ? null
         : Number(data.capacity),
-    waitlistCapacity:
-      data.waitlistCapacity === null || data.waitlistCapacity === undefined
-        ? null
-        : Number(data.waitlistCapacity),
     status: data.status as Booth['status'],
     staffingType: data.staffingType as Booth['staffingType'],
     activities: (data.activities as string[] | undefined) ?? undefined,
@@ -57,7 +52,6 @@ function asBooth(id: string, data: Record<string, unknown>): Booth {
     slots: ((data.slots as BoothSlot[]) ?? []).map((slot) => ({
       ...slot,
       confirmedCount: Number(slot.confirmedCount ?? 0),
-      waitlistCount: Number(slot.waitlistCount ?? 0),
       bookingOpen: slot.bookingOpen !== false,
     })),
     walkInPublicStatus: normalizeWalkInPublicStatus(data.walkInPublicStatus),
@@ -79,7 +73,6 @@ function asReservation(id: string, data: Record<string, unknown>): Reservation {
     gender:
       data.gender === 'MALE' || data.gender === 'FEMALE' ? data.gender : null,
     status: data.status as Reservation['status'],
-    waitlistOrder: (data.waitlistOrder as number | null) ?? null,
     portraitConsent: data.portraitConsent === true,
     createdAt: String(data.createdAt),
     updatedAt: String(data.updatedAt),

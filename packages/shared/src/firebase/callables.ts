@@ -68,25 +68,10 @@ export async function changeReservationStatusCallable(input: {
   }
 }
 
-export async function callNextWaitlistCallable(input: {
-  boothId: string;
-  slotId: string;
-}): Promise<{ ok: true; reservation: Reservation } | { ok: false; message: string }> {
-  try {
-    const result = await fn<typeof input, { reservation: Reservation }>(
-      'callNextWaitlist',
-    )(input);
-    return { ok: true, reservation: result.data.reservation };
-  } catch (error) {
-    return { ok: false, message: callableErrorMessage(error) };
-  }
-}
-
 export async function updateBoothSettingsCallable(input: {
   boothId: string;
   accessCode?: string;
   capacity?: number | null;
-  waitlistCapacity?: number | null;
   slotId?: string;
   bookingOpen?: boolean;
 }): Promise<{ ok: true } | { ok: false; message: string }> {
@@ -230,7 +215,6 @@ function callableErrorMessage(error: unknown): string {
 /** 회차 선택 화면 세션 상태 — 서버가 계산한 값을 렌더링만 한다. */
 export type BoothSessionStatus =
   | 'AVAILABLE'
-  | 'WAITLIST'
   | 'FULL'
   | 'LOCKED'
   | 'PAST';
@@ -242,7 +226,6 @@ export interface BoothSession {
   period: 'MORNING' | 'AFTERNOON';
   status: BoothSessionStatus;
   seatsLeft: number | null;
-  waitlistLeft: number | null;
 }
 
 export interface BoothSessionsResult {

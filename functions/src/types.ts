@@ -29,9 +29,7 @@ export type ReservationStatus =
   | 'IN_PROGRESS'
   | 'COMPLETED'
   | 'NO_SHOW'
-  | 'CANCELLED'
-  | 'WAITLIST'
-  | 'WAITLIST_CALLED';
+  | 'CANCELLED';
 export type OperatorRole = 'BOOTH_STAFF' | 'GROUP_MANAGER' | 'HEAD_ADMIN';
 
 export interface BoothSlot {
@@ -41,7 +39,6 @@ export interface BoothSlot {
   endTime: string;
   period: Period;
   confirmedCount: number;
-  waitlistCount: number;
   bookingOpen: boolean;
 }
 
@@ -62,7 +59,6 @@ export interface Booth {
   accessCode: string | null;
   operatorPinConfigured: boolean;
   capacity: number | null;
-  waitlistCapacity: number | null;
   status: BoothOperationalStatus;
   slots: BoothSlot[];
   staffingType: StaffingType;
@@ -100,7 +96,6 @@ export interface Reservation {
   gradeOrAge: string;
   gender: 'MALE' | 'FEMALE' | null;
   status: ReservationStatus;
-  waitlistOrder: number | null;
   portraitConsent: boolean;
   createdAt: string;
   updatedAt: string;
