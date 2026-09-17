@@ -902,7 +902,85 @@ input {
 }
 
 .success-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px 18px 18px;
   text-align: center;
+}
+
+.success-card .success-emoji {
+  margin: 0;
+}
+
+.success-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+.success-summary {
+  width: 100%;
+  padding: 14px 12px;
+  border-radius: 14px;
+  background: var(--surface-1);
+}
+
+.success-summary p {
+  margin: 0;
+}
+
+.success-booth {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  word-break: keep-all;
+}
+
+.success-time {
+  margin-top: 6px !important;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--creative-accent);
+}
+
+.success-meta {
+  margin-top: 8px !important;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.success-meta strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.success-card .success-notice {
+  width: 100%;
+  margin: 0;
+  text-align: left;
+}
+
+.success-card .success-notice p {
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.success-actions {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.success-actions .btn {
+  width: 100%;
+  min-height: 52px;
+  font-size: 16px;
 }
 
 .success-card h3 {

@@ -40,37 +40,42 @@ export function ConfirmPage() {
   return (
     <section className="glass-card success-card">
       <p className="success-emoji">{isWaitlist ? '예비' : '완료'}</p>
-      <h2 className="section-title">
+      <h2 className="success-title">
         {isWaitlist ? '예비 예약 접수' : '예약이 확정되었습니다'}
       </h2>
-      <p className="hint-text">
-        부스 {booth.number}. {booth.name}
-      </p>
-      <p className="admin-meta">
-        {formatTimeRange(slot.startTime, slot.endTime)}
-      </p>
-      <p className="admin-meta">
-        예약번호 {reservation.reservationCode} ·{' '}
-        {RESERVATION_STATUS_LABELS[reservation.status]}
-        {reservation.gender
-          ? ` · ${reservation.gender === 'MALE' ? '남' : '여'}`
-          : ''}
-        {reservation.waitlistOrder
-          ? ` · 예비 ${reservation.waitlistOrder}번`
-          : ''}
-      </p>
-      <div className="notice warning">
+      <div className="success-summary">
+        <p className="success-booth">
+          부스 {booth.number}. {booth.name}
+        </p>
+        <p className="success-time">
+          {formatTimeRange(slot.startTime, slot.endTime)}
+        </p>
+        <p className="success-meta">
+          예약번호 <strong>{reservation.reservationCode}</strong>
+          <span aria-hidden="true"> · </span>
+          {RESERVATION_STATUS_LABELS[reservation.status]}
+          {reservation.gender
+            ? ` · ${reservation.gender === 'MALE' ? '남' : '여'}`
+            : ''}
+          {reservation.waitlistOrder
+            ? ` · 예비 ${reservation.waitlistOrder}번`
+            : ''}
+        </p>
+      </div>
+      <div className="notice warning success-notice">
         <p>
           시작 시각에 맞춰 부스로 와 주세요. 정시에 시작하며, 정시에 도착하지
           않을 경우 참여가 어렵습니다.
         </p>
       </div>
-      <Link to="/my-reservations" className="btn btn-primary">
-        내 예약 보기
-      </Link>
-      <Link to="/" className="btn btn-ghost">
-        홈으로
-      </Link>
+      <div className="success-actions">
+        <Link to="/my-reservations" className="btn btn-primary">
+          내 예약 보기
+        </Link>
+        <Link to="/" className="btn btn-ghost">
+          홈으로
+        </Link>
+      </div>
     </section>
   );
 }
