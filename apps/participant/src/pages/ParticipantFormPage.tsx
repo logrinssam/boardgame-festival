@@ -152,6 +152,9 @@ export function ParticipantFormPage() {
       {bookable.isWaitlist ? (
         <div className="notice">예비 예약으로 진행됩니다.</div>
       ) : null}
+      <div className="notice warning">
+        <p>예약 확정 후에는 취소할 수 없습니다. 부스와 시간을 다시 확인해 주세요.</p>
+      </div>
       <label className="field-label" htmlFor="name">
         참가자 이름
       </label>

@@ -59,6 +59,12 @@ export function ConfirmPage() {
           ? ` · 예비 ${reservation.waitlistOrder}번`
           : ''}
       </p>
+      <div className="notice warning">
+        <p>
+          시작 시각에 맞춰 부스로 와 주세요. 정시에 시작하며, 정시에 도착하지
+          않을 경우 참여가 어렵습니다.
+        </p>
+      </div>
       <Link to="/my-reservations" className="btn btn-primary">
         내 예약 보기
       </Link>
