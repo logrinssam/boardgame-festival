@@ -316,27 +316,31 @@ export function StaffBoothOpsPage() {
       <div className="guest-list">
         {filtered.map((reservation) => (
           <article key={reservation.id} className="glass-card guest-card">
-            <div className="detail-row">
-              <strong>{reservation.participantName}</strong>
-              <StatusBadge
-                status={reservation.status}
-                label={RESERVATION_STATUS_LABELS[reservation.status]}
-              />
+            <div className="guest-main">
+              <div className="guest-head">
+                <strong className="guest-name">
+                  {reservation.participantName}
+                </strong>
+                <span className="guest-time">
+                  {formatClock(reservation.createdAt)} 예약
+                </span>
+                <StatusBadge
+                  status={reservation.status}
+                  label={RESERVATION_STATUS_LABELS[reservation.status]}
+                />
+              </div>
+              <p className="admin-meta">
+                {reservation.phone
+                  ? `${maskPhone(reservation.phone)} · 뒤 ${reservation.phoneLast4} · `
+                  : ''}
+                #{reservation.reservationCode}
+                {reservation.gender
+                  ? ` · ${reservation.gender === 'MALE' ? '남' : '여'}`
+                  : ''}
+                {reservation.gradeOrAge ? ` · ${reservation.gradeOrAge}` : ''}
+              </p>
             </div>
-            <p className="admin-meta">
-              {reservation.phone
-                ? `${maskPhone(reservation.phone)} · 뒤 ${reservation.phoneLast4} · `
-                : ''}
-              #{reservation.reservationCode}
-              {reservation.gender
-                ? ` · ${reservation.gender === 'MALE' ? '남' : '여'}`
-                : ''}
-              {reservation.gradeOrAge ? ` · ${reservation.gradeOrAge}` : ''}
-            </p>
-            <p className="admin-meta">
-              생성 {formatClock(reservation.createdAt)}
-            </p>
-            <div className="action-grid">
+            <div className="guest-actions">
               {getActionsForStatus(reservation.status).map((action) => (
                 <button
                   key={`${reservation.id}-${action.to}`}

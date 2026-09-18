@@ -1301,7 +1301,88 @@ input {
 .guest-card {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.guest-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.guest-head {
+  display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.guest-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  word-break: keep-all;
+}
+
+/* 예약한 시각 — 상태 뱃지 왼쪽에 작게 */
+.guest-time {
+  flex: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.guest-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.guest-actions .btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  word-break: keep-all;
+}
+
+/* 태블릿: 운영 화면만 넓게 쓰고, 예약자 카드를 한 줄(정보 | 버튼)로 */
+@media (min-width: 768px) {
+  .app-shell:has(.guest-list) {
+    width: min(100%, 920px);
+  }
+
+  .guest-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .guest-main {
+    flex: 1;
+  }
+
+  .guest-name {
+    flex: none;
+    font-size: 18px;
+  }
+
+  /* 넓은 화면에서는 이름 옆에 시각·뱃지를 붙여 시선 이동을 줄인다 */
+  .guest-head {
+    gap: 10px;
+  }
+
+  .guest-actions {
+    flex: none;
+  }
+
+  .guest-actions .btn {
+    flex: none;
+    min-width: 112px;
+    min-height: 44px;
+  }
 }
 
 .action-grid {
