@@ -2,18 +2,15 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useAppStore } from '../../context/AppStore';
 import { EXPERIENCE_GROUP_LABELS } from '@bgf/shared';
 import { getEffectiveCapacity } from '@bgf/shared';
-import { DEMO_MODE } from '@bgf/shared';
 import { useBoothAccessCode } from '../../services/boothSecrets';
 
 export function AdminBoothsPage() {
-  const { booths, setCapacity, setAccessCode, setSlotBookingOpen } =
-    useAppStore();
+  const { booths, setAccessCode, setSlotBookingOpen } = useAppStore();
   const [selectedId, setSelectedId] = useState(booths[0]?.id ?? '');
   const booth = useMemo(
     () => booths.find((item) => item.id === selectedId),
     [booths, selectedId],
   );
-  const [capacityInput, setCapacityInput] = useState('');
   const [codeInput, setCodeInput] = useState('');
   const [message, setMessage] = useState('');
   const [codeVersion, setCodeVersion] = useState(0);
@@ -24,18 +21,6 @@ export function AdminBoothsPage() {
 
   const currentBooth = booth;
   const effective = getEffectiveCapacity(currentBooth);
-
-  async function saveCapacity(event: FormEvent) {
-    event.preventDefault();
-    const capacity =
-      capacityInput.trim() === '' ? null : Number(capacityInput);
-    if (capacity !== null && (!Number.isFinite(capacity) || capacity < 0)) {
-      setMessage('정원은 0 이상이어야 합니다.');
-      return;
-    }
-    await setCapacity(currentBooth.id, capacity);
-    setMessage('정원이 저장되었습니다.');
-  }
 
   async function saveCode(event: FormEvent) {
     event.preventDefault();
@@ -53,7 +38,7 @@ export function AdminBoothsPage() {
     <>
       <div className="page-heading">
         <h2>부스 관리</h2>
-        <p>정원 · 현장코드 · 회차 예약 시작/중지</p>
+        <p>현장코드 · 회차 예약 시작/중지</p>
       </div>
       <label className="field-label" htmlFor="booth-select">
         부스 선택
@@ -79,28 +64,6 @@ export function AdminBoothsPage() {
             ? '미설정'
             : `${effective.capacity}${effective.isDemo ? ' (데모)' : ''}`}
         </p>
-        <form
-          className="form-card"
-          onSubmit={(event) => void saveCapacity(event)}
-        >
-          <label className="field-label" htmlFor="cap">
-            확정 정원
-          </label>
-          <input
-            id="cap"
-            className="field-input"
-            value={capacityInput}
-            onChange={(event) => setCapacityInput(event.target.value)}
-          />
-          <p className="hint-text">
-            {DEMO_MODE
-              ? 'DEMO_MODE에서는 미설정 시에도 데모 정원이 적용됩니다.'
-              : '미설정 시 참가자 예약이 차단됩니다.'}
-          </p>
-          <button type="submit" className="btn btn-primary">
-            정원 저장
-          </button>
-        </form>
       </section>
 
       <section className="glass-card form-card">

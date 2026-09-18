@@ -246,7 +246,15 @@ Module._load = function patchedLoad(request, ...rest) {
 };
 const originalConsoleError = console.error;
 console.error = () => undefined; // 함수 내부의 오류 로그는 집계로 대신한다
-const fns = require(path.join(__dirname, '..', 'functions', 'lib', 'index.js'));
+const FUNCTIONS_LIB = path.join(__dirname, '..', 'functions', 'lib');
+let fns = require(path.join(FUNCTIONS_LIB, 'index.js'));
+/** 함수 모듈을 새로 불러와 인스턴스 내부 캐시(점검 시계·회차 현황)를 비운다 — 새 인스턴스가 뜬 것과 같다 */
+function reloadFunctions() {
+  for (const key of Object.keys(require.cache)) {
+    if (key.startsWith(FUNCTIONS_LIB)) delete require.cache[key];
+  }
+  fns = require(path.join(FUNCTIONS_LIB, 'index.js'));
+}
 
 // ---------------------------------------------------------------- fixtures
 const SLOT_IDS = ['s1', 's2', 's3', 's4'];
@@ -394,6 +402,37 @@ const SYSTEM_CODES = ['internal', 'DEADLINE', 'throw', 'deadline-exceeded', 'una
 
 // ---------------------------------------------------------------- scenarios
 const scenarios = {
+  async '오픈 정각 — 08:29:58 에 🔒 을 본 화면이 08:30:00 에 바로 열린다 (서버 캐시가 정각을 넘지 않음)'() {
+    seed();
+    reloadFunctions();
+    db._write('config/testClock', { enabled: false }); // 실제 시각 규칙으로 판정
+    const realNow = Date.now;
+    const extra = [];
+    const at = (iso) => {
+      const fixed = Date.parse(iso);
+      Date.now = () => fixed;
+    };
+    try {
+      at('2026-09-18T23:29:58.000Z'); // KST 9/19 08:29:58
+      const before = await invoke('getBoothSessions', { boothId: 'b1' });
+      if (!before.result.sessions.every((item) => item.status === 'LOCKED')) {
+        extra.push('08:29:58 인데 잠겨 있지 않음');
+      }
+      const early = await book('b1', 's1', newPhone());
+      if (early.ok) extra.push('08:29:58 에 예약이 통과됨');
+      at('2026-09-18T23:30:00.300Z'); // KST 08:30:00.3 — 직전 응답의 5초 캐시 안쪽
+      const after = await invoke('getBoothSessions', { boothId: 'b1' });
+      const locked = after.result.sessions.filter((item) => item.status === 'LOCKED').length;
+      if (locked > 0) extra.push(`08:30:00 인데 아직 🔒 ${locked}개 (캐시가 정각을 넘김)`);
+      // 정각 직후 100명이 동시에 — 열리자마자 몰려도 정원만큼만
+      const rush = await Promise.all(Array.from({ length: 100 }, () => book('b1', 's1', newPhone())));
+      if (rush.filter((r) => r.ok).length !== 6) extra.push(`정각 러시 성공 ${rush.filter((r) => r.ok).length} ≠ 6`);
+      return { results: rush, extra };
+    } finally {
+      Date.now = realNow;
+      reloadFunctions(); // 가짜 시각으로 채워진 캐시가 다음 시나리오에 남지 않게
+    }
+  },
   async '오픈 러시 — 320명이 4개 부스에 동시에'() {
     seed();
     const jobs = [];
@@ -578,6 +617,11 @@ const scenarios = {
         ['permission-denied'],
       ),
       expectDenied(
+        '본부 관리자도 정원 변경 불가',
+        invoke('updateBoothSettings', { boothId: 'b1', capacity: 999 }, { uid: 'staff-yerin' }),
+        ['permission-denied'],
+      ),
+      expectDenied(
         '부스 팀장이 현장코드 변경',
         invoke('updateBoothSettings', { boothId: 'b1', accessCode: '1111' }, { uid: 'staff-booth' }),
         ['permission-denied'],
@@ -665,6 +709,7 @@ const scenarios = {
   console.log(`동시 예약 시뮬레이션 — 시나리오 ${Object.keys(scenarios).length}개 × ${repeat}회\n`);
   let failedScenarios = 0;
   for (const [title, run] of Object.entries(scenarios)) {
+    if (process.env.SIM_ONLY && !title.includes(process.env.SIM_ONLY)) continue; // 예: SIM_ONLY=정각
     const allProblems = new Map();
     let systemErrors = 0;
     let last = null;

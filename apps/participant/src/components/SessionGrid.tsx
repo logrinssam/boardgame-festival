@@ -14,6 +14,31 @@ import {
 const POLL_INTERVAL_MS = 30_000;
 
 /**
+ * 예약 오픈 정각(08:30 / 12:45) 자동 새로고침.
+ * 30초 폴링만으로는 화면을 켜 두고 기다린 사람이 최대 30초 늦게 열려, 그 사이 새로고침한 사람에게 자리를 뺏긴다.
+ * 기기 시계가 아니라 서버 시각(serverTime)을 기준으로 정각까지 남은 시간을 계산한다.
+ *   - 정각 +0.2~1.0초(무작위)에 1회 — 모두가 같은 순간에 요청하지 않게 살짝 흩는다
+ *   - 아직 🔒 이면 2초 간격으로 최대 3회 더 (네트워크 지연·서버 분 단위 판정 대비)
+ */
+const OPEN_REFRESH_MAX_AHEAD_MS = 6 * 60 * 60 * 1000;
+const OPEN_RETRY_DELAY_MS = 2_000;
+const OPEN_RETRY_LIMIT = 3;
+
+/** 서버 시각 기준으로, 아직 지나지 않은 오늘(KST) 오픈 시각까지 남은 ms 목록 */
+export function msUntilOpenTimes(serverNowMs: number): number[] {
+  const kst = new Date(serverNowMs + 9 * 60 * 60 * 1000);
+  return Object.values(BOOKING_OPEN_TIMES)
+    .map((time) => {
+      const [hours, minutes] = time.split(':').map(Number);
+      const openMs =
+        Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate(), hours, minutes) -
+        9 * 60 * 60 * 1000;
+      return openMs - serverNowMs;
+    })
+    .filter((ms) => ms > 0 && ms <= OPEN_REFRESH_MAX_AHEAD_MS);
+}
+
+/**
  * 서버 조회 실패 시 폴백 — 숨기지 않고 보여주는 쪽으로 떨어뜨린다.
  * 시간 판정 없이 로컬 부스 데이터의 좌석 수만 사용하고,
  * 잘못 열려 있어도 createReservation(서버)이 최종적으로 막는다.
@@ -47,20 +72,54 @@ export function useBoothSessions(booth: Booth) {
   const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(true);
   const timerRef = useRef<number | null>(null);
+  const openTimersRef = useRef<number[]>([]);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<BoothSession[] | null> => {
     try {
       const result = await getBoothSessionsCallable(boothId);
+      scheduleOpenRefresh(result);
       setSessions(result.sessions);
       setTestClock(result.testMode ? (result.simulatedTime ?? 'OPEN') : null);
       setPhase(result.phase ?? null);
       setLoadError(false);
+      return result.sessions;
     } catch {
       setLoadError(true);
+      return null;
     } finally {
       setLoading(false);
     }
+    // scheduleOpenRefresh 는 ref 만 쓰는 안정적인 함수라 의존성에서 뺀다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boothId]);
+
+  function clearOpenTimers() {
+    for (const id of openTimersRef.current) window.clearTimeout(id);
+    openTimersRef.current = [];
+  }
+
+  function scheduleOpenRefresh(result: { serverTime: string; testMode?: boolean }) {
+    clearOpenTimers();
+    if (result.testMode) return; // 점검용 가상 시계에서는 실제 시각과 무관
+    const serverNowMs = Date.parse(result.serverTime);
+    if (!Number.isFinite(serverNowMs)) return;
+    for (const ms of msUntilOpenTimes(serverNowMs)) {
+      const id = window.setTimeout(() => {
+        void refreshUntilUnlocked(0);
+      }, ms + 200 + Math.random() * 800);
+      openTimersRef.current.push(id);
+    }
+  }
+
+  async function refreshUntilUnlocked(attempt: number) {
+    const latest = await refresh();
+    const stillLocked = latest === null || latest.some((item) => item.status === 'LOCKED');
+    if (!stillLocked || attempt >= OPEN_RETRY_LIMIT) return;
+    const id = window.setTimeout(() => {
+      void refreshUntilUnlocked(attempt + 1);
+    }, OPEN_RETRY_DELAY_MS);
+    openTimersRef.current.push(id);
+  }
 
   useEffect(() => {
     function startPolling() {
@@ -87,6 +146,7 @@ export function useBoothSessions(booth: Booth) {
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       stopPolling();
+      clearOpenTimers();
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [refresh]);

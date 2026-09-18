@@ -23,6 +23,7 @@
     "rotate:staff-pins": "node scripts/rotate-staff-pins.mjs",
     "load-test": "node scripts/load-test.mjs",
     "sim:concurrency": "npm run functions:build && node scripts/concurrency-sim.cjs",
+    "audit:db": "node scripts/audit-db.mjs",
     "backup:local": "node scripts/backup-local.mjs"
   },
   "devDependencies": {

@@ -49,7 +49,6 @@ interface AppStoreValue {
   >;
   logout: () => Promise<void>;
   setAccessCode: (boothId: string, code: string) => Promise<void>;
-  setCapacity: (boothId: string, capacity: number | null) => Promise<void>;
   setSlotBookingOpen: (
     boothId: string,
     slotId: string,
@@ -155,13 +154,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     await updateBoothSettingsRemote({ boothId, accessCode: code });
   }, []);
 
-  const setCapacity = useCallback(
-    async (boothId: string, capacity: number | null) => {
-      await updateBoothSettingsRemote({ boothId, capacity });
-    },
-    [],
-  );
-
   const setSlotBookingOpen = useCallback(
     async (boothId: string, slotId: string, open: boolean) => {
       await updateBoothSettingsRemote({
@@ -218,7 +210,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       loginOperator,
       logout,
       setAccessCode,
-      setCapacity,
       setSlotBookingOpen,
       cancelReservation,
       changeReservationStatus,
@@ -239,7 +230,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       loginOperator,
       logout,
       setAccessCode,
-      setCapacity,
       setSlotBookingOpen,
       cancelReservation,
       changeReservationStatus,

@@ -90,7 +90,6 @@ export async function staffAddReservationCallable(input: {
 export async function updateBoothSettingsCallable(input: {
   boothId: string;
   accessCode?: string;
-  capacity?: number | null;
   slotId?: string;
   bookingOpen?: boolean;
 }): Promise<{ ok: true } | { ok: false; message: string }> {

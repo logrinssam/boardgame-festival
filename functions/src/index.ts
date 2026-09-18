@@ -222,7 +222,14 @@ const callableOpts = { invoker: 'public' as const };
  * 참가자가 몰리는 콜러블은 인스턴스 1개를 항상 띄워 둔다 (콜드 스타트 2~4초 회피).
  * 대기 비용은 인스턴스당 월 수천 원 수준 — 행사 후 0으로 낮춰도 된다.
  */
-const hotCallableOpts = { ...callableOpts, minInstances: 1 };
+const hotCallableOpts = { ...callableOpts, minInstances: 2 };
+
+/**
+ * 예약 생성 — 오픈 시각(08:30 / 12:45)에 한꺼번에 몰린다. 새 인스턴스가 뜨는 2~4초 동안
+ * 요청이 밀리지 않게 미리 3개를 띄워 두고(동시 240건), 트랜잭션 재시도가 겹쳐도 여유 있게 메모리를 늘린다.
+ * 행사 후에는 minInstances 를 0~1 로 낮춰 대기 비용을 없앤다.
+ */
+const bookingCallableOpts = { ...callableOpts, minInstances: 3, memory: '512MiB' as const };
 
 // ---- 입력 검증 ----
 /**
@@ -254,7 +261,6 @@ function assertCanCancelReservation(staff: StaffAssignment): void {
 const MOBILE_PHONE_RE = /^01\d{8,9}$/;
 const MAX_NAME_LENGTH = 20;
 const MAX_GRADE_LENGTH = 20;
-const MAX_CAPACITY = 500;
 
 function validateParticipantInput(input: {
   participantName: string;
@@ -453,7 +459,7 @@ async function resolveClock(): Promise<{
   }
 }
 
-export const createReservation = onCall(hotCallableOpts, async (request) => {
+export const createReservation = onCall(bookingCallableOpts, async (request) => {
   const data = request.data as {
     boothId?: string;
     slotId?: string;
@@ -872,13 +878,14 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
     throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
   }
 
-  if (
-    staff.role !== 'HEAD_ADMIN' &&
-    ('accessCode' in (request.data ?? {}) || 'capacity' in (request.data ?? {}))
-  ) {
+  // 정원은 행사 전에 시드 스크립트로 확정했다 — 앱에서는 바꿀 수 없다 (조작 방지).
+  if ('capacity' in (request.data ?? {})) {
+    throw new HttpsError('permission-denied', '정원은 앱에서 변경할 수 없습니다.');
+  }
+  if (staff.role !== 'HEAD_ADMIN' && 'accessCode' in (request.data ?? {})) {
     throw new HttpsError(
       'permission-denied',
-      '정원·현장코드는 본부 관리자만 바꿀 수 있습니다.',
+      '현장코드는 본부 관리자만 바꿀 수 있습니다.',
     );
   }
 
@@ -905,27 +912,6 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
     // 공개 문서에는 코드 유무만 남기고 값은 지운다
     patch.accessCode = FieldValue.delete();
     patch.accessCodeConfigured = code.length > 0;
-  }
-  if ('capacity' in (request.data ?? {})) {
-    const raw = request.data.capacity;
-    patch.capacity =
-      raw === null || raw === undefined || raw === ''
-        ? null
-        : Number(raw);
-  }
-  for (const key of ['capacity'] as const) {
-    if (!(key in patch) || patch[key] === null) continue;
-    const value = patch[key];
-    if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > MAX_CAPACITY) {
-      throw new HttpsError(
-        'invalid-argument',
-        `정원은 0~${MAX_CAPACITY} 사이의 정수여야 합니다.`,
-      );
-    }
-  }
-  if ('capacity' in patch) {
-    const capacity = patch.capacity as number | null;
-    patch.status = capacity === null ? 'CAPACITY_PENDING' : 'BOOKING_OPEN';
   }
   const slotToggle =
     'slotId' in (request.data ?? {}) && 'bookingOpen' in (request.data ?? {})
@@ -959,10 +945,6 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
     tx.update(boothRef, next as FirebaseFirestore.UpdateData<FirebaseFirestore.DocumentData>);
   });
 
-  // 정원 변경 후 슬롯 카운터를 실제 예약 기준으로 재동기화
-  if ('capacity' in patch) {
-    await scheduleBoothSync(boothId);
-  }
 
   return { ok: true };
 });
@@ -1337,8 +1319,12 @@ export const getBoothSessions = onCall(hotCallableOpts, async (request) => {
     phase,
     sessions,
   };
+  // 상태 판정이 분 단위라, 캐시가 분 경계를 넘으면 08:30:00 에 "08:29 의 🔒" 를 돌려주게 된다.
+  // 다음 분이 시작되면 무조건 새로 계산하도록 만료 시각을 분 경계로 자른다.
+  const cachedAt = Date.now();
+  const nextMinuteAt = (Math.floor(cachedAt / 60_000) + 1) * 60_000;
   sessionsCache.set(boothId, {
-    expiresAt: Date.now() + SESSIONS_CACHE_MS,
+    expiresAt: Math.min(cachedAt + SESSIONS_CACHE_MS, nextMinuteAt),
     value: result,
   });
   return result;
