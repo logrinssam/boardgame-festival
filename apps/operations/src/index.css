@@ -1348,6 +1348,24 @@ input {
   word-break: keep-all;
 }
 
+/* 현장 추가 펼침 버튼 (+ / −) */
+.add-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--creative-bg-soft);
+  color: var(--creative-accent);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
 /* 태블릿: 운영 화면만 넓게 쓰고, 예약자 카드를 한 줄(정보 | 버튼)로 */
 @media (min-width: 768px) {
   .app-shell:has(.guest-list) {
