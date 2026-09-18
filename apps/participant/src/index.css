@@ -1216,6 +1216,28 @@ input {
   color: #633806;
 }
 
+/* 내 이용 현황 — 체험 시각을 가장 크게 */
+.my-booking-card .my-booking-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 10px 0 6px;
+}
+
+.time-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #e6f1fb;
+  color: #185fa5;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
 .walkin-status.status-open {
   background: var(--badge-available-bg);
   color: var(--badge-available-text);

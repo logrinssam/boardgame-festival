@@ -27,6 +27,22 @@ export function MyReservationsPage() {
   const [message, setMessage] = useState('');
   const [pending, setPending] = useState(false);
 
+  // 체험 시각 순서로 보여 준다 (서버 응답 순서는 예약한 순서라 시간이 뒤섞인다)
+  const sortedList = list
+    .map((reservation) => ({
+      reservation,
+      booth: getBooth(reservation.boothId),
+      slot: getSlot(reservation.boothId, reservation.slotId),
+    }))
+    .filter(
+      (item): item is {
+        reservation: Reservation;
+        booth: NonNullable<typeof item.booth>;
+        slot: NonNullable<typeof item.slot>;
+      } => Boolean(item.booth && item.slot),
+    )
+    .sort((a, b) => a.slot.startTime.localeCompare(b.slot.startTime));
+
   async function handleSearch(event: FormEvent) {
     event.preventDefault();
     setPending(true);
@@ -77,30 +93,25 @@ export function MyReservationsPage() {
         <div className="empty-state">조회된 이용 기록이 없습니다.</div>
       ) : null}
 
-      {list.map((reservation) => {
-        const booth = getBooth(reservation.boothId);
-        const slot = getSlot(reservation.boothId, reservation.slotId);
-        if (!booth || !slot) return null;
-        return (
-          <article key={reservation.id} className="glass-card">
-            <div className="detail-row">
-              <strong>
-                부스 {booth.number}. {booth.name}
-              </strong>
-              <span className="status-badge">
-                {RESERVATION_STATUS_LABELS[reservation.status]}
-              </span>
-            </div>
-            <span className="mode-badge mode-time">시간 예약형</span>
-            <p className="admin-meta">
+      {sortedList.map(({ reservation, booth, slot }) => (
+        <article key={reservation.id} className="glass-card my-booking-card">
+          <strong>
+            부스 {booth.number}. {booth.name}
+          </strong>
+          {/* 참가자에게 가장 중요한 정보 = 몇 시에 가야 하는지 */}
+          <div className="my-booking-meta">
+            <span className="time-pill">
               {formatTimeRange(slot.startTime, slot.endTime)}
-            </p>
-            <p className="admin-meta">
-              {maskPhone(reservation.phone)}
-            </p>
-          </article>
-        );
-      })}
+            </span>
+            <span className="status-badge">
+              {RESERVATION_STATUS_LABELS[reservation.status]}
+            </span>
+          </div>
+          <p className="admin-meta">
+            {reservation.participantName} · {maskPhone(reservation.phone)}
+          </p>
+        </article>
+      ))}
 
       {walkIns.map((registration) => {
         const booth = getBooth(registration.boothId);
