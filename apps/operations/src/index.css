@@ -1067,6 +1067,7 @@ input {
   font-size: 12px;
   font-weight: 600;
   padding: 3px 9px;
+  white-space: nowrap; /* '체험 중 0' 같은 칩이 줄 중간에서 꺾이지 않게 */
   border-radius: 999px;
   background: var(--surface-1);
   color: var(--text-secondary);
