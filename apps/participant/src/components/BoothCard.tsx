@@ -50,7 +50,7 @@ export function BoothCard({ booth }: BoothCardProps) {
         ) : null}
       </h3>
       {booth.target && booth.target !== '추후 안내' ? (
-        <p className="booth-card-target">대상: {booth.target}</p>
+        <p className="booth-card-target">추천 대상: {booth.target}</p>
       ) : null}
       {walkIn ? (
         <>
