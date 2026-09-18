@@ -157,7 +157,7 @@ export function StaffBoothOpsPage() {
     }
     if (
       !window.confirm(
-        `확정 ${targets.length}명을 미도착 처리할까요?`,
+        `예약 확정 ${targets.length}명을 모두 도착 확인할까요?`,
       )
     ) {
       return;
@@ -355,10 +355,10 @@ export function StaffBoothOpsPage() {
         <div className="action-stack">
           <button
             type="button"
-            className="btn btn-red"
-            onClick={() => bulk('CONFIRMED', 'NO_SHOW', '미도착 처리')}
+            className="btn btn-green"
+            onClick={() => bulk('CONFIRMED', 'CHECKED_IN', '도착 확인')}
           >
-            미도착자 확인(일괄)
+            도착 확인(일괄)
           </button>
         </div>
       </section>
