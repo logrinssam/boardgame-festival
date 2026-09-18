@@ -8,7 +8,8 @@
  * 하는 일:
  *   1. reservations 컬렉션 전체 삭제
  *   2. walkInRegistrations 컬렉션 전체 삭제
- *   3. 모든 부스 문서의 slots[].confirmedCount 를 0으로 되돌림
+ *   3. operationLogs 컬렉션 전체 삭제 (운영 화면 「최근 처리 내역」)
+ *   4. 모든 부스 문서의 slots[].confirmedCount 를 0으로 되돌림
  *      (부스 문서에 캐시된 값이라 예약만 지우면 좌석 수가 어긋난 채 남는다)
  *
  * 부스 이름·회차·현장코드 등 설정값은 건드리지 않는다.
@@ -125,6 +126,7 @@ const token = await getAccessToken();
 
 const reservations = await listAll(token, 'reservations');
 const walkIns = await listAll(token, 'walkInRegistrations');
+const logs = await listAll(token, 'operationLogs');
 const booths = await listAll(token, 'booths');
 
 console.log(`예약(reservations): ${reservations.length}건`);
@@ -141,6 +143,7 @@ for (const doc of walkIns) {
     `  ${f.boothId?.stringValue} | ${f.participantName?.stringValue} | ${f.status?.stringValue}`,
   );
 }
+console.log(`처리 내역(operationLogs): ${logs.length}건`);
 
 let dirtyBooths = 0;
 for (const doc of booths) {
@@ -165,6 +168,10 @@ for (const doc of walkIns) {
   await deleteDoc(token, doc.name);
 }
 console.log(`  현장등록 ${walkIns.length}건 삭제`);
+for (const doc of logs) {
+  await deleteDoc(token, doc.name);
+}
+console.log(`  처리 내역 ${logs.length}건 삭제`);
 
 for (const doc of booths) {
   const slots = fromValue(doc.fields?.slots) ?? [];
