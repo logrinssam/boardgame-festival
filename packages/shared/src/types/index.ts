@@ -292,7 +292,8 @@ export const ALLOWED_STATUS_TRANSITIONS: Record<
   ReservationStatus[]
 > = {
   CONFIRMED: ['CHECKED_IN', 'NO_SHOW', 'CANCELLED'],
-  CHECKED_IN: ['IN_PROGRESS', 'CANCELLED'],
+  // 도착 확인을 잘못 눌렀을 때 미도착으로 되돌릴 수 있다
+  CHECKED_IN: ['IN_PROGRESS', 'NO_SHOW', 'CANCELLED'],
   IN_PROGRESS: ['COMPLETED'],
   COMPLETED: [],
   NO_SHOW: ['CHECKED_IN'],

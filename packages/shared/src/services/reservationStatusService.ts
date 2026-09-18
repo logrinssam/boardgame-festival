@@ -31,15 +31,14 @@ export function getActionsForStatus(
         { to: 'NO_SHOW', label: '미도착 처리', tone: 'red', confirm: true },
       ];
     case 'CHECKED_IN':
+      // 출결만 확인한다 (체험 시작·완료 단계는 쓰지 않음). 잘못 눌렀을 때만 되돌린다
       return [
-        { to: 'IN_PROGRESS', label: '체험 시작', tone: 'blue' },
+        { to: 'NO_SHOW', label: '미도착으로 변경', tone: 'red', confirm: true },
       ];
-    case 'IN_PROGRESS':
-      return [{ to: 'COMPLETED', label: '체험 완료', tone: 'green-deep' }];
     case 'NO_SHOW':
       // 미도착 처리 후 늦게 도착한 참가자 — 다시 도착 확인으로 되살린다
       return [
-        { to: 'CHECKED_IN', label: '늦게 도착', tone: 'green', confirm: true },
+        { to: 'CHECKED_IN', label: '도착으로 변경', tone: 'green', confirm: true },
       ];
     default:
       return [];

@@ -91,9 +91,8 @@ export function StaffBoothOpsPage() {
       slotReservations.filter((item) => statuses.includes(item.status)).length;
     return {
       confirmed: pick(['CONFIRMED']),
-      checkedIn: pick(['CHECKED_IN']),
-      inProgress: pick(['IN_PROGRESS']),
-      completed: pick(['COMPLETED']),
+      // 예전 데이터의 체험 중·완료도 도착으로 센다
+      checkedIn: pick(['CHECKED_IN', 'IN_PROGRESS', 'COMPLETED']),
       noShow: pick(['NO_SHOW']),
     };
   }, [slotReservations]);
@@ -125,9 +124,6 @@ export function StaffBoothOpsPage() {
   const afterFive =
     minutes >= currentSchedule.startMinutes + 5 &&
     minutes < currentSchedule.endMinutes;
-  const atEnd =
-    minutes >= currentSchedule.endMinutes - 1 &&
-    minutes <= currentSchedule.endMinutes + 2;
 
   function runChange(
     reservation: Reservation,
@@ -161,11 +157,7 @@ export function StaffBoothOpsPage() {
     }
     if (
       !window.confirm(
-        from === 'CHECKED_IN'
-          ? `도착 확인된 ${targets.length}명의 체험을 시작할까요?`
-          : from === 'IN_PROGRESS'
-            ? `체험 중 ${targets.length}명을 완료 처리할까요?`
-            : `확정 ${targets.length}명을 미도착 처리할까요?`,
+        `확정 ${targets.length}명을 미도착 처리할까요?`,
       )
     ) {
       return;
@@ -227,16 +219,6 @@ export function StaffBoothOpsPage() {
             도착 {counts.checkedIn}
           </span>
           <span
-            className={`status-chip inprogress${counts.inProgress > 0 ? ' active' : ''}`}
-          >
-            체험 중 {counts.inProgress}
-          </span>
-          <span
-            className={`status-chip done${counts.completed > 0 ? ' active' : ''}`}
-          >
-            완료 {counts.completed}
-          </span>
-          <span
             className={`status-chip noshow${counts.noShow > 0 ? ' active' : ''}`}
           >
             미도착 {counts.noShow}
@@ -252,11 +234,6 @@ export function StaffBoothOpsPage() {
         {afterFive ? (
           <p className="notice warning">
             회차 시작 후 5분이 지났습니다. 미도착 참가자를 확인해 주세요.
-          </p>
-        ) : null}
-        {atEnd ? (
-          <p className="notice warning">
-            체험 종료 시간입니다. 완료 처리를 확인해 주세요.
           </p>
         ) : null}
       </section>
@@ -376,20 +353,6 @@ export function StaffBoothOpsPage() {
       <section className="glass-card">
         <h3 className="section-title">일괄 처리</h3>
         <div className="action-stack">
-          <button
-            type="button"
-            className="btn btn-blue"
-            onClick={() => bulk('CHECKED_IN', 'IN_PROGRESS', '체험 시작')}
-          >
-            도착자 전체 체험 시작
-          </button>
-          <button
-            type="button"
-            className="btn btn-green-deep"
-            onClick={() => bulk('IN_PROGRESS', 'COMPLETED', '체험 완료')}
-          >
-            체험 중 인원 전체 완료
-          </button>
           <button
             type="button"
             className="btn btn-red"
