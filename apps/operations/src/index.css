@@ -640,6 +640,37 @@ input {
   margin-top: 2px;
 }
 
+.pin-reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pin-reveal-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pin-reveal-box {
+  min-width: 64px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1.5px dashed var(--creative-border);
+  border-radius: 8px;
+  background: var(--creative-bg-soft);
+  color: var(--creative-accent);
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+
+.pin-reveal-box.is-open {
+  border-style: solid;
+  background: #fff;
+}
+
 .error-text {
   margin: 0;
   color: var(--danger);

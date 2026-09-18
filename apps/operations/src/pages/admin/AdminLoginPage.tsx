@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { PinRevealHint } from '../../components/PinRevealHint';
 import { useAppStore } from '../../context/AppStore';
 
 export function AdminLoginPage() {
@@ -51,9 +52,8 @@ export function AdminLoginPage() {
   return (
     <form className="glass-card form-card" onSubmit={(e) => void handleSubmit(e)}>
       <h2 className="section-title">본부 관리자 로그인</h2>
-      <p className="hint-text">
-        이름을 입력하세요. PIN은 본부에서 개별 안내한 6자리입니다.
-      </p>
+      <p className="hint-text">이름을 입력하세요.</p>
+      <PinRevealHint />
       <label className="field-label" htmlFor="loginId">
         이름
       </label>
