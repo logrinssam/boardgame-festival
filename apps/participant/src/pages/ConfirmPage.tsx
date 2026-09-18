@@ -45,8 +45,6 @@ export function ConfirmPage() {
           {formatTimeRange(slot.startTime, slot.endTime)}
         </p>
         <p className="success-meta">
-          예약번호 <strong>{reservation.reservationCode}</strong>
-          <span aria-hidden="true"> · </span>
           {RESERVATION_STATUS_LABELS[reservation.status]}
           {reservation.gender
             ? ` · ${reservation.gender === 'MALE' ? '남' : '여'}`

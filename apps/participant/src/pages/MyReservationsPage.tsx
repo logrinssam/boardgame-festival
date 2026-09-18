@@ -96,7 +96,6 @@ export function MyReservationsPage() {
               {formatTimeRange(slot.startTime, slot.endTime)}
             </p>
             <p className="admin-meta">
-              예약번호 {reservation.reservationCode} ·{' '}
               {maskPhone(reservation.phone)}
             </p>
           </article>
