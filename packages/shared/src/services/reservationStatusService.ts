@@ -38,6 +38,11 @@ export function getActionsForStatus(
       ];
     case 'IN_PROGRESS':
       return [{ to: 'COMPLETED', label: '체험 완료', tone: 'green-deep' }];
+    case 'NO_SHOW':
+      // 미도착 처리 후 늦게 도착한 참가자 — 다시 도착 확인으로 되살린다
+      return [
+        { to: 'CHECKED_IN', label: '늦게 도착', tone: 'green', confirm: true },
+      ];
     default:
       return [];
   }

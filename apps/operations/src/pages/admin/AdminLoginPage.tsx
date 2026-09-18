@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { HEAD_ADMIN_DIRECTORY } from '../../data/staffAssignments';
 import { useAppStore } from '../../context/AppStore';
 
 export function AdminLoginPage() {
@@ -63,14 +62,8 @@ export function AdminLoginPage() {
         className="field-input"
         value={loginId}
         onChange={(event) => setLoginId(event.target.value)}
-        placeholder="예: 조하나"
-        list="admin-staff-names"
+        placeholder="이름"
       />
-      <datalist id="admin-staff-names">
-        {HEAD_ADMIN_DIRECTORY.map((person) => (
-          <option key={person.loginId} value={person.loginId} />
-        ))}
-      </datalist>
       <label className="field-label" htmlFor="pin">
         PIN
       </label>

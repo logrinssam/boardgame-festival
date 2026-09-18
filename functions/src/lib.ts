@@ -21,7 +21,8 @@ export const ALLOWED_STATUS_TRANSITIONS: Record<
   CHECKED_IN: ['IN_PROGRESS', 'CANCELLED'],
   IN_PROGRESS: ['COMPLETED'],
   COMPLETED: [],
-  NO_SHOW: [],
+  // 미도착 처리 후 늦게 온 참가자는 다시 도착 확인으로 되살릴 수 있다
+  NO_SHOW: ['CHECKED_IN'],
   CANCELLED: [],
 };
 

@@ -64,7 +64,7 @@ export function StaffLoginPage() {
         value={loginId}
         onChange={(event) => setLoginId(event.target.value)}
         autoComplete="username"
-        placeholder="예: 박미진"
+        placeholder="이름"
         list="staff-names"
       />
       <datalist id="staff-names">

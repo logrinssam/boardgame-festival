@@ -27,8 +27,8 @@
   /* 예약 상태 뱃지 */
   --badge-available-bg: #e1f5ee;
   --badge-available-text: #085041;
-  --badge-waitlist-bg: #faeeda;
-  --badge-waitlist-text: #633806;
+  --badge-pending-bg: #faeeda;
+  --badge-pending-text: #633806;
   --badge-full-bg: #fcebeb;
   --badge-full-text: #791f1f;
 
@@ -107,7 +107,7 @@ input {
 .app-header {
   position: relative;
   display: grid;
-  grid-template-columns: 64px 1fr auto;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: start;
   margin: -16px -16px 16px;
@@ -281,7 +281,7 @@ input {
 
 .info-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   margin-top: 14px;
 }
@@ -409,8 +409,8 @@ input {
 }
 
 .status-capacity_pending {
-  background: var(--badge-waitlist-bg);
-  color: var(--badge-waitlist-text);
+  background: var(--badge-pending-bg);
+  color: var(--badge-pending-text);
 }
 
 .detail-list {
@@ -419,7 +419,7 @@ input {
 
 .detail-list > div {
   display: grid;
-  grid-template-columns: 96px 1fr;
+  grid-template-columns: 96px minmax(0, 1fr);
   gap: 8px;
   padding: 8px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.45);
@@ -469,7 +469,7 @@ input {
 
 .guide-list li {
   display: grid;
-  grid-template-columns: 32px 1fr;
+  grid-template-columns: 32px minmax(0, 1fr);
   gap: 10px;
   align-items: start;
   padding: 10px 0;
@@ -590,7 +590,7 @@ input {
 
 .choice-row.grade-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .choice-chip {
@@ -744,7 +744,7 @@ input {
 
 .bottom-nav {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -831,13 +831,13 @@ input {
   }
 
   .app-header {
-    grid-template-columns: 52px 1fr auto;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
     margin-left: -12px;
     margin-right: -12px;
   }
 
   .detail-list > div {
-    grid-template-columns: 84px 1fr;
+    grid-template-columns: 84px minmax(0, 1fr);
   }
 
   .info-grid {
@@ -845,7 +845,7 @@ input {
   }
 
   .admin-nav {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .action-grid {
@@ -855,7 +855,7 @@ input {
 
 .filter-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -944,8 +944,8 @@ input {
 
 .walkin-status.status-paused,
 .walkin-status.status-preparing {
-  background: var(--badge-waitlist-bg);
-  color: var(--badge-waitlist-text);
+  background: var(--badge-pending-bg);
+  color: var(--badge-pending-text);
 }
 
 .walkin-status.status-closed {
@@ -1155,13 +1155,13 @@ input {
 
 .admin-slot-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 @media (min-width: 640px) {
   .admin-slot-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -1274,7 +1274,7 @@ input {
 
 .action-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
 }
 
@@ -1304,7 +1304,7 @@ input {
 }
 
 .admin-nav {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
 }
 
@@ -1340,3 +1340,14 @@ input {
   color: var(--danger);
 }
 
+
+/* 그리드 칸 안의 버튼·탭은 칸 폭에 맞춰 줄어들고 글자는 공백에서만 줄바꿈 */
+.bottom-nav .nav-item,
+.action-grid .btn,
+.action-stack .btn,
+.filter-tabs > *,
+.choice-row.grade-row .choice-chip,
+.admin-slot-cell {
+  min-width: 0;
+  word-break: keep-all;
+}

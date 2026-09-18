@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { createHash } from 'node:crypto';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { setGlobalOptions } from 'firebase-functions/v2/options';
 import type {
@@ -168,6 +169,62 @@ function accessCodeMatches(expected: string | null, input: unknown): boolean {
   return normalizeAccessCode(expected) === normalizeAccessCode(input);
 }
 
+// ---- 현장코드 무차별 대입 방어 ----
+// 코드가 4~8자리 숫자라 제한 없이 두면 수천 번 시도로 뚫린다.
+// 부스 + 요청 IP 단위로 10분 안에 실패 30회를 넘기면 그 조합을 잠시 막는다.
+// 행사장 공용 와이파이는 참가자 수십 명이 IP 하나를 나눠 쓰므로 여유 있게 잡았고
+// (4자리 코드 전수 시도에는 55시간 이상 걸린다), 성공하면 카운터를 지워
+// 정상 참가자가 막히는 일을 줄인다.
+const ACCESS_CODE_MAX_FAILURES = 30;
+const ACCESS_CODE_WINDOW_MS = 10 * 60 * 1000;
+
+function requestIp(request: {
+  rawRequest?: { ip?: string; headers?: Record<string, unknown> };
+}): string {
+  const forwarded = String(request.rawRequest?.headers?.['x-forwarded-for'] ?? '')
+    .split(',')[0]
+    .trim();
+  return forwarded || request.rawRequest?.ip || 'unknown';
+}
+
+function accessCodeAttemptRef(boothId: string, ip: string) {
+  const ipHash = createHash('sha256').update(ip).digest('hex').slice(0, 16);
+  return db.collection('accessCodeAttempts').doc(`${boothId}_${ipHash}`);
+}
+
+async function assertAccessCodeAttemptsAllowed(boothId: string, ip: string) {
+  const snap = await accessCodeAttemptRef(boothId, ip).get();
+  if (!snap.exists) return;
+  const data = snap.data() as { count?: number; windowStart?: number };
+  const windowStart = Number(data.windowStart ?? 0);
+  if (Date.now() - windowStart > ACCESS_CODE_WINDOW_MS) return;
+  if (Number(data.count ?? 0) >= ACCESS_CODE_MAX_FAILURES) {
+    throw new HttpsError(
+      'resource-exhausted',
+      '현장코드를 여러 번 잘못 입력했습니다. 10분 후 다시 시도하거나 부스 운영자에게 문의해 주세요.',
+    );
+  }
+}
+
+async function recordAccessCodeFailure(boothId: string, ip: string) {
+  const ref = accessCodeAttemptRef(boothId, ip);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const data = (snap.data() ?? {}) as { count?: number; windowStart?: number };
+    const windowStart = Number(data.windowStart ?? 0);
+    const fresh = Date.now() - windowStart > ACCESS_CODE_WINDOW_MS;
+    tx.set(ref, {
+      count: fresh ? 1 : Number(data.count ?? 0) + 1,
+      windowStart: fresh ? Date.now() : windowStart,
+      updatedAt: new Date().toISOString(),
+    });
+  });
+}
+
+async function clearAccessCodeFailures(boothId: string, ip: string) {
+  await accessCodeAttemptRef(boothId, ip).delete().catch(() => undefined);
+}
+
 // ---- 점검 시계 설정 캐시 ----
 // 모든 콜러블이 매번 config/testClock 을 읽으면 폴링 트래픽의 읽기 비용이 두 배가 된다.
 // 10초 캐시 — 점검 모드를 켜고 끌 때 최대 10초 늦게 반영되는 것은 감수한다.
@@ -293,6 +350,9 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
   if (phase !== 'EVENT_DAY') {
     throw new HttpsError('failed-precondition', phaseBlockedMessage(phase));
   }
+  const clientIp = requestIp(request);
+  const attemptBoothId = String(data.boothId);
+  await assertAccessCodeAttemptsAllowed(attemptBoothId, clientIp);
   const existingForPhone = await loadReservationsByPhone(phoneDigits);
 
   if (
@@ -393,12 +453,13 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
         booth.status === 'CAPACITY_PENDING' ? 'BOOKING_OPEN' : booth.status,
     });
     return record;
-  }, { maxAttempts: 8 }).catch((error: unknown) => {
+  }, { maxAttempts: 8 }).catch(async (error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     if (message.startsWith('NOT_FOUND:')) {
       throw new HttpsError('not-found', message.slice('NOT_FOUND:'.length));
     }
     if (message.startsWith('PERMISSION:')) {
+      await recordAccessCodeFailure(attemptBoothId, clientIp);
       throw new HttpsError(
         'permission-denied',
         message.slice('PERMISSION:'.length),
@@ -417,6 +478,7 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
     );
   });
 
+  await clearAccessCodeFailures(attemptBoothId, clientIp);
   return { reservation };
 });
 
@@ -429,9 +491,15 @@ export const getMyReservations = onCall(callableOpts, async (request) => {
   return { reservations };
 });
 
+// 참가자 취소는 정책상 불가(취소 버튼 제거) — 운영자 로그인 없이는 호출할 수 없다.
 export const cancelReservation = onCall(callableOpts, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError(
+      'unauthenticated',
+      '예약 취소는 부스 운영자에게 요청해 주세요.',
+    );
+  }
   const reservationId = String(request.data?.reservationId ?? '');
-  const phone = digitsOnly(String(request.data?.phone ?? ''));
   if (!reservationId) {
     throw new HttpsError('invalid-argument', '예약 ID가 필요합니다.');
   }
@@ -443,18 +511,9 @@ export const cancelReservation = onCall(callableOpts, async (request) => {
   }
   const current = asReservation(snap.id, snap.data() as Record<string, unknown>);
 
-  if (request.auth?.uid) {
-    const staff = await getStaff(request.auth.uid);
-    if (!canAccessBooth(staff, current.boothId)) {
-      throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
-    }
-  } else {
-    if (!phone || phone !== current.phone) {
-      throw new HttpsError(
-        'permission-denied',
-        '예약자 연락처가 일치하지 않습니다.',
-      );
-    }
+  const staff = await getStaff(request.auth.uid);
+  if (!canAccessBooth(staff, current.boothId)) {
+    throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
   }
 
   const allowed = ALLOWED_STATUS_TRANSITIONS[current.status];
@@ -463,10 +522,8 @@ export const cancelReservation = onCall(callableOpts, async (request) => {
   }
 
   const now = new Date().toISOString();
-  const operatorId = request.auth?.uid ?? 'participant';
-  const operatorName = request.auth?.uid
-    ? (await getStaff(request.auth.uid)).name
-    : '참가자';
+  const operatorId = staff.uid;
+  const operatorName = staff.name;
 
   await ref.update({
     previousStatus: current.status,
@@ -696,10 +753,14 @@ export const createWalkInRegistration = onCall(callableOpts, async (request) => 
   }
 
   if (booth.accessCodeConfigured) {
+    const clientIp = requestIp(request);
+    await assertAccessCodeAttemptsAllowed(booth.id, clientIp);
     const expected = await loadBoothAccessCode(booth.id, booth.accessCode);
     if (!accessCodeMatches(expected, data.accessCode)) {
+      await recordAccessCodeFailure(booth.id, clientIp);
       throw new HttpsError('permission-denied', '현장코드가 올바르지 않습니다.');
     }
+    await clearAccessCodeFailures(booth.id, clientIp);
   }
 
   const publicStatus = booth.walkInPublicStatus ?? 'OPEN';
@@ -837,7 +898,6 @@ export const setWalkInBoothStatus = onCall(callableOpts, async (request) => {
 
 export const cancelWalkInRegistration = onCall(callableOpts, async (request) => {
   const registrationId = String(request.data?.registrationId ?? '');
-  const phone = digitsOnly(String(request.data?.phone ?? ''));
   if (!registrationId) {
     throw new HttpsError('invalid-argument', '등록 ID가 필요합니다.');
   }
@@ -852,16 +912,15 @@ export const cancelWalkInRegistration = onCall(callableOpts, async (request) => 
     snap.data() as Record<string, unknown>,
   );
 
-  if (request.auth?.uid) {
-    const staff = await getStaff(request.auth.uid);
-    if (!canAccessBooth(staff, current.boothId)) {
-      throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
-    }
-  } else if (!phone || phone !== current.phone) {
+  if (!request.auth?.uid) {
     throw new HttpsError(
-      'permission-denied',
-      '예약자 연락처가 일치하지 않습니다.',
+      'unauthenticated',
+      '등록 취소는 부스 운영자에게 요청해 주세요.',
     );
+  }
+  const staff = await getStaff(request.auth.uid);
+  if (!canAccessBooth(staff, current.boothId)) {
+    throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
   }
 
   if (current.status === 'CANCELLED') {
@@ -1026,6 +1085,14 @@ export const verifyBoothAccessCode = onCall(callableOpts, async (request) => {
   if (!booth.accessCodeConfigured) {
     return { ok: true };
   }
+  const clientIp = requestIp(request);
+  await assertAccessCodeAttemptsAllowed(booth.id, clientIp);
   const expected = await loadBoothAccessCode(booth.id, booth.accessCode);
-  return { ok: accessCodeMatches(expected, input) };
+  const ok = accessCodeMatches(expected, input);
+  if (ok) {
+    await clearAccessCodeFailures(booth.id, clientIp);
+  } else {
+    await recordAccessCodeFailure(booth.id, clientIp);
+  }
+  return { ok };
 });

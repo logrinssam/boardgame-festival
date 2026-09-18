@@ -9,7 +9,6 @@ import {
 } from 'react';
 import type { Booth, BoothSlot, Reservation } from '@bgf/shared';
 import {
-  cancelReservationRemote,
   createReservationRemote,
   fetchMyReservations,
   getOpenSeatCountFromBooth,
@@ -35,10 +34,6 @@ interface AppStoreValue {
     | { ok: true; reservation: Reservation }
     | { ok: false; message: string }
   >;
-  cancelReservation: (
-    reservationId: string,
-    phone: string,
-  ) => Promise<{ ok: true } | { ok: false; message: string }>;
   getOpenSeatCount: (boothId: string, slotId: string) => number | null;
 }
 
@@ -87,12 +82,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const cancelReservation = useCallback(
-    async (reservationId: string, phone: string) =>
-      cancelReservationRemote({ reservationId, phone }),
-    [],
-  );
-
   const getOpenSeatCount = useCallback(
     (boothId: string, slotId: string) => {
       const booth = getBooth(boothId);
@@ -110,7 +99,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       getSlot,
       getMyReservations,
       createReservation,
-      cancelReservation,
       getOpenSeatCount,
     }),
     [
@@ -120,7 +108,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       getSlot,
       getMyReservations,
       createReservation,
-      cancelReservation,
       getOpenSeatCount,
     ],
   );
