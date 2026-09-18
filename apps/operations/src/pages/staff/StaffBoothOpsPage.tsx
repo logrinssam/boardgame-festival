@@ -44,8 +44,6 @@ export function StaffBoothOpsPage() {
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState('');
   const [focusSlotId, setFocusSlotId] = useState<string | null>(null);
-  // 확인이 필요한 버튼은 한 번 더 눌러야 실행된다 (window.confirm 은 태블릿·앱 내 브라우저에서 막히는 경우가 있다)
-  const [armedKey, setArmedKey] = useState<string | null>(null);
   // 안내판에 붙일 현장코드 — 담당 부스만 읽을 수 있다
   const accessCode = useBoothAccessCode(boothId);
 
@@ -53,12 +51,6 @@ export function StaffBoothOpsPage() {
     const timer = window.setInterval(() => setMinutes(nowMinutes()), 15000);
     return () => window.clearInterval(timer);
   }, []);
-
-  useEffect(() => {
-    if (!armedKey) return;
-    const timer = window.setTimeout(() => setArmedKey(null), 4000);
-    return () => window.clearTimeout(timer);
-  }, [armedKey]);
 
   const { current, next } = getCurrentAndNextSlot(minutes);
 
@@ -137,14 +129,7 @@ export function StaffBoothOpsPage() {
     reservation: Reservation,
     nextStatus: ReservationStatus,
     label: string,
-    needsConfirm?: boolean,
   ) {
-    const key = `${reservation.id}-${nextStatus}`;
-    if (needsConfirm && armedKey !== key) {
-      setArmedKey(key);
-      return;
-    }
-    setArmedKey(null);
     void changeReservationStatus({
       reservationId: reservation.id,
       nextStatus,
@@ -166,11 +151,6 @@ export function StaffBoothOpsPage() {
       setMessage('대상 인원이 없습니다.');
       return;
     }
-    if (armedKey !== 'bulk') {
-      setArmedKey('bulk');
-      return;
-    }
-    setArmedKey(null);
     void (async () => {
       for (const item of targets) {
         await changeReservationStatus({
@@ -333,17 +313,10 @@ export function StaffBoothOpsPage() {
                   type="button"
                   className={`btn btn-${action.tone}`}
                   onClick={() =>
-                    runChange(
-                      reservation,
-                      action.to,
-                      action.label,
-                      action.confirm,
-                    )
+                    runChange(reservation, action.to, action.label)
                   }
                 >
-                  {armedKey === `${reservation.id}-${action.to}`
-                    ? '한 번 더 눌러 확정'
-                    : action.label}
+                  {action.label}
                 </button>
               ))}
             </div>
@@ -369,9 +342,7 @@ export function StaffBoothOpsPage() {
             className="btn btn-green"
             onClick={() => bulk('CONFIRMED', 'CHECKED_IN', '도착 확인')}
           >
-            {armedKey === 'bulk'
-              ? `한 번 더 누르면 예약 확정 ${counts.confirmed}명 도착 확인`
-              : '도착 확인(일괄)'}
+            도착 확인(일괄)
           </button>
         </div>
       </section>
