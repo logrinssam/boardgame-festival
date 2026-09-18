@@ -79,30 +79,141 @@ async function loadReservationsByPhone(phone: string): Promise<Reservation[]> {
   return snap.docs.map((doc) => asReservation(doc.id, doc.data() as Record<string, unknown>));
 }
 
-async function recountAndUpdateBooth(boothId: string, slotId: string) {
+// ---- 동시성 도구 ----
+/** 트랜잭션 안에서 던지는 업무 오류 — 재시도하지 않고 그대로 참가자에게 돌려준다 */
+class BookingError extends Error {
+  constructor(
+    readonly httpsCode: 'not-found' | 'permission-denied' | 'failed-precondition',
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * 경합이 심한 트랜잭션용 재시도 루프.
+ * Admin SDK 기본 백오프는 1초부터 시작해 8회면 30초를 넘겨 함수 제한시간에 걸린다.
+ * 오픈 시각에 한 회차로 수십 명이 몰려도 제한시간 안에 답하도록, 짧은 지터 백오프로
+ * 직접 재시도하고 전체 시간에 상한을 둔다. 업무 오류(BookingError)는 재시도하지 않는다.
+ */
+const TX_MAX_ATTEMPTS = 14;
+const TX_DEADLINE_MS = 20_000;
+
+async function runContendedTransaction<T>(
+  fn: (tx: FirebaseFirestore.Transaction) => Promise<T>,
+): Promise<T> {
+  const startedAt = Date.now();
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < TX_MAX_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) {
+      const delay =
+        Math.min(2_500, 120 * 1.5 ** (attempt - 1)) * (0.5 + Math.random());
+      if (Date.now() + delay - startedAt > TX_DEADLINE_MS) break;
+      await sleep(delay);
+    }
+    try {
+      return await db.runTransaction(fn, { maxAttempts: 1 });
+    } catch (error) {
+      if (error instanceof BookingError || error instanceof HttpsError) throw error;
+      lastError = error;
+    }
+  }
+  throw lastError ?? new Error('transaction retry budget exhausted');
+}
+
+/** 이름 비교용 키 — 공백·대소문자 차이("김 민준" / "김민준")는 같은 사람으로 본다 */
+function participantNameKey(name: string): string {
+  return name.replace(/\s+/g, '').toLowerCase();
+}
+
+/** 회차 단위 잠금 문서 — 같은 회차의 예약 생성만 서로 직렬화한다 (부스 문서는 건드리지 않는다) */
+function slotLockRef(boothId: string, slotId: string) {
+  return db.collection('slotLocks').doc(`${boothId}__${slotId}`);
+}
+
+/** 전화번호 단위 잠금 문서 — 더블탭·여러 기기 동시 요청이 중복 검사를 함께 통과하지 못하게 한다 */
+function phoneLockRef(scope: string, phoneDigits: string) {
+  const hash = createHash('sha256').update(phoneDigits).digest('hex').slice(0, 24);
+  return db.collection('phoneLocks').doc(`${scope}_${hash}`);
+}
+
+/**
+ * 부스 문서의 slots[].confirmedCount 캐시(운영 화면 표시용)를 실제 예약 수로 맞춘다.
+ * 부스 문서를 트랜잭션으로 읽고 쓰므로, 동시에 도는 동기화나 회차 중지 토글과 서로 덮어쓰지 않는다.
+ * 정원 판정은 이 값을 쓰지 않는다 — createReservation 이 예약 문서를 직접 센다.
+ */
+async function syncBoothSlotCounts(boothId: string): Promise<void> {
   const boothRef = db.collection('booths').doc(boothId);
-  const boothSnap = await boothRef.get();
-  if (!boothSnap.exists) return;
-  const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
-  const slotSnap = await db
-    .collection('reservations')
-    .where('boothId', '==', boothId)
-    .where('slotId', '==', slotId)
-    .get();
-  const usage = countSeatUsage(
-    slotSnap.docs.map((doc) => asReservation(doc.id, doc.data() as Record<string, unknown>)),
-  );
-  await boothRef.update({
-    slots: booth.slots.map((slot) =>
-      slot.id === slotId
-        ? {
-            ...slot,
-            confirmedCount: usage.confirmed,
-          }
-        : slot,
-    ),
-    updatedAt: FieldValue.serverTimestamp(),
+  await runContendedTransaction(async (tx) => {
+    const boothSnap = await tx.get(boothRef);
+    if (!boothSnap.exists) return;
+    const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+    // 부스 문서를 읽은 "뒤"에 센다 — 그 사이 다른 동기화가 끼어들면 이 트랜잭션이 무효가 되어 다시 센다.
+    const resSnap = await db
+      .collection('reservations')
+      .where('boothId', '==', boothId)
+      .get();
+    const bySlot = new Map<string, Reservation[]>();
+    for (const doc of resSnap.docs) {
+      const reservation = asReservation(doc.id, doc.data() as Record<string, unknown>);
+      const list = bySlot.get(reservation.slotId) ?? [];
+      list.push(reservation);
+      bySlot.set(reservation.slotId, list);
+    }
+    let changed = false;
+    const nextSlots = booth.slots.map((slot) => {
+      const confirmed = countSeatUsage(bySlot.get(slot.id) ?? []).confirmed;
+      if (confirmed === slot.confirmedCount) return slot;
+      changed = true;
+      return { ...slot, confirmedCount: confirmed };
+    });
+    const promote = booth.status === 'CAPACITY_PENDING' && booth.capacity !== null;
+    if (!changed && !promote) return;
+    tx.update(boothRef, {
+      slots: nextSlots,
+      ...(promote ? { status: 'BOOKING_OPEN' } : {}),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
   });
+}
+
+/**
+ * 부스별 동기화 합치기 — 한 인스턴스 안에서 같은 부스 동기화는 동시에 1개만 돌고,
+ * 도는 중에 들어온 요청들은 "다음 1회"를 함께 기다린다 (러시 때 N번 → 2번 안팎).
+ */
+const boothSyncs = new Map<
+  string,
+  { current: Promise<void>; queued: Promise<void> | null }
+>();
+
+function scheduleBoothSync(boothId: string): Promise<void> {
+  const entry = boothSyncs.get(boothId);
+  if (!entry) {
+    const created = {
+      current: Promise.resolve(),
+      queued: null as Promise<void> | null,
+    };
+    created.current = syncBoothSlotCounts(boothId)
+      .catch((error: unknown) => {
+        console.error('syncBoothSlotCounts failed', boothId, error);
+      })
+      .finally(() => {
+        if (boothSyncs.get(boothId) === created && !created.queued) {
+          boothSyncs.delete(boothId);
+        }
+      });
+    boothSyncs.set(boothId, created);
+    return created.current;
+  }
+  if (!entry.queued) {
+    entry.queued = entry.current.then(() => {
+      boothSyncs.delete(boothId);
+      return scheduleBoothSync(boothId);
+    });
+  }
+  return entry.queued;
 }
 
 const callableOpts = { invoker: 'public' as const };
@@ -347,140 +458,156 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
     gradeOrAge: data.gradeOrAge,
   });
 
-  const boothRef = db.collection('booths').doc(data.boothId);
+  const boothId = String(data.boothId);
+  const slotId = String(data.slotId);
+  const boothRef = db.collection('booths').doc(boothId);
   const { phase, nowMinutes } = await resolveClock();
   if (phase !== 'EVENT_DAY') {
     throw new HttpsError('failed-precondition', phaseBlockedMessage(phase));
   }
   const clientIp = requestIp(request);
-  const attemptBoothId = String(data.boothId);
-  await assertAccessCodeAttemptsAllowed(attemptBoothId, clientIp);
-  const existingForPhone = await loadReservationsByPhone(phoneDigits);
+  await assertAccessCodeAttemptsAllowed(boothId, clientIp);
 
-  if (
-    existingForPhone.some(
-      (item) => item.boothId === data.boothId && item.status !== 'CANCELLED',
-    )
-  ) {
-    throw new HttpsError(
-      'failed-precondition',
-      '같은 부스는 하루 1회만 예약할 수 있습니다.',
-    );
-  }
-  if (existingForPhone.some((item) => BLOCKING_STATUSES.includes(item.status))) {
-    throw new HttpsError(
-      'failed-precondition',
-      '진행 중인 예약이 있어 다른 부스를 예약할 수 없습니다.',
-    );
-  }
+  const nameKey = participantNameKey(data.participantName);
+  const phoneQuery = db.collection('reservations').where('phone', '==', phoneDigits);
+  const slotQuery = db
+    .collection('reservations')
+    .where('boothId', '==', boothId)
+    .where('slotId', '==', slotId);
 
-  const reservation = await db.runTransaction(async (tx) => {
-    const boothSnap = await tx.get(boothRef);
+  /**
+   * 예약 가능 판정 — 같은 검사를 두 번 돌린다.
+   *   1) 잠금 없이(tx 없음): 이미 마감·중복인 요청을 트랜잭션 경합에 넣지 않고 바로 거절
+   *   2) 트랜잭션 안: 최종 판정. 읽은 문서·쿼리가 커밋 전에 바뀌면 자동으로 다시 판정된다
+   */
+  const evaluate = async (tx?: FirebaseFirestore.Transaction) => {
+    const [boothSnap, phoneSnap, slotSnap] = await Promise.all([
+      tx ? tx.get(boothRef) : boothRef.get(),
+      tx ? tx.get(phoneQuery) : phoneQuery.get(),
+      tx ? tx.get(slotQuery) : slotQuery.get(),
+    ]);
     if (!boothSnap.exists) {
-      throw new Error('NOT_FOUND:부스를 찾을 수 없습니다.');
+      throw new BookingError('not-found', '부스를 찾을 수 없습니다.');
     }
-    const booth = asBooth(
-      boothSnap.id,
-      boothSnap.data() as Record<string, unknown>,
-    );
-    const slot = booth.slots.find((item) => item.id === data.slotId);
+    const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+    const slot = booth.slots.find((item) => item.id === slotId);
     if (!slot) {
-      throw new Error('NOT_FOUND:회차 정보를 찾을 수 없습니다.');
+      throw new BookingError('not-found', '회차 정보를 찾을 수 없습니다.');
     }
 
     if (booth.accessCodeConfigured) {
       const expected = await loadBoothAccessCode(booth.id, booth.accessCode, tx);
       if (!accessCodeMatches(expected, data.accessCode)) {
-        throw new Error('PERMISSION:현장코드가 올바르지 않습니다.');
+        throw new BookingError('permission-denied', '현장코드가 올바르지 않습니다.');
       }
     }
 
+    // 참가자 구분 = 보호자 연락처 + 참가자 이름.
+    // 한 보호자가 자녀 여러 명을 같은 번호로 예약할 수 있어야 하므로 이름이 다르면 다른 참가자로 본다.
+    const existingForPhone = phoneSnap.docs
+      .map((doc) => asReservation(doc.id, doc.data() as Record<string, unknown>))
+      .filter((item) => participantNameKey(item.participantName) === nameKey);
+    // 취소·미도착으로 끝난 예약은 "참여한 것"이 아니므로 같은 부스를 다시 예약할 수 있다.
+    if (
+      existingForPhone.some(
+        (item) =>
+          item.boothId === boothId &&
+          item.status !== 'CANCELLED' &&
+          item.status !== 'NO_SHOW',
+      )
+    ) {
+      throw new BookingError(
+        'failed-precondition',
+        '같은 부스는 하루 1회만 예약할 수 있습니다.',
+      );
+    }
+    if (existingForPhone.some((item) => BLOCKING_STATUSES.includes(item.status))) {
+      throw new BookingError(
+        'failed-precondition',
+        '진행 중인 예약이 있어 다른 부스를 예약할 수 없습니다.',
+      );
+    }
+
     // 슬롯 카운터 대신 실제 예약 문서를 세어 정원 초과를 막는다.
-    const slotReservationsSnap = await tx.get(
-      db
-        .collection('reservations')
-        .where('boothId', '==', data.boothId)
-        .where('slotId', '==', data.slotId),
-    );
     const usage = countSeatUsage(
-      slotReservationsSnap.docs.map((doc) =>
+      slotSnap.docs.map((doc) =>
         asReservation(doc.id, doc.data() as Record<string, unknown>),
       ),
     );
-    const slotWithLiveCounts = {
-      ...slot,
-      confirmedCount: usage.confirmed,
-    };
-
-    const bookable = canBookSlot(booth, slotWithLiveCounts, nowMinutes);
-    if (!bookable.allowed) {
-      throw new Error(
-        `FAILED_PRECONDITION:${bookable.reason ?? '예약할 수 없습니다.'}`,
-      );
-    }
-
-    const now = new Date().toISOString();
-    const status: ReservationStatus = 'CONFIRMED';
-    const reservationId = `rsv-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2, 7)}`;
-    const record: Reservation = {
-      id: reservationId,
-      reservationCode: generateReservationCode(new Set()),
-      boothId: booth.id,
-      slotId: slot.id,
-      scheduleSlotId: slot.scheduleSlotId,
-      participantName: data.participantName!.trim(),
-      phone: phoneDigits,
-      phoneLast4: getPhoneLast4(phoneDigits),
-      gradeOrAge: data.gradeOrAge!.trim(),
-      gender: data.gender as 'MALE' | 'FEMALE',
-      status,
-      portraitConsent: data.portraitConsent === true,
-      createdAt: now,
-      updatedAt: now,
-      updatedBy: null,
-      previousStatus: null,
-    };
-
-    const nextConfirmed = usage.confirmed + 1;
-    const nextSlots = booth.slots.map((item) =>
-      item.id === slot.id ? { ...item, confirmedCount: nextConfirmed } : item,
+    const bookable = canBookSlot(
+      booth,
+      { ...slot, confirmedCount: usage.confirmed },
+      nowMinutes,
     );
-
-    tx.set(db.collection('reservations').doc(reservationId), record);
-    tx.update(boothRef, {
-      slots: nextSlots,
-      status:
-        booth.status === 'CAPACITY_PENDING' ? 'BOOKING_OPEN' : booth.status,
-    });
-    return record;
-  }, { maxAttempts: 8 }).catch(async (error: unknown) => {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.startsWith('NOT_FOUND:')) {
-      throw new HttpsError('not-found', message.slice('NOT_FOUND:'.length));
-    }
-    if (message.startsWith('PERMISSION:')) {
-      await recordAccessCodeFailure(attemptBoothId, clientIp);
-      throw new HttpsError(
-        'permission-denied',
-        message.slice('PERMISSION:'.length),
-      );
-    }
-    if (message.startsWith('FAILED_PRECONDITION:')) {
-      throw new HttpsError(
+    if (!bookable.allowed) {
+      throw new BookingError(
         'failed-precondition',
-        message.slice('FAILED_PRECONDITION:'.length),
+        bookable.reason ?? '예약할 수 없습니다.',
       );
     }
+    return { booth, slot };
+  };
+
+  const reservation = await (async () => {
+    await evaluate();
+    return runContendedTransaction(async (tx) => {
+      // 잠금 문서 2개를 읽고(아래에서 씀) 같은 회차·같은 번호의 동시 요청을 직렬화한다.
+      // 부스 문서는 읽기만 하므로 같은 부스의 다른 회차 예약끼리는 서로 기다리지 않는다.
+      const slotLock = slotLockRef(boothId, slotId);
+      const phoneLock = phoneLockRef('rsv', phoneDigits);
+      const [{ booth, slot }] = await Promise.all([
+        evaluate(tx),
+        tx.get(slotLock),
+        tx.get(phoneLock),
+      ]);
+
+      const now = new Date().toISOString();
+      const status: ReservationStatus = 'CONFIRMED';
+      const reservationId = `rsv-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 7)}`;
+      const record: Reservation = {
+        id: reservationId,
+        reservationCode: generateReservationCode(new Set()),
+        boothId: booth.id,
+        slotId: slot.id,
+        scheduleSlotId: slot.scheduleSlotId,
+        participantName: data.participantName!.trim(),
+        phone: phoneDigits,
+        phoneLast4: getPhoneLast4(phoneDigits),
+        gradeOrAge: data.gradeOrAge!.trim(),
+        gender: data.gender as 'MALE' | 'FEMALE',
+        status,
+        portraitConsent: data.portraitConsent === true,
+        createdAt: now,
+        updatedAt: now,
+        updatedBy: null,
+        previousStatus: null,
+      };
+
+      tx.set(db.collection('reservations').doc(reservationId), record);
+      tx.set(slotLock, { lastReservationId: reservationId, updatedAt: now });
+      tx.set(phoneLock, { lastReservationId: reservationId, updatedAt: now });
+      return record;
+    });
+  })().catch(async (error: unknown) => {
+    if (error instanceof BookingError) {
+      if (error.httpsCode === 'permission-denied') {
+        await recordAccessCodeFailure(boothId, clientIp);
+      }
+      throw new HttpsError(error.httpsCode, error.message);
+    }
+    if (error instanceof HttpsError) throw error;
     console.error('createReservation failed', error);
     throw new HttpsError(
-      'internal',
-      '예약 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+      'unavailable',
+      '지금 예약 요청이 몰리고 있어요. 잠시 후 다시 눌러 주세요.',
     );
   });
 
-  await clearAccessCodeFailures(attemptBoothId, clientIp);
+  // 운영 화면용 카운터 캐시 갱신 — 예약은 이미 확정됐으므로 오래 기다리지 않는다.
+  await Promise.race([scheduleBoothSync(boothId), sleep(1_500)]);
+  await clearAccessCodeFailures(boothId, clientIp);
   return { reservation };
 });
 
@@ -507,33 +634,33 @@ export const cancelReservation = onCall(callableOpts, async (request) => {
   }
 
   const ref = db.collection('reservations').doc(reservationId);
-  const snap = await ref.get();
-  if (!snap.exists) {
-    throw new HttpsError('not-found', '예약을 찾을 수 없습니다.');
-  }
-  const current = asReservation(snap.id, snap.data() as Record<string, unknown>);
-
   const staff = await getStaff(request.auth.uid);
-  if (!canAccessBooth(staff, current.boothId)) {
-    throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
-  }
-
-  const allowed = ALLOWED_STATUS_TRANSITIONS[current.status];
-  if (!allowed.includes('CANCELLED')) {
-    throw new HttpsError('failed-precondition', '취소할 수 없는 상태입니다.');
-  }
-
   const now = new Date().toISOString();
   const operatorId = staff.uid;
   const operatorName = staff.name;
 
-  await ref.update({
-    previousStatus: current.status,
-    status: 'CANCELLED',
-    updatedAt: now,
-    updatedBy: operatorId,
+  // 두 운영자가 같은 예약을 동시에 누르면 나중 요청은 바뀐 상태를 보고 거절된다.
+  const current = await runContendedTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) {
+      throw new HttpsError('not-found', '예약을 찾을 수 없습니다.');
+    }
+    const found = asReservation(snap.id, snap.data() as Record<string, unknown>);
+    if (!canAccessBooth(staff, found.boothId)) {
+      throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
+    }
+    if (!ALLOWED_STATUS_TRANSITIONS[found.status].includes('CANCELLED')) {
+      throw new HttpsError('failed-precondition', '취소할 수 없는 상태입니다.');
+    }
+    tx.update(ref, {
+      previousStatus: found.status,
+      status: 'CANCELLED',
+      updatedAt: now,
+      updatedBy: operatorId,
+    });
+    return found;
   });
-  await recountAndUpdateBooth(current.boothId, current.slotId);
+  await scheduleBoothSync(current.boothId);
   await db.collection('operationLogs').add({
     reservationId: current.id,
     boothId: current.boothId,
@@ -564,31 +691,35 @@ export const changeReservationStatus = onCall(callableOpts, async (request) => {
   }
 
   const ref = db.collection('reservations').doc(reservationId);
-  const snap = await ref.get();
-  if (!snap.exists) {
-    throw new HttpsError('not-found', '예약을 찾을 수 없습니다.');
-  }
-  const current = asReservation(snap.id, snap.data() as Record<string, unknown>);
-  if (!canAccessBooth(staff, current.boothId)) {
-    throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
-  }
-  if (!ALLOWED_STATUS_TRANSITIONS[current.status].includes(nextStatus)) {
-    throw new HttpsError(
-      'failed-precondition',
-      `${current.status} → ${nextStatus} 변경이 불가합니다.`,
-    );
-  }
-
   const now = new Date().toISOString();
-  const updated: Reservation = {
-    ...current,
-    previousStatus: current.status,
-    status: nextStatus,
-    updatedAt: now,
-    updatedBy: staff.uid,
-  };
-  await ref.set(updated);
-  await recountAndUpdateBooth(current.boothId, current.slotId);
+
+  // 더블탭·두 운영자 동시 조작 대비 — 상태 확인과 쓰기를 한 트랜잭션으로 묶는다.
+  const { current, updated } = await runContendedTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) {
+      throw new HttpsError('not-found', '예약을 찾을 수 없습니다.');
+    }
+    const found = asReservation(snap.id, snap.data() as Record<string, unknown>);
+    if (!canAccessBooth(staff, found.boothId)) {
+      throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
+    }
+    if (!ALLOWED_STATUS_TRANSITIONS[found.status].includes(nextStatus)) {
+      throw new HttpsError(
+        'failed-precondition',
+        `${found.status} → ${nextStatus} 변경이 불가합니다.`,
+      );
+    }
+    const next: Reservation = {
+      ...found,
+      previousStatus: found.status,
+      status: nextStatus,
+      updatedAt: now,
+      updatedBy: staff.uid,
+    };
+    tx.set(ref, next);
+    return { current: found, updated: next };
+  });
+  await scheduleBoothSync(current.boothId);
   await db.collection('operationLogs').add({
     reservationId: current.id,
     boothId: current.boothId,
@@ -682,7 +813,7 @@ export const staffAddReservation = onCall(callableOpts, async (request) => {
     previousStatus: null,
   };
   await db.collection('reservations').doc(reservationId).set(record);
-  await recountAndUpdateBooth(booth.id, slot.id);
+  await scheduleBoothSync(booth.id);
   await db.collection('operationLogs').add({
     reservationId,
     boothId: booth.id,
@@ -754,30 +885,41 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
     const capacity = patch.capacity as number | null;
     patch.status = capacity === null ? 'CAPACITY_PENDING' : 'BOOKING_OPEN';
   }
-  if ('slotId' in (request.data ?? {}) && 'bookingOpen' in (request.data ?? {})) {
-    const boothSnap = await db.collection('booths').doc(boothId).get();
-    const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
-    const slotId = String(request.data.slotId);
-    const bookingOpen = Boolean(request.data.bookingOpen);
-    patch.slots = booth.slots.map((slot) =>
-      slot.id === slotId ? { ...slot, bookingOpen } : slot,
-    );
-  }
+  const slotToggle =
+    'slotId' in (request.data ?? {}) && 'bookingOpen' in (request.data ?? {})
+      ? {
+          slotId: String(request.data.slotId),
+          bookingOpen: Boolean(request.data.bookingOpen),
+        }
+      : null;
 
-  if (Object.keys(patch).length === 0) {
+  if (Object.keys(patch).length === 0 && !slotToggle) {
     throw new HttpsError('invalid-argument', '변경할 설정이 없습니다.');
   }
-  await db.collection('booths').doc(boothId).update(patch);
+
+  // slots 배열은 통째로 쓰는 필드라, 읽고-고쳐-쓰기를 트랜잭션으로 묶지 않으면
+  // 동시에 도는 카운터 동기화가 회차 중지를 되돌려 버릴 수 있다.
+  const boothRef = db.collection('booths').doc(boothId);
+  await runContendedTransaction(async (tx) => {
+    const boothSnap = await tx.get(boothRef);
+    if (!boothSnap.exists) {
+      throw new HttpsError('not-found', '부스를 찾을 수 없습니다.');
+    }
+    const next: Record<string, unknown> = { ...patch };
+    if (slotToggle) {
+      const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+      next.slots = booth.slots.map((slot) =>
+        slot.id === slotToggle.slotId
+          ? { ...slot, bookingOpen: slotToggle.bookingOpen }
+          : slot,
+      );
+    }
+    tx.update(boothRef, next as FirebaseFirestore.UpdateData<FirebaseFirestore.DocumentData>);
+  });
 
   // 정원 변경 후 슬롯 카운터를 실제 예약 기준으로 재동기화
   if ('capacity' in patch) {
-    const boothSnap = await db.collection('booths').doc(boothId).get();
-    if (boothSnap.exists) {
-      const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
-      for (const slot of booth.slots) {
-        await recountAndUpdateBooth(boothId, slot.id);
-      }
-    }
+    await scheduleBoothSync(boothId);
   }
 
   return { ok: true };
@@ -868,54 +1010,69 @@ export const createWalkInRegistration = onCall(callableOpts, async (request) => 
   }
 
   const name = data.participantName.trim();
-  const existingSnap = await db
+  const gender = data.gender;
+  const existingQuery = db
     .collection('walkInRegistrations')
-    .where('boothId', '==', data.boothId)
-    .where('phone', '==', phoneDigits)
-    .get();
-  const existingToday = existingSnap.docs
-    .map((doc) =>
-      asWalkInRegistration(doc.id, doc.data() as Record<string, unknown>),
-    )
-    .find(
-      (item) =>
-        item.status === 'REGISTERED' &&
-        isSameLocalDay(item.createdAt) &&
-        item.participantName.trim().toLowerCase() === name.toLowerCase(),
+    .where('boothId', '==', booth.id)
+    .where('phone', '==', phoneDigits);
+  // 더블탭으로 같은 등록이 동시에 들어와도 1건만 만들어지게, 번호 단위 잠금 문서와 함께
+  // "중복 확인 → 등록"을 한 트랜잭션으로 묶는다. 나중 요청은 먼저 만든 등록을 그대로 돌려받는다.
+  const lockRef = phoneLockRef(`walkin_${booth.id}`, phoneDigits);
+
+  const outcome = await runContendedTransaction(async (tx) => {
+    const [existingSnap] = await Promise.all([tx.get(existingQuery), tx.get(lockRef)]);
+    const existingToday = existingSnap.docs
+      .map((doc) =>
+        asWalkInRegistration(doc.id, doc.data() as Record<string, unknown>),
+      )
+      .find(
+        (item) =>
+          item.status === 'REGISTERED' &&
+          isSameLocalDay(item.createdAt) &&
+          item.participantName.trim().toLowerCase() === name.toLowerCase(),
+      );
+    if (existingToday) {
+      return { registration: existingToday, duplicate: true };
+    }
+
+    const now = new Date().toISOString();
+    const registrationId = `walkin-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 7)}`;
+    const registration: WalkInRegistration = {
+      id: registrationId,
+      boothId: booth.id,
+      participantName: name,
+      phone: phoneDigits,
+      maskedPhone: maskPhone(phoneDigits),
+      phoneLastFour: getPhoneLast4(phoneDigits),
+      gradeOrAge: data.gradeOrAge?.trim() || null,
+      gender,
+      confirmationNumber: generateWalkInConfirmationNumber(new Set()),
+      status: 'REGISTERED',
+      portraitConsent: data.portraitConsent === true,
+      createdAt: now,
+      cancelledAt: null,
+    };
+    tx.set(db.collection('walkInRegistrations').doc(registrationId), registration);
+    tx.set(lockRef, { lastRegistrationId: registrationId, updatedAt: now });
+    return { registration, duplicate: false };
+  }).catch((error: unknown) => {
+    if (error instanceof HttpsError) throw error;
+    console.error('createWalkInRegistration failed', error);
+    throw new HttpsError(
+      'unavailable',
+      '지금 등록 요청이 몰리고 있어요. 잠시 후 다시 눌러 주세요.',
     );
+  });
 
-  if (existingToday) {
-    await boothRef.update({
-      walkInDuplicateBlockCount: FieldValue.increment(1),
-    });
-    return { registration: existingToday, duplicate: true };
+  if (outcome.duplicate) {
+    // 통계용 카운터 — 실패해도 등록 결과에는 영향이 없다.
+    await boothRef
+      .update({ walkInDuplicateBlockCount: FieldValue.increment(1) })
+      .catch(() => undefined);
   }
-
-  const now = new Date().toISOString();
-  const registrationId = `walkin-${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2, 7)}`;
-  const registration: WalkInRegistration = {
-    id: registrationId,
-    boothId: booth.id,
-    participantName: name,
-    phone: phoneDigits,
-    maskedPhone: maskPhone(phoneDigits),
-    phoneLastFour: getPhoneLast4(phoneDigits),
-    gradeOrAge: data.gradeOrAge?.trim() || null,
-    gender: data.gender,
-    confirmationNumber: generateWalkInConfirmationNumber(new Set()),
-    status: 'REGISTERED',
-    portraitConsent: data.portraitConsent === true,
-    createdAt: now,
-    cancelledAt: null,
-  };
-
-  await db
-    .collection('walkInRegistrations')
-    .doc(registrationId)
-    .set(registration);
-  return { registration, duplicate: false };
+  return outcome;
 });
 
 export const getMyWalkInRegistrations = onCall(callableOpts, async (request) => {

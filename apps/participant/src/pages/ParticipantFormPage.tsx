@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
 import {
@@ -40,6 +40,8 @@ export function ParticipantFormPage() {
   const [kindergartenAge, setKindergartenAge] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  // 따닥 더블탭 방지 — pending state 는 다음 렌더에야 버튼을 막으므로, 즉시 반영되는 ref 로 한 번 더 막는다
+  const submittingRef = useRef(false);
 
   const gradeOrAge = useMemo(() => {
     if (track === 'ELEMENTARY' && elementaryGrade != null) {
@@ -76,6 +78,7 @@ export function ParticipantFormPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (submittingRef.current) return;
     if (!participantName.trim() || !phone.trim()) {
       setError('이름과 연락처를 입력해 주세요.');
       return;
@@ -112,6 +115,7 @@ export function ParticipantFormPage() {
     const accessCode =
       state.accessCode || getGrantedBoothAccessCode(currentBooth.id) || undefined;
 
+    submittingRef.current = true;
     setPending(true);
     setError('');
     const result = await createReservation({
@@ -124,6 +128,7 @@ export function ParticipantFormPage() {
       accessCode,
       portraitConsent: state.portraitConsent === true,
     });
+    submittingRef.current = false;
     setPending(false);
 
     if (!result.ok) {

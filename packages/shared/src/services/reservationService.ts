@@ -38,11 +38,14 @@ export function generateReservationCode(existing: Set<string>): string {
 export function countSeatUsage(reservations: Reservation[]): {
   confirmed: number;
 } {
+  // 미도착(NO_SHOW)은 운영자 확인용 표시일 뿐 자리를 비우지 않는다 — 참가자에게는 계속 마감으로 보인다.
+  // (늦게 온 참가자를 도착 확인으로 되살릴 수 있어야 하므로 자리를 그대로 잡아 둔다.) 자리를 비우는 것은 취소뿐이다.
   const occupying: ReservationStatus[] = [
     'CONFIRMED',
     'CHECKED_IN',
     'IN_PROGRESS',
     'COMPLETED',
+    'NO_SHOW',
   ];
 
   return {

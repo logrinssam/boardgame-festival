@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAppStore } from '../context/AppStore';
 import {
@@ -31,6 +31,8 @@ export function WalkInRegisterPage() {
   const [kindergartenAge, setKindergartenAge] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  // 따닥 더블탭 방지 — pending state 는 다음 렌더에야 버튼을 막으므로, 즉시 반영되는 ref 로 한 번 더 막는다
+  const submittingRef = useRef(false);
 
   const gradeOrAge = useMemo(() => {
     if (track === 'ELEMENTARY' && elementaryGrade != null) {
@@ -66,6 +68,7 @@ export function WalkInRegisterPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (submittingRef.current) return;
     if (!agreed) {
       setError('개인정보 수집·이용 및 초상권 활용에 동의해 주세요.');
       return;
@@ -90,6 +93,7 @@ export function WalkInRegisterPage() {
       }
     }
 
+    submittingRef.current = true;
     setPending(true);
     setError('');
     const result = await createWalkInRegistration({
@@ -102,6 +106,7 @@ export function WalkInRegisterPage() {
       // 초상권 동의가 필수라 체크 = 동의
       portraitConsent: true,
     });
+    submittingRef.current = false;
     setPending(false);
 
     if (!result.ok) {
