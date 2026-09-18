@@ -603,6 +603,100 @@ export const changeReservationStatus = onCall(callableOpts, async (request) => {
   return { reservation: updated };
 });
 
+/**
+ * 운영자 현장 추가 — 미도착 자리 등에 교사가 현장에서 바로 넣는다.
+ * 시간(지난 회차)·정원·현장코드 검사를 모두 건너뛴다. 인원은 교사 재량.
+ * 이미 부스 앞에 와 있는 참가자이므로 CHECKED_IN 으로 만든다.
+ */
+export const staffAddReservation = onCall(callableOpts, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const staff = await getStaff(request.auth.uid);
+  const data = request.data as {
+    boothId?: string;
+    slotId?: string;
+    participantName?: string;
+    phone?: string;
+    gradeOrAge?: string;
+    gender?: string;
+  };
+  const boothId = String(data.boothId ?? '');
+  const slotId = String(data.slotId ?? '');
+  const participantName = String(data.participantName ?? '').trim();
+  if (!boothId || !slotId) {
+    throw new HttpsError('invalid-argument', '필수 정보가 없습니다.');
+  }
+  if (participantName.length === 0 || participantName.length > MAX_NAME_LENGTH) {
+    throw new HttpsError(
+      'invalid-argument',
+      `이름은 1~${MAX_NAME_LENGTH}자로 입력해 주세요.`,
+    );
+  }
+  if (!canAccessBooth(staff, boothId)) {
+    throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
+  }
+
+  // 전화번호·학년·성별은 선택 — 급할 때 이름만으로 추가할 수 있게
+  const phoneDigits = digitsOnly(String(data.phone ?? ''));
+  if (phoneDigits && !MOBILE_PHONE_RE.test(phoneDigits)) {
+    throw new HttpsError(
+      'invalid-argument',
+      '휴대폰 번호를 정확히 입력해 주세요. (비워 둘 수 있습니다)',
+    );
+  }
+  const gradeOrAge = String(data.gradeOrAge ?? '').trim().slice(0, MAX_GRADE_LENGTH);
+  const gender =
+    data.gender === 'MALE' || data.gender === 'FEMALE' ? data.gender : null;
+
+  const boothSnap = await db.collection('booths').doc(boothId).get();
+  if (!boothSnap.exists) {
+    throw new HttpsError('not-found', '부스를 찾을 수 없습니다.');
+  }
+  const booth = asBooth(boothSnap.id, boothSnap.data() as Record<string, unknown>);
+  const slot = booth.slots.find((item) => item.id === slotId);
+  if (!slot) {
+    throw new HttpsError('not-found', '회차 정보를 찾을 수 없습니다.');
+  }
+
+  const now = new Date().toISOString();
+  const reservationId = `rsv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const record: Reservation = {
+    id: reservationId,
+    reservationCode: generateReservationCode(new Set()),
+    boothId: booth.id,
+    slotId: slot.id,
+    scheduleSlotId: slot.scheduleSlotId,
+    participantName,
+    phone: phoneDigits,
+    phoneLast4: phoneDigits ? getPhoneLast4(phoneDigits) : '',
+    gradeOrAge,
+    gender,
+    status: 'CHECKED_IN',
+    portraitConsent: false,
+    createdAt: now,
+    updatedAt: now,
+    updatedBy: staff.uid,
+    previousStatus: null,
+  };
+  await db.collection('reservations').doc(reservationId).set(record);
+  await recountAndUpdateBooth(booth.id, slot.id);
+  await db.collection('operationLogs').add({
+    reservationId,
+    boothId: booth.id,
+    slotId: slot.id,
+    action: '현장 추가',
+    previousStatus: null,
+    newStatus: 'CHECKED_IN',
+    operatorId: staff.uid,
+    operatorName: staff.name,
+    participantName,
+    createdAt: now,
+  });
+
+  return { reservation: record };
+});
+
 export const updateBoothSettings = onCall(callableOpts, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');

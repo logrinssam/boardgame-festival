@@ -26,6 +26,7 @@ const services = [
   'getmyreservations',
   'cancelreservation',
   'changereservationstatus',
+  'staffaddreservation',
   'updateboothsettings',
   'createwalkinregistration',
   'getmywalkinregistrations',

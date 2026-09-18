@@ -16,6 +16,7 @@ import {
   type Reservation,
   type ReservationStatus,
 } from '@bgf/shared';
+import { StaffAddParticipantForm } from '../../components/StaffAddParticipantForm';
 import { StaffWalkInOpsPanel } from '../../components/StaffWalkInOpsPanel';
 import { useBoothAccessCode } from '../../services/boothSecrets';
 function nowMinutes(): number {
@@ -323,8 +324,10 @@ export function StaffBoothOpsPage() {
               />
             </div>
             <p className="admin-meta">
-              {maskPhone(reservation.phone)} · 뒤 {reservation.phoneLast4} · #
-              {reservation.reservationCode}
+              {reservation.phone
+                ? `${maskPhone(reservation.phone)} · 뒤 ${reservation.phoneLast4} · `
+                : ''}
+              #{reservation.reservationCode}
               {reservation.gender
                 ? ` · ${reservation.gender === 'MALE' ? '남' : '여'}`
                 : ''}
@@ -358,6 +361,13 @@ export function StaffBoothOpsPage() {
           <div className="empty-state">이 회차 예약자가 없습니다.</div>
         ) : null}
       </div>
+
+      <StaffAddParticipantForm
+        key={currentBoothSlot.id}
+        boothId={currentBooth.id}
+        slotId={currentBoothSlot.id}
+        slotLabel={`${formatTimeRange(currentSchedule.startTime, currentSchedule.endTime)} 회차`}
+      />
 
       <section className="glass-card">
         <h3 className="section-title">일괄 처리</h3>

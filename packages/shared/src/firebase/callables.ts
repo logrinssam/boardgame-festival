@@ -68,6 +68,25 @@ export async function changeReservationStatusCallable(input: {
   }
 }
 
+/** 운영자 현장 추가 — 시간·정원 검사 없이 해당 회차에 바로 넣는다 (이름만 필수) */
+export async function staffAddReservationCallable(input: {
+  boothId: string;
+  slotId: string;
+  participantName: string;
+  phone?: string;
+  gradeOrAge?: string;
+  gender?: 'MALE' | 'FEMALE' | null;
+}): Promise<{ ok: true; reservation: Reservation } | { ok: false; message: string }> {
+  try {
+    const result = await fn<typeof input, { reservation: Reservation }>(
+      'staffAddReservation',
+    )(input);
+    return { ok: true, reservation: result.data.reservation };
+  } catch (error) {
+    return { ok: false, message: callableErrorMessage(error) };
+  }
+}
+
 export async function updateBoothSettingsCallable(input: {
   boothId: string;
   accessCode?: string;

@@ -16,6 +16,7 @@ export {
   cancelReservationCallable as cancelReservationRemote,
   changeReservationStatusCallable as changeReservationStatusRemote,
   updateBoothSettingsCallable as updateBoothSettingsRemote,
+  staffAddReservationCallable as staffAddReservationRemote,
 } from './callables';
 
 function asBooth(id: string, data: Record<string, unknown>): Booth {
