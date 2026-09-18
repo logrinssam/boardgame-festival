@@ -897,6 +897,13 @@ export const setWalkInBoothStatus = onCall(callableOpts, async (request) => {
 });
 
 export const cancelWalkInRegistration = onCall(callableOpts, async (request) => {
+  // 인증을 먼저 본다 — 비로그인 호출자에게 등록 ID 존재 여부조차 알려주지 않는다.
+  if (!request.auth?.uid) {
+    throw new HttpsError(
+      'unauthenticated',
+      '등록 취소는 부스 운영자에게 요청해 주세요.',
+    );
+  }
   const registrationId = String(request.data?.registrationId ?? '');
   if (!registrationId) {
     throw new HttpsError('invalid-argument', '등록 ID가 필요합니다.');
@@ -912,12 +919,6 @@ export const cancelWalkInRegistration = onCall(callableOpts, async (request) => 
     snap.data() as Record<string, unknown>,
   );
 
-  if (!request.auth?.uid) {
-    throw new HttpsError(
-      'unauthenticated',
-      '등록 취소는 부스 운영자에게 요청해 주세요.',
-    );
-  }
   const staff = await getStaff(request.auth.uid);
   if (!canAccessBooth(staff, current.boothId)) {
     throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
