@@ -263,6 +263,19 @@ function seed({ booths = 5, capacity = 6 } = {}) {
     name: '시뮬 운영자',
     assignedBoothIds: [],
   });
+  // 예약 취소는 이 사람만 할 수 있다
+  db._write('staffAssignments/staff-yerin', {
+    isActive: true,
+    role: 'HEAD_ADMIN',
+    name: '황보예린',
+    assignedBoothIds: [],
+  });
+  db._write('staffAssignments/staff-booth', {
+    isActive: true,
+    role: 'BOOTH_STAFF',
+    name: '시뮬 부스팀장',
+    assignedBoothIds: ['b1'],
+  });
   for (let i = 1; i <= booths; i += 1) {
     const walkIn = i === booths; // 마지막 부스는 현장등록 부스
     db._write(`booths/b${i}`, {
@@ -499,14 +512,100 @@ const scenarios = {
     if (!revived.ok) extra.push('미도착 → 도착 확인 되살리기 실패');
     // 3) 부스 운영자 화면에는 취소가 없다 — 총괄 관리자 화면의 「예약 취소」(비상용)만 자리를 연다.
     //    그 순간 동시에 누른 50명 중 1명만 성공해야 한다.
+    for (const uid of ['staff-1', 'staff-booth']) {
+      const denied = await invoke(
+        'changeReservationStatus',
+        { reservationId, nextStatus: 'CANCELLED', actionLabel: '예약 취소' },
+        { uid },
+      );
+      const denied2 = await invoke('cancelReservation', { reservationId }, { uid });
+      if (denied.ok || denied2.ok) extra.push(`${uid} 가 예약을 취소할 수 있음 (황보예린만 가능해야 함)`);
+    }
     const [cancelled, afterCancel] = await Promise.all([
-      invoke('changeReservationStatus', { reservationId, nextStatus: 'CANCELLED', actionLabel: '예약 취소' }, auth),
+      invoke(
+        'changeReservationStatus',
+        { reservationId, nextStatus: 'CANCELLED', actionLabel: '예약 취소' },
+        { uid: 'staff-yerin' },
+      ),
       rush(),
     ]);
     if (!cancelled.ok) extra.push('취소 실패');
     const winners = afterCancel.filter((r) => r.ok).length;
     if (winners > 1) extra.push(`취소로 열린 1석에 ${winners}명이 예약됨`);
     return { results: [...duringNoShow, ...afterCancel], extra };
+  },
+  async '오픈 러시 XL — 1,000명이 13개 부스에, 3초에 걸쳐 몰리고 5명 중 1명은 따닥'() {
+    seed({ booths: 14 });
+    const jobs = [];
+    for (let i = 0; i < 1000; i += 1) {
+      const phone = newPhone();
+      const boothId = `b${(i % 13) + 1}`;
+      const slotId = SLOT_IDS[Math.floor(Math.random() * 4)];
+      const taps = i % 5 === 0 ? 2 : 1;
+      const delay = rand(0, 3000);
+      for (let tap = 0; tap < taps; tap += 1) {
+        jobs.push(sleep(delay + tap * rand(0, 80)).then(() => book(boothId, slotId, phone, `러시${i}`)));
+      }
+    }
+    return { results: await Promise.all(jobs), expectOk: 13 * 4 * 6 };
+  },
+  async '오픈 러시 인기 쏠림 — 600명 중 70%가 인기 부스 2곳의 첫 회차로'() {
+    seed();
+    const jobs = [];
+    for (let i = 0; i < 600; i += 1) {
+      const hot = Math.random() < 0.7;
+      const boothId = hot ? `b${(i % 2) + 1}` : `b${(i % 4) + 1}`;
+      const slotId = hot ? 's1' : SLOT_IDS[Math.floor(Math.random() * 4)];
+      jobs.push(sleep(rand(0, 1500)).then(() => book(boothId, slotId, newPhone())));
+    }
+    return { results: await Promise.all(jobs) };
+  },
+  async '조작 시도 — 경로 주입·권한 없는 설정 변경·비로그인 운영 호출'() {
+    seed();
+    const extra = [];
+    const expectDenied = async (label, promise, codes) => {
+      const r = await promise;
+      if (r.ok || !codes.includes(r.code)) extra.push(`${label}: 막혀야 하는데 ${r.ok ? '성공' : r.code}`);
+      return r;
+    };
+    const results = await Promise.all([
+      expectDenied('부스 ID 경로 주입', book('b1/../../staffAssignments/staff-1', 's1', newPhone()), ['invalid-argument']),
+      expectDenied('회차 ID 경로 주입', book('b1', '../s1', newPhone()), ['invalid-argument']),
+      expectDenied('객체를 ID로 전달', invoke('getBoothSessions', { boothId: { $ne: null } }), ['invalid-argument']),
+      expectDenied(
+        '부스 팀장이 정원 변경',
+        invoke('updateBoothSettings', { boothId: 'b1', capacity: 999 }, { uid: 'staff-booth' }),
+        ['permission-denied'],
+      ),
+      expectDenied(
+        '부스 팀장이 현장코드 변경',
+        invoke('updateBoothSettings', { boothId: 'b1', accessCode: '1111' }, { uid: 'staff-booth' }),
+        ['permission-denied'],
+      ),
+      expectDenied(
+        '부스 팀장이 남의 부스 회차 중지',
+        invoke('updateBoothSettings', { boothId: 'b2', slotId: 's1', bookingOpen: false }, { uid: 'staff-booth' }),
+        ['permission-denied'],
+      ),
+      expectDenied(
+        '비로그인 상태 변경',
+        invoke('changeReservationStatus', { reservationId: 'x', nextStatus: 'CHECKED_IN' }),
+        ['unauthenticated'],
+      ),
+      expectDenied(
+        '비로그인 현장 추가',
+        invoke('staffAddReservation', { boothId: 'b1', slotId: 's1', participantName: '침입자' }),
+        ['unauthenticated'],
+      ),
+      expectDenied(
+        '등록 안 된 계정의 운영 호출',
+        invoke('staffAddReservation', { boothId: 'b1', slotId: 's1', participantName: '침입자' }, { uid: 'ghost' }),
+        ['permission-denied'],
+      ),
+    ]);
+    if (db.docs.get('booths/b1').data.capacity !== 6) extra.push('정원이 바뀌어 버림');
+    // 막힌 시도는 정상 거절이므로 시스템 오류로 세지 않는다
+    return { results: results.map((r) => ({ ...r, code: r.ok ? r.code : 'blocked' })), extra };
   },
   async '예약 러시 중 운영자 조작 — 도착확인·미도착·현장추가·회차중지'() {
     seed();

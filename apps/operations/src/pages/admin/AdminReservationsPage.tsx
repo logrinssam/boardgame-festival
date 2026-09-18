@@ -4,6 +4,12 @@ import { formatTimeRange } from '@bgf/shared';
 import { maskPhone } from '@bgf/shared';
 import { RESERVATION_STATUS_LABELS } from '@bgf/shared';
 
+/** 예약 취소(자리를 다시 여는 유일한 조작)는 지정된 본부 관리자에게만 보인다 — 서버도 같은 이름으로 다시 막는다 */
+const RESERVATION_CANCEL_OPERATORS = ['황보예린'];
+function canCancelReservations(name: string): boolean {
+  return RESERVATION_CANCEL_OPERATORS.includes(name.trim());
+}
+
 export function AdminReservationsPage() {
   const { reservations, getBooth, getSlot, changeReservationStatus, session } =
     useAppStore();
@@ -55,7 +61,8 @@ export function AdminReservationsPage() {
             </p>
             {(reservation.status === 'CONFIRMED' ||
               reservation.status === 'CHECKED_IN') &&
-            session ? (
+            session &&
+            canCancelReservations(session.name) ? (
               <button
                 type="button"
                 className="btn btn-cancel"

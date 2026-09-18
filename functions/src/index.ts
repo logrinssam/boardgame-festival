@@ -222,9 +222,40 @@ const callableOpts = { invoker: 'public' as const };
  * 참가자가 몰리는 콜러블은 인스턴스 1개를 항상 띄워 둔다 (콜드 스타트 2~4초 회피).
  * 대기 비용은 인스턴스당 월 수천 원 수준 — 행사 후 0으로 낮춰도 된다.
  */
-const hotCallableOpts = { ...callableOpts, minInstances: 1 };
+const hotCallableOpts = { ...callableOpts, minInstances: 2 };
+
+/**
+ * 예약 생성 — 오픈 시각(08:30 / 12:45)에 한꺼번에 몰린다. 새 인스턴스가 뜨는 2~4초 동안
+ * 요청이 밀리지 않게 미리 3개를 띄워 두고(동시 240건), 트랜잭션 재시도가 겹쳐도 여유 있게 메모리를 늘린다.
+ */
+const bookingCallableOpts = { ...callableOpts, minInstances: 3, memory: '512MiB' as const };
 
 // ---- 입력 검증 ----
+/**
+ * 문서 ID로 쓰이는 입력값 검증 — 영문·숫자·-·_ 만 허용한다.
+ * '/' 나 '..' 가 섞인 값이 문서 경로로 들어가 다른 컬렉션을 가리키거나 내부 오류를 내지 못하게 한다.
+ * 형식이 틀리면 빈 문자열을 돌려주고, 각 함수의 "필수 정보 없음" 검사가 거절한다.
+ */
+const SAFE_ID_RE = /^[A-Za-z0-9_-]{1,80}$/;
+function safeId(value: unknown): string {
+  const text = typeof value === 'string' ? value : '';
+  return SAFE_ID_RE.test(text) ? text : '';
+}
+
+/**
+ * 예약 취소(자리를 다시 여는 유일한 조작)는 지정된 본부 관리자만 할 수 있다.
+ * 화면에서 버튼을 숨기는 것과 별개로 서버가 최종 판정한다.
+ */
+const RESERVATION_CANCEL_OPERATORS = ['황보예린'];
+function assertCanCancelReservation(staff: StaffAssignment): void {
+  if (
+    staff.role !== 'HEAD_ADMIN' ||
+    !RESERVATION_CANCEL_OPERATORS.includes(String(staff.name).trim())
+  ) {
+    throw new HttpsError('permission-denied', '예약 취소 권한이 없습니다.');
+  }
+}
+
 // 한국 휴대폰: 01X + 7~8자리 (하이픈 제거 후). 자릿수만 보던 이전 검사는 아무 숫자나 통과시켰다.
 const MOBILE_PHONE_RE = /^01\d{8,9}$/;
 const MAX_NAME_LENGTH = 20;
@@ -428,7 +459,7 @@ async function resolveClock(): Promise<{
   }
 }
 
-export const createReservation = onCall(hotCallableOpts, async (request) => {
+export const createReservation = onCall(bookingCallableOpts, async (request) => {
   const data = request.data as {
     boothId?: string;
     slotId?: string;
@@ -458,8 +489,11 @@ export const createReservation = onCall(hotCallableOpts, async (request) => {
     gradeOrAge: data.gradeOrAge,
   });
 
-  const boothId = String(data.boothId);
-  const slotId = String(data.slotId);
+  const boothId = safeId(data.boothId);
+  const slotId = safeId(data.slotId);
+  if (!boothId || !slotId) {
+    throw new HttpsError('invalid-argument', '부스 또는 회차 정보가 올바르지 않습니다.');
+  }
   const boothRef = db.collection('booths').doc(boothId);
   const { phase, nowMinutes } = await resolveClock();
   if (phase !== 'EVENT_DAY') {
@@ -628,13 +662,14 @@ export const cancelReservation = onCall(callableOpts, async (request) => {
       '예약 취소는 부스 운영자에게 요청해 주세요.',
     );
   }
-  const reservationId = String(request.data?.reservationId ?? '');
+  const reservationId = safeId(request.data?.reservationId);
   if (!reservationId) {
     throw new HttpsError('invalid-argument', '예약 ID가 필요합니다.');
   }
 
   const ref = db.collection('reservations').doc(reservationId);
   const staff = await getStaff(request.auth.uid);
+  assertCanCancelReservation(staff);
   const now = new Date().toISOString();
   const operatorId = staff.uid;
   const operatorName = staff.name;
@@ -682,12 +717,15 @@ export const changeReservationStatus = onCall(callableOpts, async (request) => {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
   }
   const staff = await getStaff(request.auth.uid);
-  const reservationId = String(request.data?.reservationId ?? '');
+  const reservationId = safeId(request.data?.reservationId);
   const nextStatus = request.data?.nextStatus as ReservationStatus | undefined;
-  const actionLabel = String(request.data?.actionLabel ?? '상태 변경');
+  const actionLabel = String(request.data?.actionLabel ?? '상태 변경').slice(0, 40);
 
   if (!reservationId || !nextStatus) {
     throw new HttpsError('invalid-argument', '필수 정보가 없습니다.');
+  }
+  if (nextStatus === 'CANCELLED') {
+    assertCanCancelReservation(staff);
   }
 
   const ref = db.collection('reservations').doc(reservationId);
@@ -754,8 +792,8 @@ export const staffAddReservation = onCall(callableOpts, async (request) => {
     gradeOrAge?: string;
     gender?: string;
   };
-  const boothId = String(data.boothId ?? '');
-  const slotId = String(data.slotId ?? '');
+  const boothId = safeId(data.boothId);
+  const slotId = safeId(data.slotId);
   const participantName = String(data.participantName ?? '').trim();
   if (!boothId || !slotId) {
     throw new HttpsError('invalid-argument', '필수 정보가 없습니다.');
@@ -835,9 +873,19 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
   }
   const staff = await getStaff(request.auth.uid);
-  const boothId = String(request.data?.boothId ?? '');
+  const boothId = safeId(request.data?.boothId);
   if (!boothId || !canAccessBooth(staff, boothId)) {
     throw new HttpsError('permission-denied', '해당 부스 권한이 없습니다.');
+  }
+
+  if (
+    staff.role !== 'HEAD_ADMIN' &&
+    ('accessCode' in (request.data ?? {}) || 'capacity' in (request.data ?? {}))
+  ) {
+    throw new HttpsError(
+      'permission-denied',
+      '정원·현장코드는 본부 관리자만 바꿀 수 있습니다.',
+    );
   }
 
   const patch: Record<string, unknown> = {};
@@ -888,7 +936,7 @@ export const updateBoothSettings = onCall(callableOpts, async (request) => {
   const slotToggle =
     'slotId' in (request.data ?? {}) && 'bookingOpen' in (request.data ?? {})
       ? {
-          slotId: String(request.data.slotId),
+          slotId: safeId(request.data.slotId),
           bookingOpen: Boolean(request.data.bookingOpen),
         }
       : null;
@@ -966,7 +1014,11 @@ export const createWalkInRegistration = onCall(callableOpts, async (request) => 
     );
   }
 
-  const boothRef = db.collection('booths').doc(data.boothId);
+  const walkInBoothId = safeId(data.boothId);
+  if (!walkInBoothId) {
+    throw new HttpsError('invalid-argument', '부스 정보가 올바르지 않습니다.');
+  }
+  const boothRef = db.collection('booths').doc(walkInBoothId);
   const boothSnap = await boothRef.get();
   if (!boothSnap.exists) {
     throw new HttpsError('not-found', '부스를 찾을 수 없습니다.');
@@ -1096,7 +1148,7 @@ export const getMyWalkInRegistrations = onCall(callableOpts, async (request) => 
 });
 
 export const getWalkInRegistration = onCall(callableOpts, async (request) => {
-  const registrationId = String(request.data?.registrationId ?? '');
+  const registrationId = safeId(request.data?.registrationId);
   if (!registrationId) {
     throw new HttpsError('invalid-argument', '등록 ID가 필요합니다.');
   }
@@ -1124,7 +1176,7 @@ export const setWalkInBoothStatus = onCall(callableOpts, async (request) => {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
   }
   const staff = await getStaff(request.auth.uid);
-  const boothId = String(request.data?.boothId ?? '');
+  const boothId = safeId(request.data?.boothId);
   const publicStatus = request.data?.publicStatus as
     | WalkInBoothPublicStatus
     | undefined;
@@ -1157,7 +1209,7 @@ export const cancelWalkInRegistration = onCall(callableOpts, async (request) => 
       '등록 취소는 부스 운영자에게 요청해 주세요.',
     );
   }
-  const registrationId = String(request.data?.registrationId ?? '');
+  const registrationId = safeId(request.data?.registrationId);
   if (!registrationId) {
     throw new HttpsError('invalid-argument', '등록 ID가 필요합니다.');
   }
@@ -1208,7 +1260,7 @@ const SESSIONS_CACHE_MS = 5_000;
 const sessionsCache = new Map<string, { expiresAt: number; value: unknown }>();
 
 export const getBoothSessions = onCall(hotCallableOpts, async (request) => {
-  const boothId = String(request.data?.boothId ?? '');
+  const boothId = safeId(request.data?.boothId);
   if (!boothId) {
     throw new HttpsError('invalid-argument', '부스 ID가 필요합니다.');
   }
@@ -1323,7 +1375,7 @@ export const getSiteStatus = onCall(hotCallableOpts, async () => {
  * 최종 판정은 createReservation / createWalkInRegistration 이 다시 한다.
  */
 export const verifyBoothAccessCode = onCall(callableOpts, async (request) => {
-  const boothId = String(request.data?.boothId ?? '');
+  const boothId = safeId(request.data?.boothId);
   const input = normalizeAccessCode(request.data?.accessCode);
   if (!boothId) {
     throw new HttpsError('invalid-argument', '부스 ID가 필요합니다.');
