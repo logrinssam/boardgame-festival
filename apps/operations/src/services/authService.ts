@@ -106,7 +106,17 @@ export async function verifyOperatorPin(
       code === 'auth/user-not-found' ||
       code === 'auth/invalid-email'
     ) {
-      return { ok: false, message: '로그인 정보가 올바르지 않습니다.' };
+      return { ok: false, message: '이름 또는 PIN이 올바르지 않습니다. 다시 입력해 주세요.' };
+    }
+    if (code === 'auth/too-many-requests') {
+      // Firebase 가 짧은 시간의 반복 실패를 잠시 막은 상태 — 몇 분 뒤 자동 해제된다
+      return {
+        ok: false,
+        message: 'PIN을 여러 번 잘못 입력해 잠시 차단되었습니다. 몇 분 후 다시 시도해 주세요.',
+      };
+    }
+    if (code === 'auth/network-request-failed') {
+      return { ok: false, message: '네트워크 연결을 확인한 뒤 다시 시도해 주세요.' };
     }
     console.error(error);
     return { ok: false, message: '로그인 중 오류가 발생했습니다.' };
