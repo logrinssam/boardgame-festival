@@ -1,6 +1,7 @@
 import { useAppStore } from '../../context/AppStore';
 import { useState } from 'react';
 import { storage } from '@bgf/shared';
+import { backupParticipantsNowRemote } from '@bgf/shared/firebase/reservations';
 import {
   buildParticipantCsv,
   downloadCsv,
@@ -10,6 +11,8 @@ export function AdminSettingsPage() {
   const { logout, booths, reservations, walkIns, logs, session } =
     useAppStore();
   const [downloadMessage, setDownloadMessage] = useState('');
+  const [backupError, setBackupError] = useState('');
+  const [backingUp, setBackingUp] = useState(false);
 
   function wipePersonalData() {
     if (
@@ -24,18 +27,32 @@ export function AdminSettingsPage() {
     window.location.reload();
   }
 
-  function downloadParticipants() {
-    if (session?.role !== 'HEAD_ADMIN') return;
-    const { csv, rowCount } = buildParticipantCsv({
-      booths,
-      reservations,
-      walkIns,
-    });
+  async function backupAndDownload() {
+    if (session?.role !== 'HEAD_ADMIN' || backingUp) return;
+    setBackingUp(true);
+    setBackupError('');
+    setDownloadMessage('');
+    // 1) 서버: Firestore 원본을 비공개 백업 버킷에 저장하고 같은 데이터를 받는다
+    const remote = await backupParticipantsNowRemote();
+    // 2) 이 기기: 파일로 저장. 서버 백업이 실패해도 화면에 받아 둔 실시간 데이터로 저장은 한다
+    const source = remote.ok
+      ? { booths: remote.booths, reservations: remote.reservations, walkIns: remote.walkIns }
+      : { booths, reservations, walkIns };
+    const { csv, rowCount } = buildParticipantCsv(source);
     const now = new Date();
     const pad = (value: number) => String(value).padStart(2, '0');
     const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
     downloadCsv(csv, `참가자-전체-${stamp}.csv`);
-    setDownloadMessage(`${rowCount}명 자료를 내려받았습니다.`);
+    if (remote.ok) {
+      setDownloadMessage(
+        `${rowCount}명 · 클라우드 백업 완료 (${remote.path}) + 이 기기에 파일 저장`,
+      );
+    } else {
+      setBackupError(
+        `클라우드 백업 실패: ${remote.message} — 이 기기 파일(${rowCount}명)은 저장했습니다.`,
+      );
+    }
+    setBackingUp(false);
   }
 
   return (
@@ -52,18 +69,20 @@ export function AdminSettingsPage() {
           <button
             type="button"
             className="btn btn-primary"
-            onClick={downloadParticipants}
-            disabled={reservations.length + walkIns.length === 0}
+            onClick={() => void backupAndDownload()}
+            disabled={backingUp}
           >
-            참가자 전체 자료 내려받기 (엑셀용 CSV)
+            {backingUp ? '백업 중…' : '지금 백업 + 내려받기 (엑셀용 CSV)'}
           </button>
           <p className="hint-text">
-            부스·체험 시간·이름·연락처가 모두 들어 있는 개인정보 파일입니다.
-            총괄만 받을 수 있으며, 받은 파일은 안전한 곳에만 보관하세요.
+            누르면 ① 서버 비공개 백업 보관소에 원본 전체를 저장하고 ② 이 기기에
+            엑셀 파일을 받습니다. 서버는 15분마다 자동으로도 백업합니다.
+            연락처가 모두 들어 있는 개인정보 파일이니 안전한 곳에만 보관하세요.
           </p>
           {downloadMessage ? (
             <p className="notice success-inline">{downloadMessage}</p>
           ) : null}
+          {backupError ? <p className="notice warning">{backupError}</p> : null}
         </section>
       ) : null}
       <section className="glass-card">

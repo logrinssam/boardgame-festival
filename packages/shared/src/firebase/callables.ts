@@ -277,6 +277,28 @@ export interface SiteStatusResult {
 }
 
 /** 참여자 사이트 잠금 여부 — 서버 시각으로 판정한 행사 단계를 받는다 */
+export interface ParticipantBackupRaw {
+  path: string;
+  bucket: string;
+  counts: Record<string, number>;
+  reservations: Array<Record<string, unknown> & { id: string }>;
+  walkInRegistrations: Array<Record<string, unknown> & { id: string }>;
+  operationLogs: Array<Record<string, unknown> & { id: string }>;
+  booths: Array<Record<string, unknown> & { id: string }>;
+}
+
+/** 총괄 전용 — 서버가 비공개 버킷에 즉시 백업하고 같은 원본을 돌려준다 */
+export async function backupParticipantsNowCallable(): Promise<
+  { ok: true; data: ParticipantBackupRaw } | { ok: false; message: string }
+> {
+  try {
+    const result = await fn<void, ParticipantBackupRaw>('backupParticipantsNow')();
+    return { ok: true, data: result.data };
+  } catch (error) {
+    return { ok: false, message: callableErrorMessage(error) };
+  }
+}
+
 export async function getSiteStatusCallable(): Promise<SiteStatusResult> {
   const result = await fn<Record<string, never>, SiteStatusResult>(
     'getSiteStatus',

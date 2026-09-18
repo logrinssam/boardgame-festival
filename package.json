@@ -21,7 +21,8 @@
     "test-clock": "node scripts/test-clock.mjs",
     "migrate:access-codes": "node scripts/migrate-access-codes.mjs",
     "rotate:staff-pins": "node scripts/rotate-staff-pins.mjs",
-    "load-test": "node scripts/load-test.mjs"
+    "load-test": "node scripts/load-test.mjs",
+    "backup:local": "node scripts/backup-local.mjs"
   },
   "devDependencies": {
     "oxlint": "^1.75.0",

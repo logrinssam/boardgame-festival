@@ -3,6 +3,8 @@ import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { createHash } from 'node:crypto';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { setGlobalOptions } from 'firebase-functions/v2/options';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { BACKUP_BUCKET, runParticipantBackup } from './backup';
 import type {
   Reservation,
   ReservationStatus,
@@ -1191,3 +1193,55 @@ export const verifyBoothAccessCode = onCall(callableOpts, async (request) => {
   }
   return { ok };
 });
+
+/**
+ * 자동 백업 — 15분마다 참가자 데이터를 비공개 버킷에 복사 (내용이 바뀐 경우에만 새 파일).
+ */
+export const scheduledParticipantBackup = onSchedule(
+  {
+    schedule: 'every 15 minutes',
+    timeZone: 'Asia/Seoul',
+    memory: '512MiB',
+    timeoutSeconds: 300,
+    maxInstances: 1,
+    concurrency: 1,
+  },
+  async () => {
+    const result = await runParticipantBackup({
+      trigger: 'scheduled',
+      requestedBy: null,
+      skipIfUnchanged: true,
+    });
+    console.log('participant backup', result.skipped ? 'unchanged' : result.path, result.counts);
+  },
+);
+
+/**
+ * 총괄 전용 — 즉시 백업하고, 같은 원본 데이터를 돌려줘 화면에서 파일로 내려받게 한다.
+ */
+export const backupParticipantsNow = onCall(
+  { ...callableOpts, memory: '512MiB', timeoutSeconds: 120 },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+    }
+    const staff = await getStaff(request.auth.uid);
+    if (staff.role !== 'HEAD_ADMIN') {
+      throw new HttpsError('permission-denied', '총괄만 백업할 수 있습니다.');
+    }
+    const result = await runParticipantBackup({
+      trigger: 'manual',
+      requestedBy: `${staff.name} (${staff.uid})`,
+      skipIfUnchanged: false,
+    });
+    return {
+      path: result.path,
+      bucket: BACKUP_BUCKET,
+      counts: result.counts,
+      reservations: result.collections.reservations,
+      walkInRegistrations: result.collections.walkInRegistrations,
+      operationLogs: result.collections.operationLogs,
+      booths: result.collections.booths,
+    };
+  },
+);

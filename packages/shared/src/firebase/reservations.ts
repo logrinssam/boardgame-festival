@@ -3,12 +3,19 @@ import {
   onSnapshot,
   type Unsubscribe,
 } from 'firebase/firestore';
-import type { Booth, BoothSlot, OperationLog, Reservation } from '../types';
+import type {
+  Booth,
+  BoothSlot,
+  OperationLog,
+  Reservation,
+  WalkInRegistration,
+} from '../types';
 import { getEffectiveCapacity } from '../utils/capacity';
 import { resolveOperationMode } from '../utils/operationMode';
 import { getFirebaseDb } from './client';
 import { FIRESTORE_COLLECTIONS } from './collections';
-import { normalizeWalkInPublicStatus } from './walkIns';
+import { backupParticipantsNowCallable } from './callables';
+import { asWalkInRegistration, normalizeWalkInPublicStatus } from './walkIns';
 
 export {
   createReservationCallable as createReservationRemote,
@@ -143,6 +150,37 @@ export function subscribeOperationLogs(
     },
     (error) => onError?.(error),
   );
+}
+
+/** 즉시 백업(서버 → 비공개 버킷) 후, 화면 파일 저장용으로 정규화한 데이터를 돌려준다 */
+export async function backupParticipantsNowRemote(): Promise<
+  | {
+      ok: true;
+      path: string;
+      bucket: string;
+      counts: Record<string, number>;
+      booths: Booth[];
+      reservations: Reservation[];
+      walkIns: WalkInRegistration[];
+    }
+  | { ok: false; message: string }
+> {
+  const result = await backupParticipantsNowCallable();
+  if (!result.ok) return result;
+  const { data } = result;
+  return {
+    ok: true,
+    path: data.path,
+    bucket: data.bucket,
+    counts: data.counts,
+    booths: data.booths.map(({ id, ...rest }) => asBooth(id, rest)),
+    reservations: data.reservations.map(({ id, ...rest }) =>
+      asReservation(id, rest),
+    ),
+    walkIns: data.walkInRegistrations.map(({ id, ...rest }) =>
+      asWalkInRegistration(id, rest),
+    ),
+  };
 }
 
 export function getOpenSeatCountFromBooth(

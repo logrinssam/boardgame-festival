@@ -32,3 +32,6 @@ firebase-debug.*.log
 
 # 운영 스크립트가 만드는 비밀 목록 (현장코드·PIN) — 절대 커밋하지 않는다
 *.local.csv
+
+# 참가자 개인정보 백업 (npm run backup:local) — 절대 커밋하지 않는다
+backups/
