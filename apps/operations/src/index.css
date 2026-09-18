@@ -1348,6 +1348,19 @@ input {
   word-break: keep-all;
 }
 
+/* 처리 결과·오류 알림 — 페이지 맨 아래에 두면 안 보여서 하단 메뉴 위에 띄운다 */
+.ops-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 88px;
+  z-index: 20;
+  transform: translateX(-50%);
+  width: min(calc(100% - 32px), 448px);
+  margin: 0;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(60, 50, 100, 0.18);
+}
+
 /* 현장 추가 펼침 버튼 (+ / −) */
 .add-toggle {
   flex: none;
