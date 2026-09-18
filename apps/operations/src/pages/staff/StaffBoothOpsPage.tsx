@@ -17,7 +17,6 @@ import {
   type ReservationStatus,
 } from '@bgf/shared';
 import { StaffWalkInOpsPanel } from '../../components/StaffWalkInOpsPanel';
-import { StaffBoothCapacityForm } from '../../components/StaffBoothCapacityForm';
 import { useBoothAccessCode } from '../../services/boothSecrets';
 function nowMinutes(): number {
   const now = new Date();
@@ -261,7 +260,6 @@ export function StaffBoothOpsPage() {
         ) : null}
       </section>
 
-      <StaffBoothCapacityForm booth={currentBooth} />
 
       <div className="slot-chip-groups" role="tablist" aria-label="회차 선택">
         {(
