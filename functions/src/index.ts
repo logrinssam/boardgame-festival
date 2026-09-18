@@ -222,13 +222,7 @@ const callableOpts = { invoker: 'public' as const };
  * 참가자가 몰리는 콜러블은 인스턴스 1개를 항상 띄워 둔다 (콜드 스타트 2~4초 회피).
  * 대기 비용은 인스턴스당 월 수천 원 수준 — 행사 후 0으로 낮춰도 된다.
  */
-const hotCallableOpts = { ...callableOpts, minInstances: 2 };
-
-/**
- * 예약 생성 — 오픈 시각(08:30 / 12:45)에 한꺼번에 몰린다. 새 인스턴스가 뜨는 2~4초 동안
- * 요청이 밀리지 않게 미리 3개를 띄워 두고(동시 240건), 트랜잭션 재시도가 겹쳐도 여유 있게 메모리를 늘린다.
- */
-const bookingCallableOpts = { ...callableOpts, minInstances: 3, memory: '512MiB' as const };
+const hotCallableOpts = { ...callableOpts, minInstances: 1 };
 
 // ---- 입력 검증 ----
 /**
@@ -459,7 +453,7 @@ async function resolveClock(): Promise<{
   }
 }
 
-export const createReservation = onCall(bookingCallableOpts, async (request) => {
+export const createReservation = onCall(hotCallableOpts, async (request) => {
   const data = request.data as {
     boothId?: string;
     slotId?: string;
