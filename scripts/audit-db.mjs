@@ -22,13 +22,19 @@ const WALK_IN_NUMBERS = [3, 6, 7, 8, 9];
 const OCCUPYING = ['CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS', 'COMPLETED', 'NO_SHOW'];
 const BLOCKING = ['CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS'];
 
-const [booths, reservations, walkIns, staff, secrets] = await Promise.all([
+const [booths, reservations, walkIns, staff, secrets, logs] = await Promise.all([
   listDocuments(token, 'booths'),
   listDocuments(token, 'reservations'),
   listDocuments(token, 'walkInRegistrations'),
   listDocuments(token, 'staffAssignments'),
   listDocuments(token, 'boothSecrets'),
+  listDocuments(token, 'operationLogs'),
 ]);
+// 교사가 "현장 추가"로 넣은 예약 — 정원 검사 없이 들어가므로 정원 초과 계산에서 뺀다.
+// 이후 미도착 등으로 상태가 바뀌어도 현장 추가였다는 사실은 운영 기록에 남아 있다.
+const staffAddedIds = new Set(
+  logs.filter((log) => log.data.action === '현장 추가').map((log) => log.data.reservationId),
+);
 const testClock = await getDocument(token, 'config/testClock');
 
 // 1. 공개 문서의 비밀값
@@ -66,7 +72,12 @@ for (const booth of booths.sort((a, b) => Number(a.data.number) - Number(b.data.
       problems.push(`${booth.id}/${slot.id}: 확정 인원 캐시 ${slot.confirmedCount ?? 0} ≠ 실제 ${actual}`);
     }
     const staffAdded = reservations.filter(
-      (r) => r.data.boothId === booth.id && r.data.slotId === slot.id && r.data.updatedBy && !r.data.previousStatus && r.data.status === 'CHECKED_IN',
+      (r) =>
+        r.data.boothId === booth.id &&
+        r.data.slotId === slot.id &&
+        OCCUPYING.includes(r.data.status) &&
+        (staffAddedIds.has(r.id) ||
+          (r.data.updatedBy && !r.data.previousStatus && r.data.status === 'CHECKED_IN')),
     ).length;
     if (booth.data.capacity != null && actual - staffAdded > Number(booth.data.capacity)) {
       problems.push(`${booth.id}/${slot.id}: 정원 초과 ${actual - staffAdded}/${booth.data.capacity} (현장 추가 제외)`);
