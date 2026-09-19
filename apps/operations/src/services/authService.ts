@@ -33,6 +33,45 @@ export function toSession(
   };
 }
 
+/**
+ * 로그인된 Firebase 계정(uid)의 운영 권한을 읽어 세션을 만든다.
+ * 권한이 없거나 비활성이면 로그아웃시킨다.
+ * PIN 로그인 직후와, 새로고침 뒤 로그인 복원에 함께 쓴다.
+ */
+export async function loadOperatorSession(
+  uid: string,
+): Promise<{ ok: true; session: AuthSession } | { ok: false; message: string }> {
+  const assignmentSnap = await getDoc(doc(getFirebaseDb(), 'staffAssignments', uid));
+  if (!assignmentSnap.exists()) {
+    await signOut(getFirebaseAuth());
+    return { ok: false, message: '운영 권한이 없습니다.' };
+  }
+
+  const assignment = assignmentSnap.data() as {
+    name: string;
+    role: OperatorRole;
+    experienceGroup: ExperienceGroup | null;
+    assignedBoothIds: string[];
+    isActive: boolean;
+  };
+
+  if (!assignment.isActive) {
+    await signOut(getFirebaseAuth());
+    return { ok: false, message: '비활성 운영자 계정입니다.' };
+  }
+
+  return {
+    ok: true,
+    session: toSession(
+      uid,
+      assignment.role,
+      assignment.name,
+      assignment.experienceGroup ?? null,
+      assignment.assignedBoothIds ?? [],
+    ),
+  };
+}
+
 export async function verifyOperatorPin(
   loginId: string,
   pin: string,
@@ -61,40 +100,7 @@ export async function verifyOperatorPin(
       pinToAuthPassword(trimmedPin),
     );
 
-    const assignmentRef = doc(
-      getFirebaseDb(),
-      'staffAssignments',
-      credential.user.uid,
-    );
-    const assignmentSnap = await getDoc(assignmentRef);
-    if (!assignmentSnap.exists()) {
-      await signOut(getFirebaseAuth());
-      return { ok: false, message: '운영 권한이 없습니다.' };
-    }
-
-    const assignment = assignmentSnap.data() as {
-      name: string;
-      role: OperatorRole;
-      experienceGroup: ExperienceGroup | null;
-      assignedBoothIds: string[];
-      isActive: boolean;
-    };
-
-    if (!assignment.isActive) {
-      await signOut(getFirebaseAuth());
-      return { ok: false, message: '비활성 운영자 계정입니다.' };
-    }
-
-    return {
-      ok: true,
-      session: toSession(
-        credential.user.uid,
-        assignment.role,
-        assignment.name,
-        assignment.experienceGroup ?? null,
-        assignment.assignedBoothIds ?? [],
-      ),
-    };
+    return await loadOperatorSession(credential.user.uid);
   } catch (error) {
     const code =
       error && typeof error === 'object' && 'code' in error

@@ -26,7 +26,13 @@ import {
   updateBoothSettingsRemote,
 } from '@bgf/shared/firebase/reservations';
 import { subscribeAllWalkIns } from '@bgf/shared';
-import { logoutOperator, verifyOperatorPin } from '../services/authService';
+import { getFirebaseAuth } from '@bgf/shared/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import {
+  loadOperatorSession,
+  logoutOperator,
+  verifyOperatorPin,
+} from '../services/authService';
 
 interface AppStoreValue {
   booths: Booth[];
@@ -34,6 +40,8 @@ interface AppStoreValue {
   walkIns: WalkInRegistration[];
   logs: OperationLog[];
   session: AuthSession | null;
+  /** 새로고침 직후 이전 로그인을 복원하는 중 — 이때는 로그인 화면으로 보내지 않는다 */
+  restoringSession: boolean;
   loading: boolean;
   getBooth: (boothId: string) => Booth | undefined;
   getSlot: (boothId: string, slotId: string) => BoothSlot | undefined;
@@ -78,7 +86,23 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [walkIns, setWalkIns] = useState<WalkInRegistration[]>([]);
   const [logs, setLogs] = useState<OperationLog[]>([]);
   const [session, setSession] = useState<AuthSession | null>(null);
+  const [restoringSession, setRestoringSession] = useState(true);
   const [loading, setLoading] = useState(true);
+
+  // 새로고침해도 로그인 유지 — Firebase 로그인은 기기에 남아 있으므로 운영 권한만 다시 읽는다.
+  useEffect(() => {
+    return onAuthStateChanged(getFirebaseAuth(), (user) => {
+      if (!user) {
+        setSession(null);
+        setRestoringSession(false);
+        return;
+      }
+      loadOperatorSession(user.uid)
+        .then((result) => setSession(result.ok ? result.session : null))
+        .catch(() => setSession(null))
+        .finally(() => setRestoringSession(false));
+    });
+  }, []);
 
   useEffect(() => {
     const unsubBooths = subscribeBooths(
@@ -201,6 +225,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       walkIns,
       logs,
       session,
+      restoringSession,
       loading,
       getBooth,
       getSlot,
@@ -221,6 +246,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       walkIns,
       logs,
       session,
+      restoringSession,
       loading,
       getBooth,
       getSlot,
