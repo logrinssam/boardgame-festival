@@ -78,11 +78,11 @@ for (const booth of booths.sort((a, b) => Number(a.data.number) - Number(b.data.
 const active = new Map();
 for (const r of reservations) {
   if (!r.data.phone || !BLOCKING.includes(r.data.status)) continue;
-  const key = `${r.data.phone}|${String(r.data.participantName).replace(/\s+/g, '').toLowerCase()}`;
+  const key = `${r.data.phone}|${String(r.data.participantName).replace(/\s+/g, '').toLowerCase()}|${r.data.scheduleSlotId}`;
   active.set(key, (active.get(key) ?? 0) + 1);
 }
 const duplicated = [...active.values()].filter((count) => count > 1).length;
-if (duplicated > 0) problems.push(`같은 참가자의 진행 중 예약이 2건 이상: ${duplicated}명`);
+if (duplicated > 0) problems.push(`같은 참가자가 같은 시간에 진행 중 예약 2건 이상: ${duplicated}건`);
 
 // 5. 점검 시계
 if (testClock?.enabled === true) {

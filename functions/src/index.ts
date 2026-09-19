@@ -555,10 +555,18 @@ export const createReservation = onCall(bookingCallableOpts, async (request) => 
         '같은 부스는 하루 1회만 예약할 수 있습니다.',
       );
     }
-    if (existingForPhone.some((item) => BLOCKING_STATUSES.includes(item.status))) {
+    // 다른 부스는 시간이 다르면 함께 예약할 수 있다 (유치부A·B처럼 학년별로 부스가 나뉜 경우).
+    // 모든 부스가 같은 회차 시간표를 쓰므로 scheduleSlotId 가 같으면 같은 시간이다.
+    if (
+      existingForPhone.some(
+        (item) =>
+          BLOCKING_STATUSES.includes(item.status) &&
+          item.scheduleSlotId === slot.scheduleSlotId,
+      )
+    ) {
       throw new BookingError(
         'failed-precondition',
-        '진행 중인 예약이 있어 다른 부스를 예약할 수 없습니다.',
+        '같은 시간에 이미 다른 부스 예약이 있습니다. 다른 시간을 선택해 주세요.',
       );
     }
 

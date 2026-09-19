@@ -107,16 +107,18 @@ export function validateParticipantBooking(
     };
   }
 
-  const active = allReservations.find(
+  // 다른 부스는 시간이 다르면 함께 예약할 수 있다 — 같은 시간(scheduleSlotId)만 막는다.
+  const sameTime = allReservations.find(
     (item) =>
       digitsOnly(item.phone) === phoneDigits &&
-      BLOCKING_STATUSES.includes(item.status),
+      BLOCKING_STATUSES.includes(item.status) &&
+      item.scheduleSlotId === slot.scheduleSlotId,
   );
-  if (active) {
+  if (sameTime) {
     return {
       ok: false,
       message:
-        '진행 중인 예약이 있어 다른 부스를 예약할 수 없습니다. 체험 완료 후 이용해 주세요.',
+        '같은 시간에 이미 다른 부스 예약이 있습니다. 다른 시간을 선택해 주세요.',
     };
   }
 

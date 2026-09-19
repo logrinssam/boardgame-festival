@@ -367,7 +367,8 @@ function audit({ staffAddedAllowed = false } = {}) {
   for (const r of reservations) {
     if (!r.phone || !BLOCKING.includes(r.status)) continue;
     // 참가자 구분 = 연락처 + 이름(공백·대소문자 무시) — 형제는 같은 번호로 각각 예약할 수 있다
-    const who = `${r.phone} ${String(r.participantName).replace(/\s+/g, '').toLowerCase()}`;
+    // 다른 부스는 시간이 다르면 함께 예약할 수 있다 — 같은 시간(scheduleSlotId)에 2건이면 중복
+    const who = `${r.phone} ${String(r.participantName).replace(/\s+/g, '').toLowerCase()} ${r.scheduleSlotId}`;
     byPhone.set(who, (byPhone.get(who) ?? 0) + 1);
   }
   for (const [phone, count] of byPhone) {
@@ -471,6 +472,23 @@ const scenarios = {
       for (let b = 1; b <= 4; b += 1) jobs.push(book(`b${b}`, 's2', phone));
     }
     return { results: await Promise.all(jobs), expectOk: 60 };
+  },
+  async '다른 부스 · 다른 시간 — 100명이 부스 2곳(유치부A·B)을 회차를 달리해 동시에, 이어서 같은 시간 3번째는 거절'() {
+    seed({ capacity: 500 });
+    const phones = Array.from({ length: 100 }, () => newPhone());
+    // 부스가 다르고 회차도 다르면 → 2건 모두 잡혀야 한다 (한 사람은 A 예약 뒤 이어서 B 를 예약한다)
+    const both = (
+      await Promise.all(
+        phones.map(async (phone) => [
+          await book('b1', 's1', phone),
+          await book('b2', 's2', phone),
+        ]),
+      )
+    ).flat();
+    // 이미 s1 에 예약이 있으므로 다른 부스라도 같은 시간(s1)은 거절돼야 한다
+    const clash = await Promise.all(phones.map((phone) => book('b3', 's1', phone)));
+    const extra = clash.some((r) => r.ok) ? ['같은 시간에 다른 부스 예약이 통과됨'] : [];
+    return { results: [...both, ...clash], expectOk: 200, extra };
   },
   async '형제 동시 예약 — 보호자 60명이 같은 번호로 자녀 2명을 따닥 2번씩'() {
     seed({ capacity: 500 });
