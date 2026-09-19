@@ -475,18 +475,23 @@ const scenarios = {
   },
   async '다른 부스 · 다른 시간 — 100명이 부스 2곳(유치부A·B)을 회차를 달리해 동시에, 이어서 같은 시간 3번째는 거절'() {
     seed({ capacity: 500 });
-    const phones = Array.from({ length: 100 }, () => newPhone());
+    // 사람마다 부스 3곳(A·B·C)과 회차 2개를 돌려 가며 배정 — 한 회차에 몰리지 않게 분산한다
+    const people = Array.from({ length: 100 }, (_, i) => ({
+      phone: newPhone(),
+      booths: [0, 1, 2].map((offset) => `b${((i + offset) % 4) + 1}`),
+      slots: [SLOT_IDS[(i >> 2) % 4], SLOT_IDS[((i >> 2) + 1) % 4]],
+    }));
     // 부스가 다르고 회차도 다르면 → 2건 모두 잡혀야 한다 (한 사람은 A 예약 뒤 이어서 B 를 예약한다)
     const both = (
       await Promise.all(
-        phones.map(async (phone) => [
-          await book('b1', 's1', phone),
-          await book('b2', 's2', phone),
+        people.map(async (p) => [
+          await book(p.booths[0], p.slots[0], p.phone),
+          await book(p.booths[1], p.slots[1], p.phone),
         ]),
       )
     ).flat();
-    // 이미 s1 에 예약이 있으므로 다른 부스라도 같은 시간(s1)은 거절돼야 한다
-    const clash = await Promise.all(phones.map((phone) => book('b3', 's1', phone)));
+    // 이미 첫 회차에 예약이 있으므로 다른 부스라도 같은 시간은 거절돼야 한다
+    const clash = await Promise.all(people.map((p) => book(p.booths[2], p.slots[0], p.phone)));
     const extra = clash.some((r) => r.ok) ? ['같은 시간에 다른 부스 예약이 통과됨'] : [];
     return { results: [...both, ...clash], expectOk: 200, extra };
   },
