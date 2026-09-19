@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAppStore } from '../../context/AppStore';
 import { formatTimeRange } from '@bgf/shared';
-import { maskPhone } from '@bgf/shared';
+import { formatPhone } from '@bgf/shared';
 import { RESERVATION_STATUS_LABELS } from '@bgf/shared';
 
 /** 예약 취소(자리를 다시 여는 유일한 조작)는 지정된 본부 관리자에게만 보인다 — 서버도 같은 이름으로 다시 막는다 */
@@ -57,7 +57,8 @@ export function AdminReservationsPage() {
               {formatTimeRange(slot.startTime, slot.endTime)}
             </p>
             <p className="admin-meta">
-              #{reservation.reservationCode} · {maskPhone(reservation.phone)}
+              #{reservation.reservationCode} ·{' '}
+              <a href={`tel:${reservation.phone}`}>{formatPhone(reservation.phone)}</a>
             </p>
             {(reservation.status === 'CONFIRMED' ||
               reservation.status === 'CHECKED_IN') &&

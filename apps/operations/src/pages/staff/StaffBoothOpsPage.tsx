@@ -8,7 +8,7 @@ import {
   isWalkInBooth,
   SCHEDULE_SLOTS,
 } from '@bgf/shared';
-import { maskPhone } from '@bgf/shared';
+import { formatPhone } from '@bgf/shared';
 import { getActionsForStatus } from '@bgf/shared';
 import {
   EXPERIENCE_GROUP_LABELS,
@@ -296,9 +296,12 @@ export function StaffBoothOpsPage() {
                 />
               </div>
               <p className="admin-meta">
-                {reservation.phone
-                  ? `${maskPhone(reservation.phone)} · 뒤 ${reservation.phoneLast4} · `
-                  : ''}
+                {reservation.phone ? (
+                  <>
+                    <a href={`tel:${reservation.phone}`}>{formatPhone(reservation.phone)}</a>
+                    {' · '}
+                  </>
+                ) : null}
                 #{reservation.reservationCode}
                 {reservation.gender
                   ? ` · ${reservation.gender === 'MALE' ? '남' : '여'}`

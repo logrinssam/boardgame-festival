@@ -4,6 +4,7 @@ import {
   OPERATION_MODE_LABELS,
   WALK_IN_PUBLIC_STATUS_LABELS,
   filterBoothWalkInsToday,
+  formatPhone,
   getWalkInRegistrationStatistics,
   setWalkInBoothPublicStatus,
   subscribeWalkInsForBooth,
@@ -117,8 +118,12 @@ export function StaffWalkInOpsPanel({ booth }: StaffWalkInOpsPanelProps) {
           <ul className="plain-list">
             {todayRows.slice(0, 40).map((item) => (
               <li key={item.id}>
-                <strong>{item.participantName}</strong> · 뒤 {item.phoneLastFour}{' '}
-                · {item.maskedPhone}
+                <strong>{item.participantName}</strong> ·{' '}
+                {item.phone ? (
+                  <a href={`tel:${item.phone}`}>{formatPhone(item.phone)}</a>
+                ) : (
+                  item.maskedPhone
+                )}
                 {item.gender
                   ? ` · ${item.gender === 'MALE' ? '남' : '여'}`
                   : ''}{' '}

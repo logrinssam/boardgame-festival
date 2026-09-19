@@ -12,6 +12,22 @@ function digitsOnly(value: string): string {
   return value.replace(/\D/g, '');
 }
 
+/** 운영 화면용 전체 번호 표기 (010-1234-5678). 참가자 화면에는 maskPhone 을 쓴다. */
+export function formatPhone(phone: string): string {
+  const digits = digitsOnly(phone);
+  // 서울 지역번호(02)는 두 자리
+  if (digits.startsWith('02') && (digits.length === 9 || digits.length === 10)) {
+    return `02-${digits.slice(2, -4)}-${digits.slice(-4)}`;
+  }
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  }
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return phone;
+}
+
 export function maskPhone(phone: string): string {
   const digits = digitsOnly(phone);
   if (digits.length < 4) return '***';
