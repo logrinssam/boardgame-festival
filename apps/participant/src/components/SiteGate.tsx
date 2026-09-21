@@ -5,24 +5,33 @@ import {
   getKstDateKey,
   getSiteStatusCallable,
   resolveEventPhase,
+  type EventPhase,
 } from '@bgf/shared';
 import { AppShell } from '../layouts/AppLayouts';
 
-type GateState = 'checking' | 'open' | 'locked';
+type GateState = 'checking' | 'open' | 'locked-before' | 'locked-after';
+
+/** 행사 단계 → 참여자 화면을 열지, 어떤 잠금 화면을 보일지 */
+function gateFor(phase: EventPhase): GateState {
+  if (phase === 'BEFORE_SITE_OPEN') return 'locked-before';
+  if (phase === 'AFTER_EVENT') return 'locked-after';
+  return 'open';
+}
 
 /**
- * 사이트 오픈일(9/18) 전에는 잠금 화면만 보여준다.
+ * 사이트 오픈일(9/18) 전과 행사(9/19)가 끝난 뒤에는 안내 화면만 보여준다.
  *
- * 기기 시계로 "이미 열렸다"고 판단되면 서버에 묻지 않고 바로 연다 — 행사 당일
- * 첫 화면에 콜러블 지연을 얹지 않기 위함. 예약 자체는 서버가 날짜로 다시 막는다.
- * 기기 시계로 "아직"이면 서버 시각으로 한 번 확인한다 — 시계가 틀린 기기가
- * 행사 당일 잠기는 사고를 막고, 점검 모드(test-clock)면 잠금을 건너뛴다.
+ * 기기 시계로 "지금은 여는 기간"이라고 판단되면 서버에 묻지 않고 바로 연다 —
+ * 행사 당일 첫 화면에 콜러블 지연을 얹지 않기 위함. 예약 자체는 서버가 날짜로
+ * 다시 막는다. 기기 시계로 "아직"이거나 "이미 끝났다"면 서버 시각으로 한 번
+ * 확인한다 — 시계가 틀린 기기가 행사 당일 잠기는 사고를 막고, 점검
+ * 모드(test-clock)면 서버가 행사 당일로 답하므로 잠금을 건너뛴다.
  */
 export function SiteGate({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GateState>(() =>
-    resolveEventPhase(getKstDateKey()) === 'BEFORE_SITE_OPEN'
-      ? 'checking'
-      : 'open',
+    gateFor(resolveEventPhase(getKstDateKey())) === 'open'
+      ? 'open'
+      : 'checking',
   );
 
   useEffect(() => {
@@ -30,12 +39,11 @@ export function SiteGate({ children }: { children: ReactNode }) {
     let cancelled = false;
     getSiteStatusCallable()
       .then((status) => {
-        if (cancelled) return;
-        setState(status.phase === 'BEFORE_SITE_OPEN' ? 'locked' : 'open');
+        if (!cancelled) setState(gateFor(status.phase));
       })
       .catch(() => {
-        // 서버 확인 실패 — 기기 시계 판단(아직 오픈 전)을 그대로 따른다
-        if (!cancelled) setState('locked');
+        // 서버 확인 실패 — 기기 시계 판단(오픈 전 / 종료 후)을 그대로 따른다
+        if (!cancelled) setState(gateFor(resolveEventPhase(getKstDateKey())));
       });
     return () => {
       cancelled = true;
@@ -48,6 +56,29 @@ export function SiteGate({ children }: { children: ReactNode }) {
     return (
       <AppShell>
         <p className="body-text">불러오는 중입니다…</p>
+      </AppShell>
+    );
+  }
+
+  if (state === 'locked-after') {
+    return (
+      <AppShell>
+        <section className="glass-card hero-card site-gate">
+          <p className="hero-kicker">🎲 행사 종료</p>
+          <h2 className="hero-title">행사가 모두 끝났습니다</h2>
+          <p className="body-text">
+            {EVENT_SCHEDULE.dateLabel} 행사가 모두 끝나 부스 안내와 예약
+            페이지는 닫혔습니다.
+          </p>
+          <p className="body-text">
+            함께해 주신 참가자·운영진 여러분께 감사드립니다. 다음 대축제에서
+            다시 만나요!
+          </p>
+          <div className="notice site-gate-notice">
+            <strong>문의가 있으신가요?</strong>
+            <p>행사 관련 문의는 운영 본부로 연락해 주세요.</p>
+          </div>
+        </section>
       </AppShell>
     );
   }
