@@ -257,6 +257,20 @@ function assertCanCancelReservation(staff: StaffAssignment): void {
   }
 }
 
+/**
+ * 참가자 전체 자료 내려받기도 지정된 본부 관리자만 할 수 있다.
+ * 연락처가 모두 담긴 원본이 응답으로 나가므로 총괄 전원에게는 열지 않는다.
+ */
+const PARTICIPANT_BACKUP_OPERATORS = ['황보예린'];
+function assertCanBackupParticipants(staff: StaffAssignment): void {
+  if (
+    staff.role !== 'HEAD_ADMIN' ||
+    !PARTICIPANT_BACKUP_OPERATORS.includes(String(staff.name).trim())
+  ) {
+    throw new HttpsError('permission-denied', '참가자 자료 내려받기 권한이 없습니다.');
+  }
+}
+
 // 한국 휴대폰: 01X + 7~8자리 (하이픈 제거 후). 자릿수만 보던 이전 검사는 아무 숫자나 통과시켰다.
 const MOBILE_PHONE_RE = /^01\d{8,9}$/;
 const MAX_NAME_LENGTH = 20;
@@ -1414,7 +1428,7 @@ export const scheduledParticipantBackup = onSchedule(
 );
 
 /**
- * 총괄 전용 — 즉시 백업하고, 같은 원본 데이터를 돌려줘 화면에서 파일로 내려받게 한다.
+ * 지정된 본부 관리자 전용 — 즉시 백업하고, 같은 원본 데이터를 돌려줘 화면에서 파일로 내려받게 한다.
  */
 export const backupParticipantsNow = onCall(
   { ...callableOpts, memory: '512MiB', timeoutSeconds: 120 },
@@ -1423,9 +1437,7 @@ export const backupParticipantsNow = onCall(
       throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
     }
     const staff = await getStaff(request.auth.uid);
-    if (staff.role !== 'HEAD_ADMIN') {
-      throw new HttpsError('permission-denied', '총괄만 백업할 수 있습니다.');
-    }
+    assertCanBackupParticipants(staff);
     const result = await runParticipantBackup({
       trigger: 'manual',
       requestedBy: `${staff.name} (${staff.uid})`,

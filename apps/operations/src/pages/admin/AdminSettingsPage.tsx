@@ -7,12 +7,26 @@ import {
   downloadCsv,
 } from '../../services/participantExport';
 
+/**
+ * 참가자 전체 자료 백업·내려받기는 지정된 본부 관리자에게만 보인다.
+ * 연락처가 모두 담긴 파일이 기기로 나가는 조작이라 총괄 전원이 아니라 최소 인원만 연다.
+ * 화면 가드일 뿐이므로 서버(backupParticipantsNow)도 같은 이름으로 다시 막는다.
+ */
+const PARTICIPANT_BACKUP_OPERATORS = ['황보예린'];
+function canBackupParticipants(
+  session: { role: string; name: string } | null,
+): boolean {
+  if (!session || session.role !== 'HEAD_ADMIN') return false;
+  return PARTICIPANT_BACKUP_OPERATORS.includes(session.name.trim());
+}
+
 export function AdminSettingsPage() {
   const { logout, booths, reservations, walkIns, logs, session } =
     useAppStore();
   const [downloadMessage, setDownloadMessage] = useState('');
   const [backupError, setBackupError] = useState('');
   const [backingUp, setBackingUp] = useState(false);
+  const canBackup = canBackupParticipants(session);
 
   function wipePersonalData() {
     if (
@@ -28,7 +42,7 @@ export function AdminSettingsPage() {
   }
 
   async function backupAndDownload() {
-    if (session?.role !== 'HEAD_ADMIN' || backingUp) return;
+    if (!canBackup || backingUp) return;
     setBackingUp(true);
     setBackupError('');
     setDownloadMessage('');
@@ -61,7 +75,7 @@ export function AdminSettingsPage() {
         <h2>설정</h2>
         <p>참가자 자료 · 개인정보 삭제 · 계정</p>
       </div>
-      {session?.role === 'HEAD_ADMIN' ? (
+      {canBackup ? (
         <section className="glass-card">
           <p className="admin-meta">
             시간 예약 {reservations.length}건 · 현장 등록 {walkIns.length}건
