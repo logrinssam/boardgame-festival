@@ -35,3 +35,4 @@ firebase-debug.*.log
 
 # 참가자 개인정보 백업 (npm run backup:local) — 절대 커밋하지 않는다
 backups/
+scripts/analysis/out/
